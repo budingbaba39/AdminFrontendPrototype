@@ -260,7 +260,7 @@ export default function CashBackScheduleManagement() {
 
       {/* Create/Edit Modal */}
       <Dialog open={showCreateModal || showEditModal} onOpenChange={closeModal}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-4xl w-full max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-[#3949ab] font-semibold text-lg">
               {showCreateModal ? 'Add CashBack Schedule' : 'Edit CashBack Schedule'}
