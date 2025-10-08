@@ -18,13 +18,16 @@ export default function BankListManagement() {
 
   const [formData, setFormData] = useState({
     bankName: '',
-    bankType: 'Bank Transfer',
+    bankType: 'Online Transfer' as 'Online Transfer' | 'QR',
     accountName: '',
     accountNo: '',
     accountQRImage: '',
     description: '',
     maxCountPerDay: 50,
-    maxAmountPerDay: 100000
+    maxAmountPerDay: 100000,
+    bankInSlip: 'REQUIRED' as 'REQUIRED' | 'OPTIONAL' | 'DISABLE',
+    bankInTime: 'REQUIRED' as 'REQUIRED' | 'DISABLE',
+    status: 'Active' as 'Active' | 'Inactive'
   });
 
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
@@ -57,13 +60,16 @@ export default function BankListManagement() {
     if (mode === 'create') {
       setFormData({
         bankName: '',
-        bankType: 'Bank Transfer',
+        bankType: 'Online Transfer',
         accountName: '',
         accountNo: '',
         accountQRImage: '',
         description: '',
         maxCountPerDay: 50,
-        maxAmountPerDay: 100000
+        maxAmountPerDay: 100000,
+        bankInSlip: 'REQUIRED',
+        bankInTime: 'REQUIRED',
+        status: 'Active'
       });
       setQRImagePreview('');
       setSelectedBank(null);
@@ -71,12 +77,15 @@ export default function BankListManagement() {
       setFormData({
         bankName: bank.bankName,
         bankType: bank.bankType,
-        accountName: bank.accountName,
-        accountNo: bank.accountNo,
+        accountName: bank.accountName || '',
+        accountNo: bank.accountNo || '',
         accountQRImage: bank.accountQRImage || '',
-        description: bank.description,
+        description: bank.description || '',
         maxCountPerDay: bank.maxCountPerDay,
-        maxAmountPerDay: bank.maxAmountPerDay
+        maxAmountPerDay: bank.maxAmountPerDay,
+        bankInSlip: bank.bankInSlip,
+        bankInTime: bank.bankInTime,
+        status: bank.status
       });
       setQRImagePreview(bank.accountQRImage || '');
       setSelectedBank(bank);
@@ -88,13 +97,16 @@ export default function BankListManagement() {
     setSelectedBank(null);
     setFormData({
       bankName: '',
-      bankType: 'Bank Transfer',
+      bankType: 'Online Transfer',
       accountName: '',
       accountNo: '',
       accountQRImage: '',
       description: '',
       maxCountPerDay: 50,
-      maxAmountPerDay: 100000
+      maxAmountPerDay: 100000,
+      bankInSlip: 'REQUIRED',
+      bankInTime: 'REQUIRED',
+      status: 'Active'
     });
     setValidationErrors({});
     setQRImagePreview('');
@@ -105,10 +117,20 @@ export default function BankListManagement() {
 
     if (!formData.bankName.trim()) errors.bankName = 'Bank name is required';
     if (!formData.bankType.trim()) errors.bankType = 'Bank type is required';
-    if (!formData.accountName.trim()) errors.accountName = 'Account name is required';
-    if (!formData.accountNo.trim()) errors.accountNo = 'Account number is required';
-    if (formData.maxCountPerDay <= 0) errors.maxCountPerDay = 'Max count per day must be greater than 0';
-    if (formData.maxAmountPerDay <= 0) errors.maxAmountPerDay = 'Max amount per day must be greater than 0';
+    if (!formData.bankInSlip) errors.bankInSlip = 'Bank In Slip setting is required';
+    if (!formData.bankInTime) errors.bankInTime = 'Bank In Time setting is required';
+    if (!formData.status) errors.status = 'Status is required';
+
+    if (formData.bankType === 'Online Transfer') {
+      if (!formData.accountName.trim()) errors.accountName = 'Account name is required';
+      if (!formData.accountNo.trim()) errors.accountNo = 'Account number is required';
+      if (formData.maxCountPerDay <= 0) errors.maxCountPerDay = 'Max count per day must be greater than 0';
+      if (formData.maxAmountPerDay <= 0) errors.maxAmountPerDay = 'Max amount per day must be greater than 0';
+    }
+
+    if (formData.bankType === 'QR') {
+      if (!formData.accountQRImage.trim()) errors.accountQRImage = 'QR Image is required for QR type';
+    }
 
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
@@ -159,7 +181,11 @@ export default function BankListManagement() {
         accountQRImage: formData.accountQRImage || undefined,
         description: formData.description,
         maxCountPerDay: formData.maxCountPerDay,
-        maxAmountPerDay: formData.maxAmountPerDay
+        maxAmountPerDay: formData.maxAmountPerDay,
+        bankInSlip: formData.bankInSlip,
+        bankInTime: formData.bankInTime,
+        status: formData.status,
+        createdDate: new Date().toISOString().split('T')[0]
       };
       setBanks([...banks, newBank]);
     } else if (modalMode === 'edit' && selectedBank) {
@@ -174,7 +200,10 @@ export default function BankListManagement() {
               accountQRImage: formData.accountQRImage || undefined,
               description: formData.description,
               maxCountPerDay: formData.maxCountPerDay,
-              maxAmountPerDay: formData.maxAmountPerDay
+              maxAmountPerDay: formData.maxAmountPerDay,
+              bankInSlip: formData.bankInSlip,
+              bankInTime: formData.bankInTime,
+              status: formData.status
             }
           : b
       ));
@@ -202,6 +231,25 @@ export default function BankListManagement() {
   const formatCurrency = (amount: number) => {
     return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
+
+  const getBadgeClassName = (type: string, value: string) => {
+    if (type === 'slip') {
+      if (value === 'REQUIRED') return 'bg-green-100 text-green-700 font-semibold';
+      if (value === 'OPTIONAL') return 'bg-yellow-100 text-yellow-700 font-semibold';
+      if (value === 'DISABLE') return 'bg-red-100 text-red-700 font-semibold';
+    }
+    if (type === 'time') {
+      if (value === 'REQUIRED') return 'bg-green-100 text-green-700 font-semibold';
+      if (value === 'DISABLE') return 'bg-red-100 text-red-700 font-semibold';
+    }
+    if (type === 'status') {
+      if (value === 'Active') return 'bg-green-100 text-green-700 font-semibold';
+      if (value === 'Inactive') return 'bg-red-100 text-red-700 font-semibold';
+    }
+    return '';
+  };
+
+  const isQRType = formData.bankType === 'QR';
 
   return (
     <div className="p-6">
@@ -278,7 +326,8 @@ export default function BankListManagement() {
               className="w-full px-3 py-2 border rounded-md"
             >
               <option value="All">All</option>
-              <option value="Bank Transfer">Bank Transfer</option>
+              <option value="Online Transfer">Online Transfer</option>
+              <option value="QR">QR</option>
             </select>
           </div>
         </div>
@@ -311,6 +360,10 @@ export default function BankListManagement() {
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Description</th>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-gray-900 uppercase">Max Count/Day</th>
                 <th className="px-4 py-3 text-right text-xs font-semibold text-gray-900 uppercase">Max Amount/Day</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-900 uppercase">Bank In Slip</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-900 uppercase">Bank In Time</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-900 uppercase">Status</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-900 uppercase">Created Date</th>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-gray-900 uppercase">Actions</th>
               </tr>
             </thead>
@@ -332,6 +385,22 @@ export default function BankListManagement() {
                   <td className="px-4 py-3 text-right text-gray-900 font-semibold">
                     {formatCurrency(bank.maxAmountPerDay)}
                   </td>
+                  <td className="px-4 py-3 text-center">
+                    <Badge className={getBadgeClassName('slip', bank.bankInSlip)}>
+                      {bank.bankInSlip}
+                    </Badge>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <Badge className={getBadgeClassName('time', bank.bankInTime)}>
+                      {bank.bankInTime}
+                    </Badge>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <Badge className={getBadgeClassName('status', bank.status)}>
+                      {bank.status}
+                    </Badge>
+                  </td>
+                  <td className="px-4 py-3 text-center text-gray-900">{bank.createdDate}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-center gap-2">
                       <Button
@@ -358,7 +427,7 @@ export default function BankListManagement() {
               ))}
               {filteredBanks.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
+                  <td colSpan={12} className="px-4 py-8 text-center text-gray-500">
                     No banks found
                   </td>
                 </tr>
@@ -406,7 +475,8 @@ export default function BankListManagement() {
                     onChange={(e) => handleInputChange('bankType', e.target.value)}
                     className={`w-full h-9 px-3 rounded-md border ${validationErrors.bankType ? 'border-red-500' : 'border-gray-300'} bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
                   >
-                    <option value="Bank Transfer">Bank Transfer</option>
+                    <option value="Online Transfer">Online Transfer</option>
+                    <option value="QR">QR</option>
                   </select>
                   {validationErrors.bankType && (
                     <p className="text-red-600 text-sm mt-1">{validationErrors.bankType}</p>
@@ -415,7 +485,7 @@ export default function BankListManagement() {
 
                 <div className="w-full">
                   <label className="block text-sm font-semibold mb-2 text-gray-700">
-                    Account Name <span className="text-red-600">*</span>
+                    Account Name {!isQRType && <span className="text-red-600">*</span>}
                   </label>
                   <Input
                     value={formData.accountName}
@@ -430,7 +500,7 @@ export default function BankListManagement() {
 
                 <div className="w-full">
                   <label className="block text-sm font-semibold mb-2 text-gray-700">
-                    Account Number <span className="text-red-600">*</span>
+                    Account Number {!isQRType && <span className="text-red-600">*</span>}
                   </label>
                   <Input
                     value={formData.accountNo}
@@ -464,13 +534,13 @@ export default function BankListManagement() {
               <div className="space-y-4">
                 <div className="w-full">
                   <label className="block text-sm font-semibold mb-2 text-gray-700">
-                    Max Count Per Day <span className="text-red-600">*</span>
+                    Max Count Per Day {!isQRType && <span className="text-red-600">*</span>}
                   </label>
                   <Input
                     type="number"
                     value={formData.maxCountPerDay}
                     onChange={(e) => handleInputChange('maxCountPerDay', parseInt(e.target.value) || 0)}
-                    min={1}
+                    min={0}
                     placeholder="Maximum transactions per day"
                     className={`w-full h-9 px-3 rounded-md border ${validationErrors.maxCountPerDay ? 'border-red-500' : 'border-gray-300'} bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
                   />
@@ -481,18 +551,78 @@ export default function BankListManagement() {
 
                 <div className="w-full">
                   <label className="block text-sm font-semibold mb-2 text-gray-700">
-                    Max Amount Per Day <span className="text-red-600">*</span>
+                    Max Amount Per Day {!isQRType && <span className="text-red-600">*</span>}
                   </label>
                   <Input
                     type="number"
                     value={formData.maxAmountPerDay}
                     onChange={(e) => handleInputChange('maxAmountPerDay', parseInt(e.target.value) || 0)}
-                    min={1}
+                    min={0}
                     placeholder="Maximum amount per day"
                     className={`w-full h-9 px-3 rounded-md border ${validationErrors.maxAmountPerDay ? 'border-red-500' : 'border-gray-300'} bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
                   />
                   {validationErrors.maxAmountPerDay && (
                     <p className="text-red-600 text-sm mt-1">{validationErrors.maxAmountPerDay}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Deposit Settings Section */}
+            <div>
+              <h3 className="text-lg font-bold mb-4 text-gray-800 pb-2 border-b">Deposit Settings</h3>
+              <div className="space-y-4">
+                <div className="w-full">
+                  <label className="block text-sm font-semibold mb-2 text-gray-700">
+                    Bank In Slip (Upload Receipt) <span className="text-red-600">*</span>
+                  </label>
+                  <select
+                    value={formData.bankInSlip}
+                    onChange={(e) => handleInputChange('bankInSlip', e.target.value)}
+                    className={`w-full h-9 px-3 rounded-md border ${validationErrors.bankInSlip ? 'border-red-500' : 'border-gray-300'} bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  >
+                    <option value="REQUIRED">REQUIRED</option>
+                    <option value="OPTIONAL">OPTIONAL</option>
+                    <option value="DISABLE">DISABLE</option>
+                  </select>
+                  {validationErrors.bankInSlip && (
+                    <p className="text-red-600 text-sm mt-1">{validationErrors.bankInSlip}</p>
+                  )}
+                  <p className="text-xs text-gray-500 mt-1">Controls whether deposit receipt upload is required, optional, or disabled</p>
+                </div>
+
+                <div className="w-full">
+                  <label className="block text-sm font-semibold mb-2 text-gray-700">
+                    Bank In Time (Deposit Time) <span className="text-red-600">*</span>
+                  </label>
+                  <select
+                    value={formData.bankInTime}
+                    onChange={(e) => handleInputChange('bankInTime', e.target.value)}
+                    className={`w-full h-9 px-3 rounded-md border ${validationErrors.bankInTime ? 'border-red-500' : 'border-gray-300'} bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  >
+                    <option value="REQUIRED">REQUIRED</option>
+                    <option value="DISABLE">DISABLE</option>
+                  </select>
+                  {validationErrors.bankInTime && (
+                    <p className="text-red-600 text-sm mt-1">{validationErrors.bankInTime}</p>
+                  )}
+                  <p className="text-xs text-gray-500 mt-1">Controls whether deposit time tracking is required or disabled</p>
+                </div>
+
+                <div className="w-full">
+                  <label className="block text-sm font-semibold mb-2 text-gray-700">
+                    Status <span className="text-red-600">*</span>
+                  </label>
+                  <select
+                    value={formData.status}
+                    onChange={(e) => handleInputChange('status', e.target.value)}
+                    className={`w-full h-9 px-3 rounded-md border ${validationErrors.status ? 'border-red-500' : 'border-gray-300'} bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  >
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                  </select>
+                  {validationErrors.status && (
+                    <p className="text-red-600 text-sm mt-1">{validationErrors.status}</p>
                   )}
                 </div>
               </div>
@@ -504,18 +634,30 @@ export default function BankListManagement() {
               <div className="space-y-4">
                 <div className="w-full">
                   <label className="block text-sm font-semibold mb-2 text-gray-700">
-                    Account QR Image (Optional)
+                    Account QR Image {isQRType && <span className="text-red-600">*</span>} ({isQRType ? 'Required' : 'Optional'})
                   </label>
                   <input
                     ref={fileInputRef}
                     type="file"
                     accept="image/*"
                     onChange={handleFileChange}
-                    className="w-full h-9"
+                    className={`w-full h-9 ${validationErrors.accountQRImage ? 'border-red-500' : 'border-gray-300'}`}
                   />
+                  {validationErrors.accountQRImage && (
+                    <p className="text-red-600 text-sm mt-1">{validationErrors.accountQRImage}</p>
+                  )}
                   {qrImagePreview && (
                     <div className="mt-2">
                       <img src={qrImagePreview} alt="Preview" className="w-[100px] h-[100px] object-cover rounded border" />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleRemoveImage}
+                        className="mt-2 text-red-600 hover:text-red-800"
+                      >
+                        Remove Image
+                      </Button>
                     </div>
                   )}
                 </div>

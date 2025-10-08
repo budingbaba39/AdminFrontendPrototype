@@ -5,7 +5,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Badge } from './ui/badge';
 import { Trash2, Edit, Eye, List, TrendingUp, RefreshCw, Percent, DollarSign, X } from 'lucide-react';
 import { Level, initialLevels, levelColors, ProviderBetLimit, ProviderRebateAssignment, ProviderCashbackAssignment } from './LevelData';
-import { Gateway, gatewaysData } from './GatewayData';
 import { Bank, banksData } from './BankData';
 import { Provider, providersData, categoryLabels } from './ProviderData';
 import { rebateSetupsData } from './RebateSetupData';
@@ -22,7 +21,7 @@ export default function LevelManagement() {
   const [activeTab, setActiveTab] = useState<'info' | 'languages'>('info');
   const [showBankListModal, setShowBankListModal] = useState(false);
   const [selectedLevelForBanks, setSelectedLevelForBanks] = useState<number | null>(null);
-  const [selectedGateways, setSelectedGateways] = useState<number[]>([]);
+  const [selectedBanks, setSelectedBanks] = useState<number[]>([]);
   const [showBetLimitModal, setShowBetLimitModal] = useState(false);
   const [selectedLevelForProviders, setSelectedLevelForProviders] = useState<number | null>(null);
   const [providerBetLimits, setProviderBetLimits] = useState<ProviderBetLimit[]>([]);
@@ -203,7 +202,7 @@ export default function LevelManagement() {
 
   const handleBankList = (levelId: number) => {
     setSelectedLevelForBanks(levelId);
-    setSelectedGateways([]); // Reset selection or load saved gateways for this level
+    setSelectedBanks([]); // Reset selection or load saved banks for this level
     setShowBankListModal(true);
   };
 
@@ -395,30 +394,26 @@ export default function LevelManagement() {
     setCashbackCategoryToApply('');
   };
 
-  const handleToggleGateway = (gatewayId: number) => {
-    setSelectedGateways(prev =>
-      prev.includes(gatewayId)
-        ? prev.filter(id => id !== gatewayId)
-        : [...prev, gatewayId]
+  const handleToggleBank = (bankId: number) => {
+    setSelectedBanks(prev =>
+      prev.includes(bankId)
+        ? prev.filter(id => id !== bankId)
+        : [...prev, bankId]
     );
   };
 
-  const handleToggleAllGateways = () => {
-    if (selectedGateways.length === gatewaysData.length) {
-      setSelectedGateways([]);
+  const handleToggleAllBanks = () => {
+    if (selectedBanks.length === banksData.length) {
+      setSelectedBanks([]);
     } else {
-      setSelectedGateways(gatewaysData.map(gateway => gateway.id));
+      setSelectedBanks(banksData.map(bank => bank.id));
     }
   };
 
   const handleSaveBankList = () => {
-    console.log(`Saved gateways for level ${selectedLevelForBanks}:`, selectedGateways);
-    // Here you would save the gateway selections for this level
+    console.log(`Saved banks for level ${selectedLevelForBanks}:`, selectedBanks);
+    // Here you would save the bank selections for this level
     setShowBankListModal(false);
-  };
-
-  const getBankInfo = (bankId: number): Bank | undefined => {
-    return banksData.find(bank => bank.id === bankId);
   };
 
   const handleViewBetLimit = (levelId: number) => {
@@ -1306,12 +1301,12 @@ export default function LevelManagement() {
         </DialogContent>
       </Dialog>
 
-      {/* Gateway List Modal */}
+      {/* Bank List Modal */}
       <Dialog open={showBankListModal} onOpenChange={setShowBankListModal}>
         <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle className="text-[#3949ab] font-semibold text-lg">
-              Gateway List - {levels.find(l => l.id === selectedLevelForBanks)?.levelName}
+              Bank List - {levels.find(l => l.id === selectedLevelForBanks)?.levelName}
             </DialogTitle>
           </DialogHeader>
 
@@ -1323,12 +1318,12 @@ export default function LevelManagement() {
                     <th className="px-4 py-3 text-center text-xs font-semibold text-gray-900 uppercase w-12">
                       <input
                         type="checkbox"
-                        checked={selectedGateways.length === gatewaysData.length}
-                        onChange={handleToggleAllGateways}
+                        checked={selectedBanks.length === banksData.length}
+                        onChange={handleToggleAllBanks}
                         className="w-4 h-4 text-[#3949ab] border-gray-300 rounded focus:ring-[#3949ab]"
                       />
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Gateway ID</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Bank Type</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Bank Name</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Account Name</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Account No</th>
@@ -1336,52 +1331,51 @@ export default function LevelManagement() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 text-sm">
-                  {gatewaysData.map((gateway) => {
-                    const bank = getBankInfo(gateway.bankId);
-                    return (
-                      <tr
-                        key={gateway.id}
-                        className={`hover:bg-gray-50 cursor-pointer ${
-                          selectedGateways.includes(gateway.id) ? 'bg-blue-50' : ''
-                        }`}
-                        onClick={() => handleToggleGateway(gateway.id)}
-                      >
-                        <td className="px-4 py-3 text-center">
-                          <input
-                            type="checkbox"
-                            checked={selectedGateways.includes(gateway.id)}
-                            onChange={() => handleToggleGateway(gateway.id)}
-                            onClick={(e) => e.stopPropagation()}
-                            className="w-4 h-4 text-[#3949ab] border-gray-300 rounded focus:ring-[#3949ab]"
-                          />
-                        </td>
-                        <td className="px-4 py-3 font-semibold text-gray-900">
-                          {gateway.gatewayId}
-                        </td>
-                        <td className="px-4 py-3 font-semibold text-gray-900">
-                          {bank?.bankName || 'N/A'}
-                        </td>
-                        <td className="px-4 py-3 text-gray-900">
-                          {bank?.accountName || 'N/A'}
-                        </td>
-                        <td className="px-4 py-3 text-gray-900 font-mono">
-                          {bank?.accountNo || 'N/A'}
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <Badge className={gateway.status === 'Active' ? 'bg-green-100 text-green-700 font-semibold' : 'bg-red-100 text-red-700 font-semibold'}>
-                            {gateway.status.toUpperCase()}
-                          </Badge>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {banksData.map((bank) => (
+                    <tr
+                      key={bank.id}
+                      className={`hover:bg-gray-50 cursor-pointer ${
+                        selectedBanks.includes(bank.id) ? 'bg-blue-50' : ''
+                      }`}
+                      onClick={() => handleToggleBank(bank.id)}
+                    >
+                      <td className="px-4 py-3 text-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedBanks.includes(bank.id)}
+                          onChange={() => handleToggleBank(bank.id)}
+                          onClick={(e) => e.stopPropagation()}
+                          className="w-4 h-4 text-[#3949ab] border-gray-300 rounded focus:ring-[#3949ab]"
+                        />
+                      </td>
+                      <td className="px-4 py-3 font-semibold text-gray-900">
+                        <Badge className="bg-blue-100 text-blue-800 font-semibold">
+                          {bank.bankType}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3 font-semibold text-gray-900">
+                        {bank.bankName}
+                      </td>
+                      <td className="px-4 py-3 text-gray-900">
+                        {bank.accountName}
+                      </td>
+                      <td className="px-4 py-3 text-gray-900 font-mono">
+                        {bank.accountNo}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <Badge className={bank.status === 'Active' ? 'bg-green-100 text-green-700 font-semibold' : 'bg-red-100 text-red-700 font-semibold'}>
+                          {bank.status.toUpperCase()}
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
 
             <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded">
               <p className="text-sm text-gray-700">
-                <span className="font-semibold">{selectedGateways.length}</span> gateway(s) selected out of <span className="font-semibold">{gatewaysData.length}</span>
+                <span className="font-semibold">{selectedBanks.length}</span> bank(s) selected out of <span className="font-semibold">{banksData.length}</span>
               </p>
             </div>
           </div>

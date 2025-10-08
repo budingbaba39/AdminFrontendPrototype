@@ -7,7 +7,7 @@ import { X, RefreshCw } from 'lucide-react';
 import { Transaction, allTransactions } from './transactionData';
 import { User, sampleUsers } from './UserData';
 import { initialPromotions } from './PromotionListData';
-import { providersData } from './ProviderData';
+import { providersData, categoryLabels } from './ProviderData';
 import ProfileContent from './ProfileContent';
 
 export default function PromotionOngoingManagement() {
@@ -108,10 +108,14 @@ export default function PromotionOngoingManagement() {
   };
 
   const handleSelectAllProviders = () => {
-    if (searchFilters.provider.length === providersData.length) {
-      setSearchFilters(prev => ({ ...prev, provider: [] }));
+    const filtered = getFilteredProviders();
+    const filteredIds = filtered.map(p => p.id);
+    const allFilteredSelected = filteredIds.every(id => searchFilters.provider.includes(id));
+
+    if (allFilteredSelected) {
+      setSearchFilters(prev => ({ ...prev, provider: prev.provider.filter(id => !filteredIds.includes(id)) }));
     } else {
-      setSearchFilters(prev => ({ ...prev, provider: providersData.map(p => p.id) }));
+      setSearchFilters(prev => ({ ...prev, provider: [...new Set([...prev.provider, ...filteredIds])] }));
     }
   };
 
@@ -519,53 +523,74 @@ export default function PromotionOngoingManagement() {
             </Button>
           </div>
 
-          {/* Provider Grid */}
-          <div className="flex-1 overflow-y-auto py-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
-              {getFilteredProviders().map(provider => (
-                <label
-                  key={provider.id}
-                  className={`flex flex-col items-center p-3 border-2 rounded-lg cursor-pointer transition-all ${
-                    searchFilters.provider.includes(provider.id)
-                      ? 'border-[#3949ab] bg-[#3949ab]/10'
-                      : 'border-gray-200 hover:border-[#3949ab]/50'
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={searchFilters.provider.includes(provider.id)}
-                    onChange={() => handleProviderToggle(provider.id)}
-                    className="sr-only"
-                  />
-                  <div className="text-2xl mb-1">{provider.icon}</div>
-                  <div className="text-xs text-center font-medium text-gray-700">{provider.name}</div>
-                </label>
-              ))}
+          <div className="flex-1 overflow-y-auto">
+            <div className="bg-white rounded-lg border overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b">
+                  <tr>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-900 uppercase w-12">
+                      <input
+                        type="checkbox"
+                        checked={
+                          getFilteredProviders().length > 0 &&
+                          getFilteredProviders().every(p => searchFilters.provider.includes(p.id))
+                        }
+                        onChange={handleSelectAllProviders}
+                        className="w-4 h-4 text-[#3949ab] border-gray-300 rounded focus:ring-[#3949ab]"
+                      />
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Category</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Provider Name</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 text-sm">
+                  {getFilteredProviders().map((provider) => (
+                    <tr
+                      key={provider.id}
+                      className={`hover:bg-gray-50 cursor-pointer ${
+                        searchFilters.provider.includes(provider.id) ? 'bg-blue-50' : ''
+                      }`}
+                      onClick={() => handleProviderToggle(provider.id)}
+                    >
+                      <td className="px-4 py-3 text-center">
+                        <input
+                          type="checkbox"
+                          checked={searchFilters.provider.includes(provider.id)}
+                          onChange={() => handleProviderToggle(provider.id)}
+                          onClick={(e) => e.stopPropagation()}
+                          className="w-4 h-4 text-[#3949ab] border-gray-300 rounded focus:ring-[#3949ab]"
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge className="bg-[#3949ab] text-white font-semibold">
+                          {categoryLabels[provider.category]}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3 font-semibold text-gray-900">
+                        {provider.name}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
 
-          {/* Footer Buttons */}
-          <div className="flex justify-between items-center pt-4 border-t">
-            <div className="text-sm text-gray-600">
-              {searchFilters.provider.length} provider{searchFilters.provider.length !== 1 ? 's' : ''} selected
+          <div className="flex justify-between items-center pt-3 border-t mt-3">
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded flex-1 mr-3">
+              <p className="text-sm text-gray-700">
+                <span className="font-semibold">{searchFilters.provider.length}</span> provider(s) selected out of <span className="font-semibold">{providersData.length}</span> total
+                {providerCategoryFilter !== 'all' && (
+                  <span> ({providersData.filter(p => p.category === providerCategoryFilter).length} in current filter)</span>
+                )}
+              </p>
             </div>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                onClick={handleSelectAllProviders}
-                variant="outline"
-                className="text-xs"
-              >
-                {searchFilters.provider.length === providersData.length ? 'Clear All' : 'Select All'}
-              </Button>
-              <Button
-                type="button"
-                onClick={() => setShowProviderModal(false)}
-                className="bg-[#3949ab] hover:bg-[#2c3785] text-white text-xs"
-              >
-                Done
-              </Button>
-            </div>
+            <Button
+              onClick={() => setShowProviderModal(false)}
+              className="bg-[#4caf50] hover:bg-[#45a049] text-white"
+            >
+              APPLY
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

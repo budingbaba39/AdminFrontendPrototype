@@ -868,7 +868,8 @@ export default function PromotionListManagement() {
                       </div>
 
                       <div className="w-full">
-                        <label className="block text-sm font-semibold mb-2 text-gray-700">Max Withdraw *</label>
+                        <label className="block text-sm font-semibold mb-2 text-gray-700">Max withdraw (less than 1 is percent, otherwise is fix value)
+ *</label>
                         <Input
                           type="number"
                           min="0"

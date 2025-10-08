@@ -484,7 +484,7 @@ function BankMenuItem({ currentPage, onNavigate }: {
             <span className="text-left">7.1 BANK LIST</span>
           </button>
 
-          <button
+          {/* <button
             onClick={() => onNavigate('bank-setup')}
             className={`w-full flex items-center p-2 rounded-lg text-sm font-medium tracking-[-0.14px] transition-colors ${
               currentPage === 'bank-setup'
@@ -493,7 +493,7 @@ function BankMenuItem({ currentPage, onNavigate }: {
             }`}
           >
             <span className="text-left">7.2 BANK SETUP</span>
-          </button>
+          </button> */}
 
           <button
             onClick={() => onNavigate('bank-report')}
