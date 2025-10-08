@@ -641,12 +641,91 @@ export default function PromotionListManagement() {
                     </div>
                   </div>
 
-                  {/* Bonus Info Section */}
+                  <div>
+                    <div className="space-y-4">
+                      {/* Valid From */}
+                      <div className="w-full">
+                        <label className="block text-sm font-semibold mb-2 text-gray-700">Valid From *</label>
+                        <Input
+                          type="date"
+                          value={formData.validFrom}
+                          onChange={(e) => handleInputChange('validFrom', e.target.value)}
+                          disabled={isReadOnly}
+                          className="w-full h-10"
+                        />
+                        {validationErrors.validFrom && (
+                          <p className="text-red-600 text-sm mt-1">{validationErrors.validFrom}</p>
+                        )}
+                      </div>
+
+                      {/* Valid To */}
+                      <div className="w-full">
+                        <label className="block text-sm font-semibold mb-2 text-gray-700">Valid To *</label>
+                        <Input
+                          type="date"
+                          value={formData.validTo}
+                          onChange={(e) => handleInputChange('validTo', e.target.value)}
+                          disabled={isReadOnly}
+                          className="w-full h-10"
+                        />
+                        {validationErrors.validTo && (
+                          <p className="text-red-600 text-sm mt-1">{validationErrors.validTo}</p>
+                        )}
+                      </div>
+
+                      {/* Status */}
+                      <div className="w-full">
+                        <label className="block text-sm font-semibold mb-2 text-gray-700">Status *</label>
+                        <select
+                          value={formData.status}
+                          onChange={(e) => handleInputChange('status', e.target.value as 'Active' | 'Inactive')}
+                          className="w-full h-10 px-3 py-2 border rounded-md"
+                          disabled={isReadOnly}
+                        >
+                          <option value="Active">Active</option>
+                          <option value="Inactive">Inactive</option>
+                        </select>
+                      </div>
+
+                      {/* Time From */}
+                      <div className="w-full">
+                        <label className="block text-sm font-semibold mb-2 text-gray-700">Time From *</label>
+                        <Input
+                          type="time"
+                          value={formData.timeFrom}
+                          onChange={(e) => handleInputChange('timeFrom', e.target.value)}
+                          disabled={isReadOnly}
+                          className="w-full h-10"
+                        />
+                      </div>
+
+                      {/* Time To */}
+                      <div className="w-full">
+                        <label className="block text-sm font-semibold mb-2 text-gray-700">Time To *</label>
+                        <Input
+                          type="time"
+                          value={formData.timeTo}
+                          onChange={(e) => handleInputChange('timeTo', e.target.value)}
+                          disabled={isReadOnly}
+                          className="w-full h-10"
+                        />
+                        {validationErrors.timeTo && (
+                          <p className="text-red-600 text-sm mt-1">{validationErrors.timeTo}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'details' && (
+                <div className="space-y-6 py-2">
+                  {/* Bonus Info Section - moved here */}
                   <div>
                     <h3 className="text-lg font-bold mb-4 text-gray-800 pb-2 border-b">Bonus Info</h3>
                     <div className="space-y-4">
                       <div className="w-full">
-                        <label className="block text-sm font-semibold mb-2 text-gray-700">Unlock Rate (Win %) *</label>
+                        <label className="block text-sm font-semibold mb-2 text-gray-700">Unlock Rate (%) *</label>
                         <Input
                           type="number"
                           min="0"
@@ -663,7 +742,9 @@ export default function PromotionListManagement() {
                       </div>
 
                       <div className="w-full">
-                        <label className="block text-sm font-semibold mb-2 text-gray-700">Unlock Amount (Lose) *</label>
+                        <label className="block text-sm font-semibold mb-2 text-gray-700">
+                          Unlock Amount {'<='} *
+                        </label>
                         <Input
                           type="number"
                           min="0"
@@ -800,81 +881,10 @@ export default function PromotionListManagement() {
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
 
-              {activeTab === 'details' && (
-                <div className="space-y-6 py-2">
                   {/* Details Section */}
                   <div>
-                    <h3 className="text-lg font-bold mb-4 text-gray-800 pb-2 border-b">Details</h3>
                     <div className="space-y-4">
-                      <div className="w-full">
-                        <label className="block text-sm font-semibold mb-2 text-gray-700">Valid From *</label>
-                        <Input
-                          type="date"
-                          value={formData.validFrom}
-                          onChange={(e) => handleInputChange('validFrom', e.target.value)}
-                          disabled={isReadOnly}
-                          className="w-full h-10"
-                        />
-                        {validationErrors.validFrom && (
-                          <p className="text-red-600 text-sm mt-1">{validationErrors.validFrom}</p>
-                        )}
-                      </div>
-
-                      <div className="w-full">
-                        <label className="block text-sm font-semibold mb-2 text-gray-700">Valid To *</label>
-                        <Input
-                          type="date"
-                          value={formData.validTo}
-                          onChange={(e) => handleInputChange('validTo', e.target.value)}
-                          disabled={isReadOnly}
-                          className="w-full h-10"
-                        />
-                        {validationErrors.validTo && (
-                          <p className="text-red-600 text-sm mt-1">{validationErrors.validTo}</p>
-                        )}
-                      </div>
-
-                      <div className="w-full">
-                        <label className="block text-sm font-semibold mb-2 text-gray-700">Status *</label>
-                        <select
-                          value={formData.status}
-                          onChange={(e) => handleInputChange('status', e.target.value as 'Active' | 'Inactive')}
-                          className="w-full h-10 px-3 py-2 border rounded-md"
-                          disabled={isReadOnly}
-                        >
-                          <option value="Active">Active</option>
-                          <option value="Inactive">Inactive</option>
-                        </select>
-                      </div>
-
-                      <div className="w-full">
-                        <label className="block text-sm font-semibold mb-2 text-gray-700">Time From *</label>
-                        <Input
-                          type="time"
-                          value={formData.timeFrom}
-                          onChange={(e) => handleInputChange('timeFrom', e.target.value)}
-                          disabled={isReadOnly}
-                          className="w-full h-10"
-                        />
-                      </div>
-
-                      <div className="w-full">
-                        <label className="block text-sm font-semibold mb-2 text-gray-700">Time To *</label>
-                        <Input
-                          type="time"
-                          value={formData.timeTo}
-                          onChange={(e) => handleInputChange('timeTo', e.target.value)}
-                          disabled={isReadOnly}
-                          className="w-full h-10"
-                        />
-                        {validationErrors.timeTo && (
-                          <p className="text-red-600 text-sm mt-1">{validationErrors.timeTo}</p>
-                        )}
-                      </div>
-
                       <div className="w-full">
                         <label className="block text-sm font-semibold mb-2 text-gray-700">Target Type *</label>
                         <select
