@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Edit, Trash2, X, RefreshCw } from 'lucide-react';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 
 type ModalMode = 'create' | 'edit' | 'view' | null;
 type ActiveTab = 'info' | 'details' | 'languages' | 'eligibility';
@@ -1021,28 +1023,26 @@ export default function PromotionListManagement() {
                       <div className="space-y-4">
                         <div className="w-full">
                           <label className="block text-sm font-semibold mb-2 text-gray-700">Title (English) *</label>
-                          <Input
+                          <ReactQuill
                             value={languageTranslations.english.title}
-                            onChange={(e) => setLanguageTranslations(prev => ({
+                            onChange={(value) => setLanguageTranslations(prev => ({
                               ...prev,
-                              english: { ...prev.english, title: e.target.value }
+                              english: { ...prev.english, title: value }
                             }))}
-                            className="w-full h-10"
-                            placeholder="e.g., Welcome Bonus"
-                            disabled={isReadOnly}
+                            readOnly={isReadOnly}
+                            className="bg-white"
                           />
                         </div>
                         <div className="w-full">
                           <label className="block text-sm font-semibold mb-2 text-gray-700">Name (English) *</label>
-                          <Input
+                          <ReactQuill
                             value={languageTranslations.english.name}
-                            onChange={(e) => setLanguageTranslations(prev => ({
+                            onChange={(value) => setLanguageTranslations(prev => ({
                               ...prev,
-                              english: { ...prev.english, name: e.target.value }
+                              english: { ...prev.english, name: value }
                             }))}
-                            className="w-full h-10"
-                            placeholder="e.g., New Member Welcome"
-                            disabled={isReadOnly}
+                            readOnly={isReadOnly}
+                            className="bg-white"
                           />
                         </div>
                       </div>
@@ -1053,28 +1053,26 @@ export default function PromotionListManagement() {
                       <div className="space-y-4">
                         <div className="w-full">
                           <label className="block text-sm font-semibold mb-2 text-gray-700">Title (Chinese) *</label>
-                          <Input
+                          <ReactQuill
                             value={languageTranslations.chinese.title}
-                            onChange={(e) => setLanguageTranslations(prev => ({
+                            onChange={(value) => setLanguageTranslations(prev => ({
                               ...prev,
-                              chinese: { ...prev.chinese, title: e.target.value }
+                              chinese: { ...prev.chinese, title: value }
                             }))}
-                            className="w-full h-10"
-                            placeholder="e.g., 欢迎奖金"
-                            disabled={isReadOnly}
+                            readOnly={isReadOnly}
+                            className="bg-white"
                           />
                         </div>
                         <div className="w-full">
                           <label className="block text-sm font-semibold mb-2 text-gray-700">Name (Chinese) *</label>
-                          <Input
+                          <ReactQuill
                             value={languageTranslations.chinese.name}
-                            onChange={(e) => setLanguageTranslations(prev => ({
+                            onChange={(value) => setLanguageTranslations(prev => ({
                               ...prev,
-                              chinese: { ...prev.chinese, name: e.target.value }
+                              chinese: { ...prev.chinese, name: value }
                             }))}
-                            className="w-full h-10"
-                            placeholder="e.g., 新会员欢迎"
-                            disabled={isReadOnly}
+                            readOnly={isReadOnly}
+                            className="bg-white"
                           />
                         </div>
                       </div>
@@ -1085,28 +1083,26 @@ export default function PromotionListManagement() {
                       <div className="space-y-4">
                         <div className="w-full">
                           <label className="block text-sm font-semibold mb-2 text-gray-700">Title (Malay) *</label>
-                          <Input
+                          <ReactQuill
                             value={languageTranslations.malay.title}
-                            onChange={(e) => setLanguageTranslations(prev => ({
+                            onChange={(value) => setLanguageTranslations(prev => ({
                               ...prev,
-                              malay: { ...prev.malay, title: e.target.value }
+                              malay: { ...prev.malay, title: value }
                             }))}
-                            className="w-full h-10"
-                            placeholder="e.g., Bonus Selamat Datang"
-                            disabled={isReadOnly}
+                            readOnly={isReadOnly}
+                            className="bg-white"
                           />
                         </div>
                         <div className="w-full">
                           <label className="block text-sm font-semibold mb-2 text-gray-700">Name (Malay) *</label>
-                          <Input
+                          <ReactQuill
                             value={languageTranslations.malay.name}
-                            onChange={(e) => setLanguageTranslations(prev => ({
+                            onChange={(value) => setLanguageTranslations(prev => ({
                               ...prev,
-                              malay: { ...prev.malay, name: e.target.value }
+                              malay: { ...prev.malay, name: value }
                             }))}
-                            className="w-full h-10"
-                            placeholder="e.g., Ahli Baru Selamat Datang"
-                            disabled={isReadOnly}
+                            readOnly={isReadOnly}
+                            className="bg-white"
                           />
                         </div>
                       </div>
