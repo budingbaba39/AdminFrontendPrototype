@@ -23,8 +23,6 @@ export default function BankListManagement() {
     accountNo: '',
     accountQRImage: '',
     description: '',
-    maxCountPerDay: 50,
-    maxAmountPerDay: 100000,
     bankInSlip: 'REQUIRED' as 'REQUIRED' | 'OPTIONAL' | 'DISABLE',
     bankInTime: 'REQUIRED' as 'REQUIRED' | 'DISABLE',
     status: 'Active' as 'Active' | 'Inactive'
@@ -65,8 +63,6 @@ export default function BankListManagement() {
         accountNo: '',
         accountQRImage: '',
         description: '',
-        maxCountPerDay: 50,
-        maxAmountPerDay: 100000,
         bankInSlip: 'REQUIRED',
         bankInTime: 'REQUIRED',
         status: 'Active'
@@ -81,8 +77,6 @@ export default function BankListManagement() {
         accountNo: bank.accountNo || '',
         accountQRImage: bank.accountQRImage || '',
         description: bank.description || '',
-        maxCountPerDay: bank.maxCountPerDay,
-        maxAmountPerDay: bank.maxAmountPerDay,
         bankInSlip: bank.bankInSlip,
         bankInTime: bank.bankInTime,
         status: bank.status
@@ -102,8 +96,6 @@ export default function BankListManagement() {
       accountNo: '',
       accountQRImage: '',
       description: '',
-      maxCountPerDay: 50,
-      maxAmountPerDay: 100000,
       bankInSlip: 'REQUIRED',
       bankInTime: 'REQUIRED',
       status: 'Active'
@@ -124,8 +116,7 @@ export default function BankListManagement() {
     if (formData.bankType === 'Online Transfer') {
       if (!formData.accountName.trim()) errors.accountName = 'Account name is required';
       if (!formData.accountNo.trim()) errors.accountNo = 'Account number is required';
-      if (formData.maxCountPerDay <= 0) errors.maxCountPerDay = 'Max count per day must be greater than 0';
-      if (formData.maxAmountPerDay <= 0) errors.maxAmountPerDay = 'Max amount per day must be greater than 0';
+
     }
 
     if (formData.bankType === 'QR') {
@@ -180,8 +171,6 @@ export default function BankListManagement() {
         accountNo: formData.accountNo,
         accountQRImage: formData.accountQRImage || undefined,
         description: formData.description,
-        maxCountPerDay: formData.maxCountPerDay,
-        maxAmountPerDay: formData.maxAmountPerDay,
         bankInSlip: formData.bankInSlip,
         bankInTime: formData.bankInTime,
         status: formData.status,
@@ -199,8 +188,6 @@ export default function BankListManagement() {
               accountNo: formData.accountNo,
               accountQRImage: formData.accountQRImage || undefined,
               description: formData.description,
-              maxCountPerDay: formData.maxCountPerDay,
-              maxAmountPerDay: formData.maxAmountPerDay,
               bankInSlip: formData.bankInSlip,
               bankInTime: formData.bankInTime,
               status: formData.status
@@ -226,10 +213,6 @@ export default function BankListManagement() {
 
   const toggleAllBankNames = () => {
     setFilterBankName(prev => prev.length === uniqueBankNames.length ? [] : uniqueBankNames);
-  };
-
-  const formatCurrency = (amount: number) => {
-    return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
   const getBadgeClassName = (type: string, value: string) => {
@@ -358,8 +341,6 @@ export default function BankListManagement() {
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Account Name</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Account Number</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Description</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-900 uppercase">Max Count/Day</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-900 uppercase">Max Amount/Day</th>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-gray-900 uppercase">Bank In Slip</th>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-gray-900 uppercase">Bank In Time</th>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-gray-900 uppercase">Status</th>
@@ -380,10 +361,6 @@ export default function BankListManagement() {
                   <td className="px-4 py-3 text-gray-900 font-mono">{bank.accountNo}</td>
                   <td className="px-4 py-3 text-gray-600 max-w-xs truncate" title={bank.description}>
                     {bank.description}
-                  </td>
-                  <td className="px-4 py-3 text-center text-gray-900 font-medium">{bank.maxCountPerDay}</td>
-                  <td className="px-4 py-3 text-right text-gray-900 font-semibold">
-                    {formatCurrency(bank.maxAmountPerDay)}
                   </td>
                   <td className="px-4 py-3 text-center">
                     <Badge className={getBadgeClassName('slip', bank.bankInSlip)}>
@@ -427,7 +404,7 @@ export default function BankListManagement() {
               ))}
               {filteredBanks.length === 0 && (
                 <tr>
-                  <td colSpan={12} className="px-4 py-8 text-center text-gray-500">
+                  <td colSpan={10} className="px-4 py-8 text-center text-gray-500">
                     No banks found
                   </td>
                 </tr>
@@ -524,46 +501,6 @@ export default function BankListManagement() {
                     rows={3}
                     className="w-full px-3 py-2 rounded-md border border-gray-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
-                </div>
-              </div>
-            </div>
-
-            {/* Transaction Limits Section */}
-            <div>
-              <h3 className="text-lg font-bold mb-4 text-gray-800 pb-2 border-b">Transaction Limits</h3>
-              <div className="space-y-4">
-                <div className="w-full">
-                  <label className="block text-sm font-semibold mb-2 text-gray-700">
-                    Max Count Per Day {!isQRType && <span className="text-red-600">*</span>}
-                  </label>
-                  <Input
-                    type="number"
-                    value={formData.maxCountPerDay}
-                    onChange={(e) => handleInputChange('maxCountPerDay', parseInt(e.target.value) || 0)}
-                    min={0}
-                    placeholder="Maximum transactions per day"
-                    className={`w-full h-9 px-3 rounded-md border ${validationErrors.maxCountPerDay ? 'border-red-500' : 'border-gray-300'} bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                  />
-                  {validationErrors.maxCountPerDay && (
-                    <p className="text-red-600 text-sm mt-1">{validationErrors.maxCountPerDay}</p>
-                  )}
-                </div>
-
-                <div className="w-full">
-                  <label className="block text-sm font-semibold mb-2 text-gray-700">
-                    Max Amount Per Day {!isQRType && <span className="text-red-600">*</span>}
-                  </label>
-                  <Input
-                    type="number"
-                    value={formData.maxAmountPerDay}
-                    onChange={(e) => handleInputChange('maxAmountPerDay', parseInt(e.target.value) || 0)}
-                    min={0}
-                    placeholder="Maximum amount per day"
-                    className={`w-full h-9 px-3 rounded-md border ${validationErrors.maxAmountPerDay ? 'border-red-500' : 'border-gray-300'} bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                  />
-                  {validationErrors.maxAmountPerDay && (
-                    <p className="text-red-600 text-sm mt-1">{validationErrors.maxAmountPerDay}</p>
-                  )}
                 </div>
               </div>
             </div>

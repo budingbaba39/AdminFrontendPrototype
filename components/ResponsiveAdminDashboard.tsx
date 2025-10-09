@@ -1,3 +1,4 @@
+// Updated ResponsiveAdminDashboard.tsx (full code with changes)
 import { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
@@ -21,13 +22,16 @@ import PromotionListContent from './PromotionListContent';
 import PromotionOngoingContent from './PromotionOngoingContent';
 import RebateRecordContent from './RebateRecordContent';
 import RebateSetupContent from './RebateSetupContent';
+import RebateScheduleContent from './RebateScheduleContent';
+import RebateReleaseContent from './RebateReleaseContent';
 import CashBackSetupContent from './CashBackSetupContent';
 import CashBackRecordContent from './CashBackRecordContent';
 import CashBackScheduleContent from './CashBackScheduleContent';
+import CashBackReleaseContent from './CashBackReleaseContent';
 import CommissionRecordContent from './CommissionRecordContent';
 
 // Define page type to avoid repetition
-type PageType = 'dashboard' | 'deposit' | 'withdrawal' | 'adjustment' | 'transaction-record' | 'user-record' | 'level' | 'tag' | 'promotion' | 'promotion-record' | 'promotion-list' | 'promotion-ongoing' | 'rebate' | 'rebate-record' | 'rebate-setup' | 'cashback' | 'cashback-record' | 'cashback-setup' | 'cashback-schedule' | 'commission' | 'commission-record' | 'game-kiosk' | 'settings' | 'security' | 'bank-list' | 'bank-setup' | 'bank-report' | 'report' | 'admin-tool' | 'api' | 'change-log' | 'display' | 'domain' | 'page' | 'staff' | 'theme' | 'tools';
+type PageType = 'dashboard' | 'deposit' | 'withdrawal' | 'adjustment' | 'transaction-record' | 'user-record' | 'level' | 'tag' | 'promotion' | 'promotion-record' | 'promotion-list' | 'promotion-ongoing' | 'rebate' | 'rebate-record' | 'rebate-setup' | 'rebate-release' | 'rebate-schedule' | 'cashback' | 'cashback-record' | 'cashback-setup' | 'cashback-release' | 'cashback-schedule' | 'commission' | 'commission-record' | 'game-kiosk' | 'settings' | 'security' | 'bank-list' | 'bank-setup' | 'bank-report' | 'report' | 'admin-tool' | 'api' | 'change-log' | 'display' | 'domain' | 'page' | 'staff' | 'theme' | 'tools';
 
 interface ResponsiveAdminDashboardProps {
   currentPage: PageType;
@@ -281,7 +285,7 @@ function RebateMenuItem({ currentPage, onNavigate }: {
   onNavigate: (page: PageType) => void;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const isRebateActive = ['rebate', 'rebate-record', 'rebate-setup'].includes(currentPage);
+  const isRebateActive = ['rebate', 'rebate-record', 'rebate-setup', 'rebate-release', 'rebate-schedule'].includes(currentPage);
 
   useEffect(() => {
     if (isRebateActive) {
@@ -326,6 +330,28 @@ function RebateMenuItem({ currentPage, onNavigate }: {
           >
             <span className="text-left">4.2 REBATE SETUP</span>
           </button>
+
+          <button
+            onClick={() => onNavigate('rebate-release')}
+            className={`w-full flex items-center p-2 rounded-lg text-sm font-medium tracking-[-0.14px] transition-colors ${
+              currentPage === 'rebate-release'
+                ? 'bg-[#e8eaf6] text-[#3949ab]'
+                : 'text-[#3949ab] hover:bg-[#f0f0f0]'
+            }`}
+          >
+            <span className="text-left">4.3 REBATE RELEASE</span>
+          </button>
+
+          <button
+            onClick={() => onNavigate('rebate-schedule')}
+            className={`w-full flex items-center p-2 rounded-lg text-sm font-medium tracking-[-0.14px] transition-colors ${
+              currentPage === 'rebate-schedule'
+                ? 'bg-[#e8eaf6] text-[#3949ab]'
+                : 'text-[#3949ab] hover:bg-[#f0f0f0]'
+            }`}
+          >
+            <span className="text-left">4.4 REBATE SCHEDULE</span>
+          </button>
         </div>
       )}
     </div>
@@ -337,7 +363,7 @@ function CashBackMenuItem({ currentPage, onNavigate }: {
   onNavigate: (page: PageType) => void;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const isCashBackActive = ['cashback', 'cashback-record', 'cashback-setup', 'cashback-schedule'].includes(currentPage);
+  const isCashBackActive = ['cashback', 'cashback-record', 'cashback-setup', 'cashback-release', 'cashback-schedule'].includes(currentPage);
 
   useEffect(() => {
     if (isCashBackActive) {
@@ -384,6 +410,17 @@ function CashBackMenuItem({ currentPage, onNavigate }: {
           </button>
 
           <button
+            onClick={() => onNavigate('cashback-release')}
+            className={`w-full flex items-center p-2 rounded-lg text-sm font-medium tracking-[-0.14px] transition-colors ${
+              currentPage === 'cashback-release'
+                ? 'bg-[#e8eaf6] text-[#3949ab]'
+                : 'text-[#3949ab] hover:bg-[#f0f0f0]'
+            }`}
+          >
+            <span className="text-left">5.3 CASHBACK RELEASE</span>
+          </button>
+
+          <button
             onClick={() => onNavigate('cashback-schedule')}
             className={`w-full flex items-center p-2 rounded-lg text-sm font-medium tracking-[-0.14px] transition-colors ${
               currentPage === 'cashback-schedule'
@@ -391,7 +428,7 @@ function CashBackMenuItem({ currentPage, onNavigate }: {
                 : 'text-[#3949ab] hover:bg-[#f0f0f0]'
             }`}
           >
-            <span className="text-left">5.3 CASHBACK SCHEDULE</span>
+            <span className="text-left">5.4 CASHBACK SCHEDULE</span>
           </button>
         </div>
       )}
@@ -606,7 +643,7 @@ function Sidebar({ currentPage, onNavigate, onLogout, className = "" }: {
 function Header({ onToggleSidebar, currentPage, onNavigate }: {
   onToggleSidebar: () => void;
   currentPage: string;
-  onNavigate: (page: 'dashboard' | 'deposit' | 'withdrawal' | 'adjustment' | 'transaction-record' | 'user-record' | 'level' | 'tag' | 'promotion' | 'promotion-record' | 'promotion-list' | 'rebate' | 'rebate-record' | 'commission' | 'commission-record' | 'game-kiosk' | 'settings' | 'security' | 'bank-list' | 'bank-setup' | 'bank-report' | 'report' | 'admin-tool' | 'api' | 'change-log' | 'display' | 'domain' | 'page' | 'staff' | 'theme' | 'tools') => void;
+  onNavigate: (page: 'dashboard' | 'deposit' | 'withdrawal' | 'adjustment' | 'transaction-record' | 'user-record' | 'level' | 'tag' | 'promotion' | 'promotion-record' | 'promotion-list' | 'rebate' | 'rebate-record' | 'rebate-setup' | 'rebate-release' | 'rebate-schedule' | 'cashback' | 'cashback-record' | 'cashback-setup' | 'cashback-release' | 'cashback-schedule' | 'commission' | 'commission-record' | 'game-kiosk' | 'settings' | 'security' | 'bank-list' | 'bank-setup' | 'bank-report' | 'report' | 'admin-tool' | 'api' | 'change-log' | 'display' | 'domain' | 'page' | 'staff' | 'theme' | 'tools') => void;
 }) {
   return (
     <div className="bg-white border-b border-[#e0e0e0] shadow-sm">
@@ -680,7 +717,7 @@ function Header({ onToggleSidebar, currentPage, onNavigate }: {
           {/* Action buttons */}
           <Button variant="ghost" size="sm" className="bg-[#f5f0f0] rounded-lg">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707 .707L5.586 15z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
             </svg>
           </Button>
@@ -765,6 +802,10 @@ export default function ResponsiveAdminDashboard({ currentPage, onNavigate, onLo
         return <RebateRecordContent />;
       case 'rebate-setup':
         return <RebateSetupContent />;
+      case 'rebate-schedule':
+        return <RebateScheduleContent />;
+      case 'rebate-release':
+        return <RebateReleaseContent />;
       case 'cashback':
       case 'cashback-record':
         return <CashBackRecordContent />;
@@ -772,6 +813,8 @@ export default function ResponsiveAdminDashboard({ currentPage, onNavigate, onLo
         return <CashBackSetupContent />;
       case 'cashback-schedule':
         return <CashBackScheduleContent />;
+      case 'cashback-release':
+        return <CashBackReleaseContent />;
       case 'commission':
       case 'commission-record':
         return <CommissionRecordContent />;

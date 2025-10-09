@@ -2,51 +2,32 @@ import { useState } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Dialog, DialogContent } from './ui/dialog';
 import { Badge } from './ui/badge';
-import { ChevronDown, ChevronUp, Copy, RefreshCw } from 'lucide-react';
-import { Textarea } from './ui/textarea';
+import { RefreshCw } from 'lucide-react';
 import ProfileContent from './ProfileContent';
 import { sampleUsers, User } from './UserData';
 import { cashBackSetupsData } from './CashBackSetupData';
-import { sampleCashBackSchedules } from './CashBackScheduleData';
-import { sampleOtherTransactions, allTransactions, Transaction, getTypeColor, getStatusColor } from './transactionData';
+import { allTransactions, Transaction } from './transactionData';
 
-// Filter transactions to only get CASHBACK type records
-const getCashbackRecords = () => {
-  return allTransactions.filter(transaction => transaction.type === 'CASHBACK');
+// Filter transactions to only get CASHBACK type records with PENDING status
+const getPendingCashbackRecords = () => {
+  return allTransactions.filter(transaction =>
+    transaction.type === 'CASHBACK' && transaction.status === 'PENDING'
+  );
 };
-
-const levelOptions = ['all', 'bronze', 'silver', 'gold'];
-
-// Generate cashback options from CashBackSetupData
-const cashbackOptions = [
-  { value: 'all', label: 'All CashBacks' },
-  ...cashBackSetupsData.map(cashback => ({
-    value: cashback.name,
-    label: cashback.name
-  }))
-];
 
 const cashbackTypeOptions = ['all', 'By Net Lose Only', 'By Net Deposit', 'By Total WinLose Only'];
 
-type CashbackStatus = 'ALL' | 'PENDING' | 'COMPLETED' | 'REJECTED';
-
-export default function CashBackRecordManagement() {
+export default function CashBackReleaseManagement() {
   const [searchFilters, setSearchFilters] = useState({
-    username: '',
     dateFrom: '',
     dateTo: '',
-    level: 'all',
-    handler: '',
-    cashbackName: 'all',
     cashbackType: 'all'
   });
 
-  const [hasSearched, setHasSearched] = useState(true);
-  const [activeStatus, setActiveStatus] = useState<CashbackStatus>('ALL');
-  const [transactions, setTransactions] = useState(getCashbackRecords());
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [hasGenerated, setHasGenerated] = useState(false);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [usersData, setUsersData] = useState<Map<string, User>>(new Map());
@@ -65,11 +46,6 @@ export default function CashBackRecordManagement() {
 
   const getCashbackSetup = (cashbackName: string) => {
     return cashBackSetupsData.find(c => c.name === cashbackName);
-  };
-
-  const getAutoApprovedAmount = (cashbackType: string): number => {
-    const schedule = sampleCashBackSchedules.find(s => s.cashbackType === cashbackType);
-    return schedule?.autoApprovedAmount || 0;
   };
 
   const getCashbackTier = (applicableAmount: number, cashbackSetup: any): string => {
@@ -106,81 +82,46 @@ export default function CashBackRecordManagement() {
     return cashbackSetup.maxLimit ? `$${cashbackSetup.maxLimit.toFixed(2)}` : 'Unlimited';
   };
 
-  // Filter transactions based on search and status
-  const filteredTransactions = hasSearched
-    ? transactions.filter(transaction => {
-        // Status filter
-        if (activeStatus !== 'ALL' && transaction.status !== activeStatus) return false;
+  // Filter transactions based on search filters
+  const filteredTransactions = transactions.filter(transaction => {
+    // Only show PENDING transactions
+    if (transaction.status !== 'PENDING') return false;
 
-        // CRITICAL: For PENDING status, only show transactions where cashback amount > autoApprovedAmount
-        if (activeStatus === 'PENDING' && transaction.status === 'PENDING') {
-          const cashbackSetup = getCashbackSetup(transaction.cashbackName || '');
-          if (cashbackSetup) {
-            const cashbackRate = getCashbackRate(transaction.lossAmount || 0, cashbackSetup);
-            const cashbackAmount = calculateCashbackAmount(transaction.lossAmount || 0, cashbackRate);
-            const autoApprovedAmount = getAutoApprovedAmount(transaction.cashbackType || '');
+    // Date filters (by submitTime)
+    if (searchFilters.dateFrom && new Date(transaction.submitTime) < new Date(searchFilters.dateFrom)) return false;
+    if (searchFilters.dateTo && new Date(transaction.submitTime) > new Date(searchFilters.dateTo + ' 23:59:59')) return false;
+    if (searchFilters.cashbackType && searchFilters.cashbackType !== 'all' && transaction.cashbackType !== searchFilters.cashbackType) return false;
 
-            // Only show if calculated cashback exceeds auto-approved threshold
-            if (cashbackAmount <= autoApprovedAmount) return false;
-          }
-        }
+    return true;
+  })
+  .sort((a, b) => {
+    const dateA = a.submitTime;
+    const dateB = b.submitTime;
+    return new Date(dateB).getTime() - new Date(dateA).getTime();
+  });
 
-        // Search filters
-        if (searchFilters.username && !transaction.username.toLowerCase().includes(searchFilters.username.toLowerCase()) &&
-            !transaction.mobile.includes(searchFilters.username)) return false;
-        if (searchFilters.dateFrom && new Date(transaction.completeTime || transaction.submitTime) < new Date(searchFilters.dateFrom)) return false;
-        if (searchFilters.dateTo && new Date(transaction.completeTime || transaction.submitTime) > new Date(searchFilters.dateTo + ' 23:59:59')) return false;
-        if (searchFilters.level && searchFilters.level !== 'all') {
-          const user = sampleUsers.find(u => u.mobile === transaction.mobile || u.id === transaction.username);
-          if (!user || user.level !== searchFilters.level) return false;
-        }
-        if (searchFilters.handler && !transaction.completeBy?.toLowerCase().includes(searchFilters.handler.toLowerCase())) return false;
-        if (searchFilters.cashbackName && searchFilters.cashbackName !== 'all' && transaction.cashbackName !== searchFilters.cashbackName) return false;
-        if (searchFilters.cashbackType && searchFilters.cashbackType !== 'all' && transaction.cashbackType !== searchFilters.cashbackType) return false;
+  const totalAmount = filteredTransactions.reduce((sum, transaction) => {
+    const cashbackSetup = getCashbackSetup(transaction.cashbackName || '');
+    const cashbackRate = getCashbackRate(transaction.lossAmount || 0, cashbackSetup);
+    const cashbackAmount = calculateCashbackAmount(transaction.lossAmount || 0, cashbackRate);
+    return sum + cashbackAmount;
+  }, 0);
 
-        return true;
-      })
-      .sort((a, b) => {
-        const dateA = a.completeTime || a.submitTime;
-        const dateB = b.completeTime || b.submitTime;
-        return new Date(dateB).getTime() - new Date(dateA).getTime();
-      })
-    : [];
-
-  // Calculate status counts (PENDING count only includes those > autoApprovedAmount)
-  const statusCounts = {
-    ALL: transactions.length,
-    PENDING: transactions.filter(t => {
-      if (t.status !== 'PENDING') return false;
-      const cashbackSetup = getCashbackSetup(t.cashbackName || '');
-      if (cashbackSetup) {
-        const cashbackRate = getCashbackRate(t.lossAmount || 0, cashbackSetup);
-        const cashbackAmount = calculateCashbackAmount(t.lossAmount || 0, cashbackRate);
-        const autoApprovedAmount = getAutoApprovedAmount(t.cashbackType || '');
-        return cashbackAmount > autoApprovedAmount;
-      }
-      return true;
-    }).length,
-    COMPLETED: transactions.filter(t => t.status === 'COMPLETED').length,
-    REJECTED: transactions.filter(t => t.status === 'REJECTED').length,
-  };
-
-  const totalAmount = filteredTransactions.reduce((sum, transaction) => sum + transaction.amount, 0);
-
-  const handleSearch = () => {
-    setHasSearched(true);
+  const handleGenerate = () => {
+    setHasGenerated(true);
+    setTransactions(getPendingCashbackRecords());
   };
 
   const handleReset = () => {
     setSearchFilters({
-      username: '',
       dateFrom: '',
       dateTo: '',
-      level: 'all',
-      handler: '',
-      cashbackName: 'all',
       cashbackType: 'all'
     });
+    setHasGenerated(false);
+    setSelectedRows(new Set());
+    setGivenCashbackInputs({});
+    setRemarkInputs({});
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -241,16 +182,10 @@ export default function CashBackRecordManagement() {
     setSelectedUser(updatedUser);
   };
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-  };
-
   // Bulk action handlers
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      const allPendingIds = filteredTransactions
-        .filter(t => t.status === 'PENDING')
-        .map(t => t.id);
+      const allPendingIds = filteredTransactions.map(t => t.id);
       setSelectedRows(new Set(allPendingIds));
     } else {
       setSelectedRows(new Set());
@@ -307,6 +242,11 @@ export default function CashBackRecordManagement() {
     delete newRemarkInputs[transaction.id];
     setGivenCashbackInputs(newGivenInputs);
     setRemarkInputs(newRemarkInputs);
+
+    // Remove from selected rows
+    const newSelected = new Set(selectedRows);
+    newSelected.delete(transaction.id);
+    setSelectedRows(newSelected);
   };
 
   const handleSubmitAll = () => {
@@ -338,27 +278,19 @@ export default function CashBackRecordManagement() {
     setSelectedRows(new Set());
     setGivenCashbackInputs({});
     setRemarkInputs({});
-    setActiveStatus('COMPLETED');
   };
 
-  const pendingCount = statusCounts.PENDING;
+  const pendingCount = filteredTransactions.length;
 
   return (
     <div className="p-3 space-y-3 bg-gray-50 min-h-screen">
-      {/* Search/Filter Section */}
+      {/* Filter Section */}
       <div className="bg-white rounded-lg shadow-sm border p-4">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">CashBack Record Search & Filter</h2>
+          <h2 className="text-xl font-semibold text-gray-900">CashBack Release Filter</h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
-          <Input
-            placeholder="Username / Mobile No"
-            value={searchFilters.username}
-            onChange={(e) => handleInputChange('username', e.target.value)}
-            className="h-9"
-          />
-
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-3">
           <Input
             type="date"
             placeholder="Date From (Submit Time)"
@@ -372,28 +304,6 @@ export default function CashBackRecordManagement() {
             placeholder="Date To (Submit Time)"
             value={searchFilters.dateTo}
             onChange={(e) => handleInputChange('dateTo', e.target.value)}
-            className="h-9"
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-3">
-          <Select value={searchFilters.level} onValueChange={(value) => handleInputChange('level', value)}>
-            <SelectTrigger className="h-9">
-              <SelectValue placeholder="Level" />
-            </SelectTrigger>
-            <SelectContent>
-              {levelOptions.map(level => (
-                <SelectItem key={level} value={level}>
-                  {level === 'all' ? 'All Levels' : level.charAt(0).toUpperCase() + level.slice(1)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Input
-            placeholder="Handler"
-            value={searchFilters.handler}
-            onChange={(e) => handleInputChange('handler', e.target.value)}
             className="h-9"
           />
 
@@ -411,30 +321,12 @@ export default function CashBackRecordManagement() {
           </Select>
 
           <Button
-            onClick={handleSearch}
+            onClick={handleGenerate}
             className="bg-[#4caf50] hover:bg-[#45a049] text-white h-9 text-sm font-semibold px-6"
           >
-            SEARCH
+            GENERATE
           </Button>
         </div>
-
-        {/* Advanced Filters */}
-        {showAdvancedFilters && (
-          <div className="grid grid-cols-1 md:grid-cols-1 gap-3 mb-3 mt-3">
-            <Select value={searchFilters.cashbackName} onValueChange={(value) => handleInputChange('cashbackName', value)}>
-              <SelectTrigger className="h-9">
-                <SelectValue placeholder="CashBack Name" />
-              </SelectTrigger>
-              <SelectContent>
-                {cashbackOptions.map(cashback => (
-                  <SelectItem key={cashback.value} value={cashback.value}>
-                    {cashback.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
 
         <div className="border-t pt-3 mt-4">
           <div className="flex justify-between items-center">
@@ -455,49 +347,12 @@ export default function CashBackRecordManagement() {
                 RESET
               </Button>
             </div>
-            <button
-              onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-              className="text-sm text-[#3949ab] hover:text-[#2c3582] underline font-medium flex items-center gap-1"
-            >
-              ADVANCED
-              {showAdvancedFilters ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-            </button>
           </div>
         </div>
       </div>
 
-      {/* Status Filter Bar */}
-      {hasSearched && (
-        <div className="bg-white rounded-lg shadow-sm border p-4">
-          <div className="relative">
-            <div className="flex bg-gray-100 rounded-lg p-1 relative">
-              <div
-                className="absolute top-1 bottom-1 bg-[#3949ab] rounded-md transition-all duration-300 ease-in-out shadow-sm"
-                style={{
-                  width: `calc(${100 / 4}% - 0.25rem)`,
-                  left: `calc(${(['ALL', 'PENDING', 'COMPLETED', 'REJECTED'].indexOf(activeStatus) * 100) / 4}% + 0.125rem)`,
-                }}
-              />
-              {(['ALL', 'PENDING', 'COMPLETED', 'REJECTED'] as CashbackStatus[]).map((status) => (
-                <button
-                  key={status}
-                  onClick={() => setActiveStatus(status)}
-                  className={`flex-1 px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-300 relative z-10 ${
-                    activeStatus === status
-                      ? 'text-white'
-                      : 'text-gray-700 hover:text-gray-900'
-                  }`}
-                >
-                  {status.charAt(0) + status.slice(1).toLowerCase()} ({statusCounts[status]})
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Bulk Actions for PENDING Tab */}
-      {hasSearched && activeStatus === 'PENDING' && pendingCount > 0 && (
+      {/* Bulk Actions */}
+      {pendingCount > 0 && (
         <div className="bg-white rounded-lg shadow-sm border p-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -527,23 +382,20 @@ export default function CashBackRecordManagement() {
         </div>
       )}
 
-      {/* CashBack Record List */}
-      {hasSearched && (
-        <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+      {/* CashBack Release List */}
+      <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50 border-b">
                 <tr>
-                  {activeStatus === 'PENDING' && (
-                    <th className="px-3 py-2 text-center text-xs font-semibold text-gray-900 uppercase">
-                      <input
-                        type="checkbox"
-                        checked={selectedRows.size === pendingCount && pendingCount > 0}
-                        onChange={(e) => handleSelectAll(e.target.checked)}
-                        className="w-4 h-4 text-[#3949ab] border-gray-300 rounded focus:ring-[#3949ab]"
-                      />
-                    </th>
-                  )}
+                  <th className="px-3 py-2 text-center text-xs font-semibold text-gray-900 uppercase">
+                    <input
+                      type="checkbox"
+                      checked={selectedRows.size === pendingCount && pendingCount > 0}
+                      onChange={(e) => handleSelectAll(e.target.checked)}
+                      className="w-4 h-4 text-[#3949ab] border-gray-300 rounded focus:ring-[#3949ab]"
+                    />
+                  </th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Username</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Level</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">CashBack Name</th>
@@ -558,9 +410,7 @@ export default function CashBackRecordManagement() {
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">CashBack Amount</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Release Amount</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Remark</th>
-                  {activeStatus === 'PENDING' && (
-                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Action</th>
-                  )}
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 text-sm">
@@ -574,16 +424,14 @@ export default function CashBackRecordManagement() {
 
                   return (
                     <tr key={transaction.id} className="hover:bg-gray-50">
-                      {activeStatus === 'PENDING' && (
-                        <td className="px-3 py-2 text-center">
-                          <input
-                            type="checkbox"
-                            checked={selectedRows.has(transaction.id)}
-                            onChange={(e) => handleRowSelect(transaction.id, e.target.checked)}
-                            className="w-4 h-4 text-[#3949ab] border-gray-300 rounded focus:ring-[#3949ab]"
-                          />
-                        </td>
-                      )}
+                      <td className="px-3 py-2 text-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedRows.has(transaction.id)}
+                          onChange={(e) => handleRowSelect(transaction.id, e.target.checked)}
+                          className="w-4 h-4 text-[#3949ab] border-gray-300 rounded focus:ring-[#3949ab]"
+                        />
+                      </td>
                       <td className="px-3 py-2">
                         <span
                           className="text-gray-900 font-medium cursor-pointer hover:text-blue-600 hover:underline"
@@ -618,52 +466,37 @@ export default function CashBackRecordManagement() {
                         ${cashbackAmount.toFixed(2)}
                       </td>
                       <td className="px-3 py-2">
-                        {activeStatus === 'PENDING' ? (
-                          <Input
-                            type="number"
-                            step="0.01"
-                            value={givenCashbackInputs[transaction.id] || ''}
-                            onChange={(e) => handleGivenCashbackChange(transaction.id, e.target.value)}
-                            className="h-7 w-28 text-xs"
-                          />
-                        ) : (
-                          <span className="text-green-600 font-semibold text-xs">
-                            ${transaction.amount.toFixed(2)}
-                          </span>
-                        )}
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={givenCashbackInputs[transaction.id] || ''}
+                          onChange={(e) => handleGivenCashbackChange(transaction.id, e.target.value)}
+                          className="h-7 w-28 text-xs"
+                        />
                       </td>
                       <td className="px-3 py-2">
-                        {activeStatus === 'PENDING' ? (
-                          <Input
-                            type="text"
-                            value={remarkInputs[transaction.id] || ''}
-                            onChange={(e) => handleRemarkChange(transaction.id, e.target.value)}
-                            className="h-7 w-28 text-xs"
-                          />
-                        ) : (
-                          <span className="text-gray-900 text-xs max-w-40 truncate block" title={transaction.remark}>
-                            {transaction.remark || '-'}
-                          </span>
-                        )}
+                        <Input
+                          type="text"
+                          value={remarkInputs[transaction.id] || ''}
+                          onChange={(e) => handleRemarkChange(transaction.id, e.target.value)}
+                          className="h-7 w-28 text-xs"
+                        />
                       </td>
-                      {activeStatus === 'PENDING' && (
-                        <td className="px-3 py-2">
-                          <Button
-                            onClick={() => handleSubmitSingle(transaction)}
-                            className="bg-[#4caf50] hover:bg-[#45a049] text-white h-7 text-xs px-3"
-                          >
-                            SUBMIT
-                          </Button>
-                        </td>
-                      )}
+                      <td className="px-3 py-2">
+                        <Button
+                          onClick={() => handleSubmitSingle(transaction)}
+                          className="bg-[#4caf50] hover:bg-[#45a049] text-white h-7 text-xs px-3"
+                        >
+                          SUBMIT
+                        </Button>
+                      </td>
                     </tr>
                   );
                 })}
               </tbody>
             </table>
           </div>
-        </div>
-      )}
+      </div>
 
       {/* Profile Modal */}
       <Dialog open={showProfileModal} onOpenChange={setShowProfileModal}>

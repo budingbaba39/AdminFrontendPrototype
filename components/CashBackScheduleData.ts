@@ -15,9 +15,8 @@ export const sampleCashBackSchedules: CashBackSchedule[] = [
     type: 'Recurring',
     cashbackType: 'By Net Lose Only',
     status: 'Active',
-    autoApprovedAmount: 100,
-    resetFrequency: 'Every Week',
-    resetFrequencyDay: 'Monday',
+    autoApprovedAmount: 300,
+    resetFrequency: 'Everyday',
     createdDate: '2024-01-15'
   },
   {
@@ -25,9 +24,9 @@ export const sampleCashBackSchedules: CashBackSchedule[] = [
     type: 'Recurring',
     cashbackType: 'By Net Deposit',
     status: 'Active',
-    autoApprovedAmount: 500,
-    resetFrequency: 'Every Month',
-    resetFrequencyDay: 15,
+    autoApprovedAmount: 300,
+    resetFrequency: 'Every Week',
+    resetFrequencyDay: 'Monday',
     createdDate: '2024-01-20'
   },
   {
@@ -35,8 +34,9 @@ export const sampleCashBackSchedules: CashBackSchedule[] = [
     type: 'Recurring',
     cashbackType: 'By Total WinLose Only',
     status: 'Inactive',
-    autoApprovedAmount: 1000,
-    resetFrequency: 'Everyday',
+    autoApprovedAmount: 300,
+    resetFrequency: 'Every Month',
+    resetFrequencyDay: 1,
     createdDate: '2024-02-01'
   }
 ];
