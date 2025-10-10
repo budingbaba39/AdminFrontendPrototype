@@ -41,9 +41,9 @@ export interface Promotion {
 
   // Languages
   translations?: {
-    english: { title: string; name: string };
-    chinese: { title: string; name: string };
-    malay: { title: string; name: string };
+    english: { title: string; name: string; description: string; images: string[] };
+    chinese: { title: string; name: string; description: string; images: string[] };
+    malay: { title: string; name: string; description: string; images: string[] };
   };
 
   // Display
@@ -82,9 +82,9 @@ export const initialPromotions: Promotion[] = [
     levelIds: [1, 2, 3], // All levels
     providerIds: [6, 16, 31], // Pragmatic Play, Evolution Gaming, Betradar
     translations: {
-      english: { title: '20%x3 Slot Daily Reload Bonus', name: '20% Bonus with 3x Turnover for Slot Daily Reload' },
-      chinese: { title: '20%x3 老虎机每日充值奖金', name: '老虎机每日充值20%奖金（3倍流水）' },
-      malay: { title: 'Bonus Reload Harian Slot 20%x3', name: 'Bonus 20% dengan Pusing Ganti 3x untuk Reload Harian Slot' }
+      english: { title: '20%x3 Slot Daily Reload Bonus', name: '20% Bonus with 3x Turnover for Slot Daily Reload', description: '', images: [] },
+      chinese: { title: '20%x3 老虎机每日充值奖金', name: '老虎机每日充值20%奖金（3倍流水）', description: '', images: [] },
+      malay: { title: 'Bonus Reload Harian Slot 20%x3', name: 'Bonus 20% dengan Pusing Ganti 3x untuk Reload Harian Slot', description: '', images: [] }
     },
     memberApplied: 342,
     createdDate: '2024-01-01'
@@ -121,9 +121,9 @@ export const initialPromotions: Promotion[] = [
     levelIds: [1, 2, 3], // All levels
     providerIds: [31,32,33,34,35], // PG Soft, Spadegaming
     translations: {
-      english: { title: '10%x1 Daily Sport Bonus', name: '10% Bonus with 1x Turnover for Daily Sport' },
-      chinese: { title: '10%x1 每日体育奖金', name: '每日体育10%奖金（1倍流水）' },
-      malay: { title: 'Bonus Sukan Harian 10%x1', name: 'Bonus 10% dengan Pusing Ganti 1x untuk Sukan Harian' }
+      english: { title: '10%x1 Daily Sport Bonus', name: '10% Bonus with 1x Turnover for Daily Sport', description: '', images: [] },
+      chinese: { title: '10%x1 每日体育奖金', name: '每日体育10%奖金（1倍流水）', description: '', images: [] },
+      malay: { title: 'Bonus Sukan Harian 10%x1', name: 'Bonus 10% dengan Pusing Ganti 1x untuk Sukan Harian', description: '', images: [] }
     },
     memberApplied: 178,
     createdDate: '2024-05-15'
@@ -160,9 +160,9 @@ export const initialPromotions: Promotion[] = [
     levelIds: [3], // Only Gold level
     providerIds: [16, 17, 18], // Evolution Gaming, Pragmatic Play Live, Ezugi
     translations: {
-      english: { title: '6%x1 Unlimited Reload Bonus', name: '6% Bonus with 1x Turnover for Unlimited Reload' },
-      chinese: { title: '6%x1 无限充值奖金', name: '无限充值6%奖金（1倍流水）' },
-      malay: { title: 'Bonus Reload Tanpa Had 6%x1', name: 'Bonus 6% dengan Pusing Ganti 1x untuk Reload Tanpa Had' }
+      english: { title: '6%x1 Unlimited Reload Bonus', name: '6% Bonus with 1x Turnover for Unlimited Reload', description: '', images: [] },
+      chinese: { title: '6%x1 无限充值奖金', name: '无限充值6%奖金（1倍流水）', description: '', images: [] },
+      malay: { title: 'Bonus Reload Tanpa Had 6%x1', name: 'Bonus 6% dengan Pusing Ganti 1x untuk Reload Tanpa Had', description: '', images: [] }
     },
     memberApplied: 89,
     createdDate: '2024-01-01'

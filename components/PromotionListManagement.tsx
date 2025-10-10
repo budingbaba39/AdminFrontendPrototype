@@ -12,11 +12,7 @@ import 'react-quill/dist/quill.snow.css';
 
 type ModalMode = 'create' | 'edit' | 'view' | null;
 type ActiveTab = 'info' | 'details' | 'languages' | 'eligibility';
-
-const MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December'
-];
+type LanguageTab = 'english' | 'chinese' | 'malay';
 
 const DAYS_IN_MONTH: Record<string, number> = {
   'January': 31, 'February': 29, 'March': 31, 'April': 30,
@@ -59,15 +55,16 @@ const getDefaultFormData = (): Promotion => ({
 
 // Default language translations
 const getDefaultTranslations = () => ({
-  english: { title: '', name: '' },
-  chinese: { title: '', name: '' },
-  malay: { title: '', name: '' }
+  english: { title: '', name: '', description: '', images: [] as string[] },
+  chinese: { title: '', name: '', description: '', images: [] as string[] },
+  malay: { title: '', name: '', description: '', images: [] as string[] }
 });
 
 export default function PromotionListManagement() {
   const [promotions, setPromotions] = useState<Promotion[]>(initialPromotions);
   const [modalMode, setModalMode] = useState<ModalMode>(null);
   const [activeTab, setActiveTab] = useState<ActiveTab>('info');
+  const [languageTab, setLanguageTab] = useState<LanguageTab>('english');
   const [editingPromotion, setEditingPromotion] = useState<Promotion | null>(null);
 
   // Filter states
@@ -252,6 +249,31 @@ export default function PromotionListManagement() {
   const getDaysForMonth = (month: string): number[] => {
     const maxDay = DAYS_IN_MONTH[month] || 31;
     return Array.from({ length: maxDay }, (_, i) => i + 1);
+  };
+
+  const handleImageUpload = (lang: LanguageTab, e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      const fileArray = Array.from(files);
+      const imageUrls = fileArray.map(file => URL.createObjectURL(file));
+      setLanguageTranslations(prev => ({
+        ...prev,
+        [lang]: {
+          ...prev[lang],
+          images: [...prev[lang].images, ...imageUrls]
+        }
+      }));
+    }
+  };
+
+  const removeImage = (lang: LanguageTab, index: number) => {
+    setLanguageTranslations(prev => ({
+      ...prev,
+      [lang]: {
+        ...prev[lang],
+        images: prev[lang].images.filter((_, i) => i !== index)
+      }
+    }));
   };
 
   const filteredPromotions = getFilteredPromotions();
@@ -1017,95 +1039,148 @@ export default function PromotionListManagement() {
 
               {activeTab === 'languages' && (
                 <div className="space-y-4 min-h-[500px]">
-                  <div className="space-y-4">
-                    <div>
-                      <h3 className="text-lg font-bold mb-4 text-gray-800 pb-2 border-b">English</h3>
-                      <div className="space-y-4">
-                        <div className="w-full">
-                          <label className="block text-sm font-semibold mb-2 text-gray-700">Title (English) *</label>
-                          <ReactQuill
-                            value={languageTranslations.english.title}
-                            onChange={(value) => setLanguageTranslations(prev => ({
-                              ...prev,
-                              english: { ...prev.english, title: value }
-                            }))}
-                            readOnly={isReadOnly}
-                            className="bg-white"
-                          />
-                        </div>
-                        <div className="w-full">
-                          <label className="block text-sm font-semibold mb-2 text-gray-700">Name (English) *</label>
-                          <ReactQuill
-                            value={languageTranslations.english.name}
-                            onChange={(value) => setLanguageTranslations(prev => ({
-                              ...prev,
-                              english: { ...prev.english, name: value }
-                            }))}
-                            readOnly={isReadOnly}
-                            className="bg-white"
-                          />
-                        </div>
-                      </div>
+                  {/* Language Tab Selection */}
+                  <div className="flex gap-2 border-b pb-2">
+                    <button
+                      onClick={() => setLanguageTab('english')}
+                      className={`px-6 py-2 rounded-t font-medium transition-colors ${
+                        languageTab === 'english'
+                          ? 'bg-[#3949ab] text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                      disabled={isReadOnly}
+                    >
+                      English
+                    </button>
+                    <button
+                      onClick={() => setLanguageTab('chinese')}
+                      className={`px-6 py-2 rounded-t font-medium transition-colors ${
+                        languageTab === 'chinese'
+                          ? 'bg-[#3949ab] text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                      disabled={isReadOnly}
+                    >
+                      Chinese
+                    </button>
+                    <button
+                      onClick={() => setLanguageTab('malay')}
+                      className={`px-6 py-2 rounded-t font-medium transition-colors ${
+                        languageTab === 'malay'
+                          ? 'bg-[#3949ab] text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                      disabled={isReadOnly}
+                    >
+                      Malay
+                    </button>
+                  </div>
+
+                  {/* Language Content */}
+                  <div className="space-y-4 pt-2">
+                    {/* Title Input */}
+                    <div className="w-full">
+                      <label className="block text-sm font-semibold mb-2 text-gray-700">
+                        Title ({languageTab.charAt(0).toUpperCase() + languageTab.slice(1)}) *
+                      </label>
+                      <Input
+                        type="text"
+                        value={languageTranslations[languageTab].title}
+                        onChange={(e) => setLanguageTranslations(prev => ({
+                          ...prev,
+                          [languageTab]: { ...prev[languageTab], title: e.target.value }
+                        }))}
+                        disabled={isReadOnly}
+                        placeholder="Enter title"
+                        className="w-full h-10"
+                      />
                     </div>
 
-                    <div>
-                      <h3 className="text-lg font-bold mb-4 text-gray-800 pb-2 border-b">Chinese</h3>
-                      <div className="space-y-4">
-                        <div className="w-full">
-                          <label className="block text-sm font-semibold mb-2 text-gray-700">Title (Chinese) *</label>
-                          <ReactQuill
-                            value={languageTranslations.chinese.title}
-                            onChange={(value) => setLanguageTranslations(prev => ({
-                              ...prev,
-                              chinese: { ...prev.chinese, title: value }
-                            }))}
-                            readOnly={isReadOnly}
-                            className="bg-white"
-                          />
-                        </div>
-                        <div className="w-full">
-                          <label className="block text-sm font-semibold mb-2 text-gray-700">Name (Chinese) *</label>
-                          <ReactQuill
-                            value={languageTranslations.chinese.name}
-                            onChange={(value) => setLanguageTranslations(prev => ({
-                              ...prev,
-                              chinese: { ...prev.chinese, name: value }
-                            }))}
-                            readOnly={isReadOnly}
-                            className="bg-white"
-                          />
-                        </div>
-                      </div>
+                    {/* Name Input */}
+                    <div className="w-full">
+                      <label className="block text-sm font-semibold mb-2 text-gray-700">
+                        Name ({languageTab.charAt(0).toUpperCase() + languageTab.slice(1)}) *
+                      </label>
+                      <Input
+                        type="text"
+                        value={languageTranslations[languageTab].name}
+                        onChange={(e) => setLanguageTranslations(prev => ({
+                          ...prev,
+                          [languageTab]: { ...prev[languageTab], name: e.target.value }
+                        }))}
+                        disabled={isReadOnly}
+                        placeholder="Enter name"
+                        className="w-full h-10"
+                      />
                     </div>
 
-                    <div>
-                      <h3 className="text-lg font-bold mb-4 text-gray-800 pb-2 border-b">Malay</h3>
-                      <div className="space-y-4">
-                        <div className="w-full">
-                          <label className="block text-sm font-semibold mb-2 text-gray-700">Title (Malay) *</label>
-                          <ReactQuill
-                            value={languageTranslations.malay.title}
-                            onChange={(value) => setLanguageTranslations(prev => ({
-                              ...prev,
-                              malay: { ...prev.malay, title: value }
-                            }))}
-                            readOnly={isReadOnly}
-                            className="bg-white"
+                    {/* Description Rich Text */}
+                    <div className="w-full">
+                      <label className="block text-sm font-semibold mb-2 text-gray-700">
+                        Description ({languageTab.charAt(0).toUpperCase() + languageTab.slice(1)})
+                      </label>
+                      <ReactQuill
+                        value={languageTranslations[languageTab].description}
+                        onChange={(value) => setLanguageTranslations(prev => ({
+                          ...prev,
+                          [languageTab]: { ...prev[languageTab], description: value }
+                        }))}
+                        readOnly={isReadOnly}
+                        className="bg-white"
+                        theme="snow"
+                      />
+                    </div>
+
+                    {/* Promotion Poster/Images Upload */}
+                    <div className="w-full">
+                      <label className="block text-sm font-semibold mb-2 text-gray-700">
+                        Promotion Poster/Images
+                      </label>
+                      {!isReadOnly && (
+                        <div className="mb-3">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            onChange={(e) => handleImageUpload(languageTab, e)}
+                            className="block w-full text-sm text-gray-500
+                              file:mr-4 file:py-2 file:px-4
+                              file:rounded file:border-0
+                              file:text-sm file:font-semibold
+                              file:bg-[#3949ab] file:text-white
+                              hover:file:bg-[#2c3785] cursor-pointer"
                           />
                         </div>
-                        <div className="w-full">
-                          <label className="block text-sm font-semibold mb-2 text-gray-700">Name (Malay) *</label>
-                          <ReactQuill
-                            value={languageTranslations.malay.name}
-                            onChange={(value) => setLanguageTranslations(prev => ({
-                              ...prev,
-                              malay: { ...prev.malay, name: value }
-                            }))}
-                            readOnly={isReadOnly}
-                            className="bg-white"
-                          />
+                      )}
+
+                      {/* Image Preview Grid */}
+                      {languageTranslations[languageTab].images.length > 0 && (
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-3">
+                          {languageTranslations[languageTab].images.map((img, index) => (
+                            <div key={index} className="relative group">
+                              <img
+                                src={img}
+                                alt={`Promotion ${index + 1}`}
+                                className="w-full h-40 object-cover rounded-lg border-2 border-gray-200"
+                              />
+                              {!isReadOnly && (
+                                <button
+                                  onClick={() => removeImage(languageTab, index)}
+                                  className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              )}
+                            </div>
+                          ))}
                         </div>
-                      </div>
+                      )}
+
+                      {languageTranslations[languageTab].images.length === 0 && (
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center text-gray-500">
+                          No images uploaded
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

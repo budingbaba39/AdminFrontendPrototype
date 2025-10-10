@@ -528,14 +528,14 @@ export default function RebateRecordManagement() {
                   )}
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Username</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Level</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Cashback Tier</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Rebate Tier</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Rebate Rate (%)</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Rebate Max Limit</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Handler</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Submit Time</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Completed Time</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Loss Amount</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Cashback Amount</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Rebate Amount</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Release Amount</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Remark</th>
                   {activeStatus === 'PENDING' && (
