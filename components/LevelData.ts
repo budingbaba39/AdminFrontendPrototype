@@ -25,6 +25,8 @@ export interface Level {
   maxWithdrawAmountPerTransaction: number; // DOUBLE
   maxWithdrawAmountPerDay: number; // DOUBLE
   maxWithdrawCountPerDay: number; // INT
+  minWithdrawAmount: number;
+  minDepositAmount: number;
   depositTurnoverRate: number; // FLOAT (multiplier)
   autoUpgradeAmount: number; // DOUBLE (threshold amount)
   remark?: string; // Optional
@@ -53,6 +55,8 @@ export const initialLevels: Level[] = [
     maxWithdrawAmountPerTransaction: 500,
     maxWithdrawAmountPerDay: 1000,
     maxWithdrawCountPerDay: 3,
+    minWithdrawAmount: 100,
+    minDepositAmount: 10,
     depositTurnoverRate: 1,
     autoUpgradeAmount: 1000,
     remark: 'Entry level for new players',
@@ -88,6 +92,8 @@ export const initialLevels: Level[] = [
     maxWithdrawAmountPerTransaction: 2000,
     maxWithdrawAmountPerDay: 5000,
     maxWithdrawCountPerDay: 5,
+    minWithdrawAmount: 1000,
+    minDepositAmount: 100,
     depositTurnoverRate: 1,
     autoUpgradeAmount: 5000,
     remark: 'Intermediate level with higher limits',
@@ -124,6 +130,8 @@ export const initialLevels: Level[] = [
     maxWithdrawAmountPerTransaction: 10000,
     maxWithdrawAmountPerDay: 25000,
     maxWithdrawCountPerDay: 10,
+    minWithdrawAmount: 10000,
+    minDepositAmount: 1000,
     depositTurnoverRate: 1,
     autoUpgradeAmount: 25000,
     remark: 'Premium level with maximum privileges',

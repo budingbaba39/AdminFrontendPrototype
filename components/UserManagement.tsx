@@ -7,6 +7,7 @@ import { Badge } from './ui/badge';
 import { ChevronDown, ChevronUp, Download, RefreshCw } from 'lucide-react';
 import ProfileContent from './ProfileContent';
 import { User, sampleUsers } from './UserData';
+import { Transaction, allTransactions } from './transactionData';
 
 // Level color mapping to match ProfileManagement
 const levelColorMap = {
@@ -581,6 +582,7 @@ export default function UserManagement() {
               <ProfileContent 
                 user={selectedUser} 
                 onUserUpdate={handleUserUpdate}
+                transactions={allTransactions}
               />
             )}
           </div>

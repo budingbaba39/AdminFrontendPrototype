@@ -52,6 +52,8 @@ export default function LevelManagement() {
     },
     maxWithdrawAmountPerTransaction: 0,
     maxWithdrawAmountPerDay: 0,
+    minWithdrawAmount: 0,
+    minDepositAmount: 0,
     maxWithdrawCountPerDay: 0,
     depositTurnoverRate: 1,
     autoUpgradeAmount: 0,
@@ -91,6 +93,8 @@ export default function LevelManagement() {
       },
       maxWithdrawAmountPerTransaction: 0,
       maxWithdrawAmountPerDay: 0,
+      minWithdrawAmount: 0,
+      minDepositAmount: 0,
       maxWithdrawCountPerDay: 0,
       depositTurnoverRate: 1,
       autoUpgradeAmount: 0,
@@ -170,6 +174,8 @@ export default function LevelManagement() {
       },
       maxWithdrawAmountPerTransaction: level.maxWithdrawAmountPerTransaction,
       maxWithdrawAmountPerDay: level.maxWithdrawAmountPerDay,
+      minWithdrawAmount: level.minWithdrawAmount,
+      minDepositAmount: level.minDepositAmount,
       maxWithdrawCountPerDay: level.maxWithdrawCountPerDay,
       depositTurnoverRate: level.depositTurnoverRate,
       autoUpgradeAmount: level.autoUpgradeAmount,
@@ -756,6 +762,36 @@ export default function LevelManagement() {
               </div>
             </div>
 
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1"> Minimum Deposit Amount *</label>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={formData.minDepositAmount}
+                        onChange={(e) =>setFormData((prev) => ({...prev,minDepositAmount: parseFloat(e.target.value) || 0,}))}
+                        className="w-full h-9"
+                        placeholder="0.00"
+                      />
+                    </div>
+
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Minimum Withdraw Amount *</label>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={formData.minWithdrawAmount}
+                        onChange={(e) =>setFormData((prev) => ({...prev,minWithdrawAmount: parseFloat(e.target.value) || 0,}))}
+                        className="w-full h-9"
+                        placeholder="0.00"
+                      />
+                    </div>
+                  </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Max Withdraw Amount Per Transaction *</label>
@@ -1327,6 +1363,7 @@ export default function LevelManagement() {
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Bank Name</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Account Name</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Account No</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Description</th>
                     <th className="px-4 py-3 text-center text-xs font-semibold text-gray-900 uppercase">Status</th>
                   </tr>
                 </thead>
@@ -1361,6 +1398,9 @@ export default function LevelManagement() {
                       </td>
                       <td className="px-4 py-3 text-gray-900 font-mono">
                         {bank.accountNo}
+                      </td>
+                      <td className="px-4 py-3 text-gray-900">
+                        {bank.description}
                       </td>
                       <td className="px-4 py-3 text-center">
                         <Badge className={bank.status === 'Active' ? 'bg-green-100 text-green-700 font-semibold' : 'bg-red-100 text-red-700 font-semibold'}>
