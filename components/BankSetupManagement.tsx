@@ -18,6 +18,7 @@ export default function BankSetupManagement() {
   const [formData, setFormData] = useState({
     gatewayType: 'Bank Transfer' as 'Bank Transfer',
     bankId: 0,
+    description: '',
     bankInSlip: 'REQUIRED' as 'REQUIRED' | 'OPTIONAL' | 'DISABLE',
     bankInTime: 'REQUIRED' as 'REQUIRED' | 'DISABLE',
     status: 'Active' as 'Active' | 'Inactive'
@@ -52,6 +53,7 @@ export default function BankSetupManagement() {
       setFormData({
         gatewayType: 'Bank Transfer',
         bankId: 0,
+        description: '',
         bankInSlip: 'REQUIRED',
         bankInTime: 'REQUIRED',
         status: 'Active'
@@ -61,6 +63,7 @@ export default function BankSetupManagement() {
       setFormData({
         gatewayType: gateway.gatewayType,
         bankId: gateway.bankId,
+        description: bank?.description || '',
         bankInSlip: gateway.bankInSlip,
         bankInTime: gateway.bankInTime,
         status: gateway.status
@@ -75,6 +78,7 @@ export default function BankSetupManagement() {
     setFormData({
       gatewayType: 'Bank Transfer',
       bankId: 0,
+      description: '',
       bankInSlip: 'REQUIRED',
       bankInTime: 'REQUIRED',
       status: 'Active'
@@ -229,6 +233,7 @@ export default function BankSetupManagement() {
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Bank Name</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Bank Account Name</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Bank Account Number</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-900 uppercase">Description</th>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-gray-900 uppercase">Bank In Slip</th>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-gray-900 uppercase">Bank In Time</th>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-gray-900 uppercase">Status</th>
@@ -249,6 +254,7 @@ export default function BankSetupManagement() {
                     <td className="px-4 py-3 text-gray-900 font-medium">{bank?.bankName || 'N/A'}</td>
                     <td className="px-4 py-3 text-gray-900">{bank?.accountName || 'N/A'}</td>
                     <td className="px-4 py-3 text-gray-900 font-mono">{bank?.accountNo || 'N/A'}</td>
+                    <td className="px-4 py-3 text-gray-900">{bank?.description || 'N/A'}</td>
                     <td className="px-4 py-3 text-center">
                       <Badge className={getBadgeClassName('slip', gateway.bankInSlip)}>
                         {gateway.bankInSlip}
@@ -354,6 +360,18 @@ export default function BankSetupManagement() {
                   {validationErrors.bankId && (
                     <p className="text-red-600 text-sm mt-1">{validationErrors.bankId}</p>
                   )}
+                </div>
+                <div className="w-full">
+                  <label className="block text-sm font-semibold mb-2 text-gray-700">Bank Description <span className="text-red-600">*</span></label>
+                  <textarea
+                    value={formData.description}
+                    onChange={(e) =>handleInputChange('description', e.target.value)}
+                    placeholder="Enter bank description..."
+                    className={`w-full min-h-[80px] px-3 py-2 rounded-md border ${validationErrors.description? 'border-red-500' : 'border-gray-300'
+                    } bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  />
+                  {validationErrors.description && (
+                    <p className="text-red-600 text-sm mt-1">{validationErrors.description}</p>)}
                 </div>
               </div>
             </div>

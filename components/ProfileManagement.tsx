@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Checkbox } from './ui/checkbox';
 import { Label } from './ui/label';
 import { User } from './UserData';
+import { Transaction } from './transactionData';
 
 // Level color mapping
 const levelColorMap = {
@@ -47,6 +48,7 @@ interface Bank {
 
 interface ProfileManagementProps {
   user: User;
+  transactions?: Transaction[];
   onUserUpdate?: (updatedUser: User) => void;
 }
 
@@ -78,7 +80,7 @@ const sampleIPData = [
   { time: '2023-08-24 20:15', ip: '192.168.1.102', isp: 'Digi', city: 'Shah Alam', country: 'Malaysia', userAgent: 'Firefox 116.0' },
 ];
 
-export default function ProfileManagement({ user, onUserUpdate }: ProfileManagementProps) {
+export default function ProfileManagement({ user, transactions = [], onUserUpdate }: ProfileManagementProps) {
   const [activeTab, setActiveTab] = useState<TabType>('TRANSACTION');
   const [currentUser, setCurrentUser] = useState<User>(user);
   const [showAssignModal, setShowAssignModal] = useState(false);
@@ -97,7 +99,9 @@ export default function ProfileManagement({ user, onUserUpdate }: ProfileManagem
     transferBank: '(optional)',
     remarks: '',
     promotion: '',
-    rebateName: ''
+    rebateName: '',
+    cashbackName: '',
+    commissionName: ''
   });
   
   const [settingForm, setSettingForm] = useState({
@@ -241,6 +245,7 @@ export default function ProfileManagement({ user, onUserUpdate }: ProfileManagem
                     <SelectItem value="BONUS">BONUS</SelectItem>
                     <SelectItem value="MANUAL">MANUAL</SelectItem>
                     <SelectItem value="REBATE">REBATE</SelectItem>
+                    <SelectItem value="CASHBACK">CASHBACK</SelectItem>
                     <SelectItem value="FORFEITED">FORFEITED</SelectItem>
                     <SelectItem value="COMMISSION">COMMISSION</SelectItem>
                     <SelectItem value="LOSSCREDIT">LOSSCREDIT</SelectItem>
@@ -485,6 +490,14 @@ export default function ProfileManagement({ user, onUserUpdate }: ProfileManagem
             alert('Please select a rebate name for REBATE type.');
             return;
           }
+          if (creditForm.type === 'CASHBACK' && !creditForm.cashbackName) {
+            alert('Please select a cashback name for CASHBACK type.');
+            return;
+          }
+          if (creditForm.type === 'COMMISSION' && !creditForm.commissionName) {
+            alert('Please select a commission name for COMMISSION type.');
+            return;
+          }
           console.log('Form submitted:', creditForm);
           // Add your submission logic here (e.g., API call)
         };
@@ -516,12 +529,48 @@ export default function ProfileManagement({ user, onUserUpdate }: ProfileManagem
               </div>
 
               {currentUser.ongoingPromotionID && (
-                <div className="pt-3 border-t border-red-200">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-700">Ongoing Promotion:</span>
-                    <span className="text-sm font-bold text-blue-600">{currentUser.ongoingPromotionID}</span>
+                <>
+                  {/* Ongoing Promotion */}
+                  <div className="pt-3 border-t border-red-200">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-gray-700">Ongoing Promotion:</span>
+                      <span className="text-sm font-bold text-blue-600">{currentUser.ongoingPromotionID}</span>
+                    </div>
                   </div>
-                </div>
+
+                  {currentUser.ongoingPromotionID &&
+                    transactions &&
+                    (() => {
+                      // Find the BONUS transaction linked to this user's ongoing promotion
+                      console.log('Promo Check:', {
+                        userID: currentUser.id,
+                        userName: currentUser.name,
+                        ongoingPromo: currentUser.ongoingPromotionID,
+                        allTransactions: transactions,
+                      });
+
+                      const promoTx = transactions.find(
+                        (t) =>
+                          t.username === currentUser.id &&
+                          t.type === 'BONUS' &&
+                          t.promotionID === currentUser.ongoingPromotionID
+                      );
+
+                      // If not found, don’t show anything
+                      if (!promoTx) return null;
+
+                      return (
+                        <div className="flex items-center justify-between mt-2">
+                          <span className="text-sm font-medium text-gray-700">Target:</span>
+                          <span className="text-sm font-bold">
+                            <span className="text-green-600">{promoTx.turnoverCurrent?.toLocaleString() || 0}</span>
+                            <span className="text-gray-500 mx-1">/</span>
+                            <span className="text-blue-600">{promoTx.turnoverTarget?.toLocaleString() || 0}</span>
+                          </span>
+                        </div>
+                      );
+                    })()}
+                </>
               )}
             </div>
       
@@ -539,6 +588,7 @@ export default function ProfileManagement({ user, onUserUpdate }: ProfileManagem
                     <SelectItem value="BONUS">BONUS</SelectItem>
                     <SelectItem value="REBATE">REBATE</SelectItem>
                     <SelectItem value="COMMISSION">COMMISSION</SelectItem>
+                    <SelectItem value="CASHBACK">CASHBACK</SelectItem>
                     <SelectItem value="LOSSCREDIT">LOSSCREDIT</SelectItem>
                     <SelectItem value="FORFEITED">FORFEITED</SelectItem>
                   </SelectContent>
@@ -773,7 +823,53 @@ export default function ProfileManagement({ user, onUserUpdate }: ProfileManagem
                     <label className="block text-sm font-medium text-gray-700 mb-1">Remarks</label>
                     <Input 
                       value={creditForm.remarks}
-                      onChange={(e) => setCreditForm(prev => ({ ...prev, remarks: e.target.value }))}
+                      onChange={(e) =>
+                        setCreditForm((prev) => ({
+                          ...prev,
+                          remarks: e.target.value,
+                        }))
+                      }
+                      placeholder="(optional)"
+                    />
+                  </div>
+                </>
+              )}
+
+              {creditForm.type === 'CASHBACK' && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
+                    <Input
+                      value={creditForm.amount}
+                      onChange={(e) =>setCreditForm((prev) => ({...prev, amount: e.target.value,}))}
+                      placeholder="100.00"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Cashback</label>
+                    <Select
+                      value={creditForm.cashbackName}
+                      onValueChange={(value) =>setCreditForm((prev) => ({...prev, cashbackName: value,
+                        }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Cashback (compulsory)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Cashback1">Cashback1</SelectItem>
+                        <SelectItem value="Cashback2">Cashback2</SelectItem>
+                        <SelectItem value="Cashback3">Cashback3</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Remarks</label>
+                    <Input
+                      value={creditForm.remarks}
+                      onChange={(e) =>setCreditForm((prev) => ({...prev, remarks: e.target.value,
+                        }))
+                      }
                       placeholder="(optional)"
                     />
                   </div>
