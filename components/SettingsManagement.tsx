@@ -4,46 +4,55 @@ import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Label } from './ui/label';
 import { Switch } from './ui/switch';
+import ReactSelect from 'react-select';
+
 
 export default function SystemSettingsOnly() {
   const [systemSettings, setSystemSettings] = useState({
-    language: 'English',
+    languages: ['English'],
     currency: 'MYR',
     timezone: 'Asia/Kuala_Lumpur',
+    mobileCountryCode: '+60',
     hideMobileNumber: 'No',
+    smsLimitPerDay: 100,
     displayLiveTransactions: false,
   });
+
+  const languageOptions = [
+    { value: 'English', label: 'English' },
+    { value: 'Chinese', label: 'Chinese' },
+    { value: 'Malay', label: 'Malay' },
+    { value: 'Thai', label: 'Thai' },
+    { value: 'Nepali', label: 'Nepali' },
+    { value: 'Burmese', label: 'Burmese' },
+    { value: 'Indonesian', label: 'Indonesian' },
+  ];
 
   const handleSave = () => {
     console.log('✅ Saving System Settings:', systemSettings);
     alert('Settings saved (demo only)');
   };
 
+
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="bg-white rounded-lg shadow-sm border p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-6">
-          System Settings
-        </h2>
+        <h2 className="text-xl font-semibold text-gray-900 mb-6">System Settings</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Language */}
+          {/* Language (Multi-select) */}
           <div>
-            <Label htmlFor="language">Language</Label>
-          <Select value={systemSettings.language} onValueChange={(value) => setSystemSettings(prev => ({ ...prev, language: value }))}>
-              <SelectTrigger className="mt-1">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="English">English</SelectItem>
-                <SelectItem value="Chinese">Chinese</SelectItem>
-                <SelectItem value="Malay">Malay</SelectItem>
-                <SelectItem value="Thai">Thai</SelectItem>
-                <SelectItem value="Nepali">Nepali</SelectItem>
-                <SelectItem value="Burmese">Burmese</SelectItem>
-                <SelectItem value="Indonesian">Indonesian</SelectItem>
-              </SelectContent>
-            </Select>
+            <div>
+              <Label>Languages</Label>
+              <ReactSelect
+                isMulti
+                className="mt-1"
+                options={languageOptions}
+                value={languageOptions.filter(opt =>systemSettings.languages.includes(opt.value))}
+                onChange={(selected) =>
+                  setSystemSettings((prev) => ({...prev,languages: selected.map((s) => s.value),}))}
+              />
+            </div>
           </div>
 
           {/* Currency */}
@@ -67,7 +76,7 @@ export default function SystemSettingsOnly() {
 
           {/* Timezone */}
           <div>
-            <Label htmlFor="timezone">Timezone</Label>
+            <Label htmlFor="timezone">Country/Timezone</Label>
             <Select
               value={systemSettings.timezone}
               onValueChange={(value) =>
@@ -88,6 +97,28 @@ export default function SystemSettingsOnly() {
             </Select>
           </div>
 
+
+          {/* Mobile Country Code */}
+          <div>
+            <Label htmlFor="mobileCountryCode">Mobile Country Code</Label>
+            <Select
+              value={systemSettings.mobileCountryCode}
+              onValueChange={(value) => setSystemSettings(prev => ({ ...prev, mobileCountryCode: value }))}
+            >
+              <SelectTrigger className="mt-1">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="+60">+60 (Malaysia)</SelectItem>
+                <SelectItem value="+65">+65 (Singapore)</SelectItem>
+                <SelectItem value="+66">+66 (Thailand)</SelectItem>
+                <SelectItem value="+62">+62 (Indonesia)</SelectItem>
+                <SelectItem value="+977">+977 (Nepal)</SelectItem>
+                <SelectItem value="+95">+95 (Myanmar)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Hide Mobile Number */}
           <div>
             <Label htmlFor="hideMobileNumber">Hide Mobile Number</Label>
@@ -101,6 +132,18 @@ export default function SystemSettingsOnly() {
               <SelectItem value="Yes (except admin)">Yes (except admin)</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          {/* SMS Limit Per Day */}
+          <div>
+            <Label htmlFor="smsLimitPerDay">SMS Limit Per Day</Label>
+            <Input
+              id="smsLimitPerDay"
+              type="number"
+              min={0}
+              value={systemSettings.smsLimitPerDay}
+              onChange={(e) => setSystemSettings(prev => ({ ...prev, smsLimitPerDay: Number(e.target.value) }))}
+            />
           </div>
 
           {/* Display Live Transactions */}

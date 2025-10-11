@@ -1096,6 +1096,35 @@ export default function LevelManagement() {
               </div>
             </div>
 
+           <div className="grid grid-cols-2 gap-4">
+              <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1"> Minimum Deposit Amount *</label>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={formData.minDepositAmount}
+                        onChange={(e) =>setFormData((prev) => ({...prev,minDepositAmount: parseFloat(e.target.value) || 0,}))}
+                        className="w-full h-9"
+                        placeholder="0.00"
+                      />
+                    </div>
+
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Minimum Withdraw Amount *</label>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={formData.minWithdrawAmount}
+                        onChange={(e) =>setFormData((prev) => ({...prev,minWithdrawAmount: parseFloat(e.target.value) || 0,}))}
+                        className="w-full h-9"
+                        placeholder="0.00"
+                      />
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Max Withdraw Amount Per Transaction *</label>

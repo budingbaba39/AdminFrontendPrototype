@@ -358,32 +358,20 @@ export default function BankSetupManagement() {
                     ))}
                   </select>
                   {validationErrors.bankId && (
-                    <p className="text-red-600 text-sm mt-1">
-                      {validationErrors.bankId}
-                    </p>
+                    <p className="text-red-600 text-sm mt-1">{validationErrors.bankId}</p>
                   )}
                 </div>
                 <div className="w-full">
-                  <label className="block text-sm font-semibold mb-2 text-gray-700">
-                    Bank Description <span className="text-red-600">*</span>
-                  </label>
+                  <label className="block text-sm font-semibold mb-2 text-gray-700">Bank Description <span className="text-red-600">*</span></label>
                   <textarea
                     value={formData.description}
-                    onChange={(e) =>
-                      handleInputChange('description', e.target.value)
-                    }
+                    onChange={(e) =>handleInputChange('description', e.target.value)}
                     placeholder="Enter bank description..."
-                    className={`w-full min-h-[80px] px-3 py-2 rounded-md border ${
-                      validationErrors.description
-                        ? 'border-red-500'
-                        : 'border-gray-300'
+                    className={`w-full min-h-[80px] px-3 py-2 rounded-md border ${validationErrors.description? 'border-red-500' : 'border-gray-300'
                     } bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500`}
                   />
                   {validationErrors.description && (
-                    <p className="text-red-600 text-sm mt-1">
-                      {validationErrors.description}
-                    </p>
-                  )}
+                    <p className="text-red-600 text-sm mt-1">{validationErrors.description}</p>)}
                 </div>
               </div>
             </div>
