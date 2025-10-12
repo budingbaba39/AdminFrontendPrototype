@@ -9,6 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Edit, Trash2, X, RefreshCw } from 'lucide-react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import ReactSelect from 'react-select';
+
 
 type ModalMode = 'create' | 'edit' | 'view' | null;
 type ActiveTab = 'info' | 'details' | 'languages' | 'eligibility';
@@ -351,59 +353,22 @@ export default function PromotionListManagement() {
             />
           </div>
 
-          <div className="relative">
+          <div>
             <label className="block text-sm font-medium mb-2">Level</label>
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setShowFilterLevelDropdown(!showFilterLevelDropdown)}
-                className="w-full px-3 py-2 border rounded-md text-left bg-white"
-              >
-                {filterLevels.length === 0 ? 'Select levels' : `${filterLevels.length} selected`}
-              </button>
-              {showFilterLevelDropdown && (
-                <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-y-auto">
-                  <div className="p-2 border-b">
-                    <label className="flex items-center space-x-2 hover:bg-gray-100 p-1 rounded cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={filterLevels.length === initialLevels.length}
-                        onChange={toggleAllFilterLevels}
-                      />
-                      <span className="font-medium">Select All</span>
-                    </label>
-                  </div>
-                  {initialLevels.map(level => (
-                    <div key={level.id} className="p-2">
-                      <label className="flex items-center space-x-2 hover:bg-gray-100 p-1 rounded cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={filterLevels.includes(level.id)}
-                          onChange={() => toggleFilterLevel(level.id)}
-                        />
-                        <span>{level.levelName}</span>
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            {filterLevels.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-2">
-                {filterLevels.map(levelId => {
-                  const level = initialLevels.find(l => l.id === levelId);
-                  return level ? (
-                    <Badge key={levelId} variant="secondary" className="text-xs">
-                      {level.levelName}
-                      <X
-                        className="ml-1 h-3 w-3 cursor-pointer"
-                        onClick={() => toggleFilterLevel(levelId)}
-                      />
-                    </Badge>
-                  ) : null;
-                })}
-              </div>
-            )}
+            <ReactSelect
+              isMulti
+              className="text-sm"
+              options={initialLevels.map(level => ({
+                value: level.id,
+                label: level.levelName,
+              }))}
+              value={initialLevels.filter(level => filterLevels.includes(level.id)).map(level => ({
+                  value: level.id,
+                  label: level.levelName,
+                }))}
+              onChange={(selected) =>setFilterLevels(selected ? selected.map(s => s.value) : [])}
+              placeholder="Select Levels"
+            />
           </div>
 
           <div>
@@ -759,7 +724,7 @@ export default function PromotionListManagement() {
                     <h3 className="text-lg font-bold mb-4 text-gray-800 pb-2 border-b">Bonus Info</h3>
                     <div className="space-y-4">
                       <div className="w-full">
-                        <label className="block text-sm font-semibold mb-2 text-gray-700">Unlock Rate (%) *</label>
+                        <label className="block text-sm font-semibold mb-2 text-gray-700">Unlock Rate (%) {'<='} *</label>
                         <Input
                           type="number"
                           min="0"

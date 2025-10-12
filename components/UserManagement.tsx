@@ -8,6 +8,7 @@ import { ChevronDown, ChevronUp, Download, RefreshCw } from 'lucide-react';
 import ProfileContent from './ProfileContent';
 import { User, sampleUsers } from './UserData';
 import { Transaction, allTransactions } from './transactionData';
+import ReactSelect from 'react-select';
 
 // Level color mapping to match ProfileManagement
 const levelColorMap = {
@@ -62,7 +63,6 @@ export default function UserManagement() {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<typeof sampleUsers[0] | null>(null);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-  const [showTagDropdown, setShowTagDropdown] = useState(false);
   const [newUser, setNewUser] = useState({
     username: '',
     password: '000000',
@@ -125,14 +125,6 @@ export default function UserManagement() {
     setSearchFilters(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleTagToggle = (tag: string) => {
-    setSearchFilters(prev => ({
-      ...prev,
-      tags: prev.tags.includes(tag)
-        ? prev.tags.filter(t => t !== tag)
-        : [...prev.tags, tag]
-    }));
-  };
 
   const handleUserNameClick = (user: typeof sampleUsers[0]) => {
     setSelectedUser(user);
@@ -317,35 +309,17 @@ export default function UserManagement() {
                 </SelectContent>
               </Select>
 
-              <div className="relative">
-                <button
-                  onClick={() => setShowTagDropdown(!showTagDropdown)}
-                  className="w-full h-9 px-3 text-left bg-[rgba(245,245,245,1)] rounded-md text-sm flex items-center justify-between hover:bg-gray-50"
-                >
-                  <span className={searchFilters.tags.length > 0 ? 'text-gray-900' : 'text-gray-500'}>
-                    {searchFilters.tags.length > 0 ? `${searchFilters.tags.length} tags selected` : 'Select Tags'}
-                  </span>
-                  <ChevronDown className="w-4 h-4 text-gray-500" />
-                </button>
-                
-                {showTagDropdown && (
-                  <div className="absolute z-50 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
-                    {tagOptions.map((tag) => (
-                      <label
-                        key={tag}
-                        className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={searchFilters.tags.includes(tag)}
-                          onChange={() => handleTagToggle(tag)}
-                          className="mr-2"
-                        />
-                        <span className="text-sm">{tag}</span>
-                      </label>
-                    ))}
-                  </div>
-                )}
+              <div>
+                <ReactSelect
+                  isMulti
+                  className="text-sm"
+                  menuPortalTarget={document.body}
+                  styles={{menuPortal: base => ({ ...base, zIndex: 9999 }),}}
+                  options={tagOptions.map(tag => ({ value: tag, label: tag }))}
+                  value={tagOptions.filter(tag => searchFilters.tags.includes(tag)).map(tag => ({ value: tag, label: tag }))}
+                  onChange={(selected) =>setSearchFilters(prev => ({...prev,tags: selected ? selected.map(s => s.value) : [],}))}
+                  placeholder="Select Tags"
+                />
               </div>
             </div>
 
