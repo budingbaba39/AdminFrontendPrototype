@@ -37,6 +37,7 @@ const getDefaultFormData = (): Promotion => ({
   bonusFixedAmount: 0,
   bonusRandom: { min: 0, max: 0 },
   maxWithdraw: 0,
+  creditLessThan: 0,
   validFrom: '',
   validTo: '',
   status: 'Active',
@@ -304,6 +305,7 @@ export default function PromotionListManagement() {
               <option value="All">All</option>
               <option value="Deposit">Deposit</option>
               <option value="Free">Free</option>
+              <option value="Referrer">Referrer</option>
             </select>
           </div>
 
@@ -460,7 +462,9 @@ export default function PromotionListManagement() {
                     className={`font-semibold ${
                       promo.promoType === 'Deposit'
                         ? 'bg-blue-100 text-blue-800'
-                        : 'bg-green-100 text-green-800'
+                        : promo.promoType === 'Free'
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-purple-100 text-purple-800'
                     }`}
                   >
                     {promo.promoType}
@@ -472,9 +476,14 @@ export default function PromotionListManagement() {
                   <div className="flex flex-wrap gap-1">
                     {promo.levelIds.map(levelId => {
                       const level = initialLevels.find(l => l.id === levelId);
+                      const levelName = level?.levelName?.toLowerCase() || 'bronze';
                       return level ? (
-                        <Badge key={levelId} variant="outline" className="text-xs">
-                          {level.levelName}
+                        <Badge key={levelId} className={`text-xs font-semibold px-2 py-0.5 ${
+                          levelName === 'gold' ? 'bg-yellow-500 text-white' :
+                          levelName === 'silver' ? 'bg-gray-400 text-white' :
+                          'bg-amber-700 text-white'
+                        }`}>
+                          {levelName.toUpperCase()}
                         </Badge>
                       ) : null;
                     })}
@@ -641,12 +650,13 @@ export default function PromotionListManagement() {
                         <label className="block text-sm font-semibold mb-2 text-gray-700">Promo Type *</label>
                         <select
                           value={formData.promoType}
-                          onChange={(e) => handleInputChange('promoType', e.target.value as 'Deposit' | 'Free')}
+                          onChange={(e) => handleInputChange('promoType', e.target.value as 'Deposit' | 'Free' | 'Referrer')}
                           className="w-full h-10 px-3 py-2 border rounded-md"
                           disabled={isReadOnly}
                         >
                           <option value="Deposit">Deposit</option>
                           <option value="Free">Free</option>
+                          <option value="Referrer">Referrer</option>
                         </select>
                       </div>
 
@@ -901,6 +911,19 @@ export default function PromotionListManagement() {
                           onChange={(e) => handleInputChange('maxWithdraw', parseFloat(e.target.value) || 0)}
                           disabled={isReadOnly}
                           placeholder="Maximum withdrawal"
+                          className="w-full h-10"
+                        />
+                      </div>
+
+                      <div className="w-full">
+                        <label className="block text-sm font-semibold mb-2 text-gray-700">Credit Less Than *</label>
+                        <Input
+                          type="number"
+                          min="0"
+                          value={formData.creditLessThan}
+                          onChange={(e) => handleInputChange('creditLessThan', parseFloat(e.target.value) || 0)}
+                          disabled={isReadOnly}
+                          placeholder="Credit limit threshold"
                           className="w-full h-10"
                         />
                       </div>

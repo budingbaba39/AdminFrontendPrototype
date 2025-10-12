@@ -3,7 +3,7 @@ export interface Promotion {
 
   // Basic Info
   promoName: string;
-  promoType: 'Deposit' | 'Free';
+  promoType: 'Deposit' | 'Free' | 'Referrer';
   allowInterTransfer: boolean;
 
   // Bonus Info
@@ -19,6 +19,7 @@ export interface Promotion {
     max: number;
   };
   maxWithdraw: number;
+  creditLessThan: number;
 
   // Details Info
   validFrom: string; // date string (YYYY-MM-DD)
@@ -62,13 +63,14 @@ export const initialPromotions: Promotion[] = [
     minTimeOfDeposit: 1,
     minDeposit: 50,
     maxClaimBonus: 500,
-    bonusRate: 20,
+    bonusRate: 20, // Only bonus rate has value
     bonusFixedAmount: 0,
     bonusRandom: {
       min: 0,
       max: 0
     },
     maxWithdraw: 1000,
+    creditLessThan: 5000,
     validFrom: '2024-01-01',
     validTo: '2024-12-31',
     status: 'Active',
@@ -98,7 +100,7 @@ export const initialPromotions: Promotion[] = [
     unlockAmountLose: 50,
     minTimeOfDeposit: 0,
     minDeposit: 0,
-    maxClaimBonus: 100,
+    maxClaimBonus: 500,
     bonusRate: 10,
     bonusFixedAmount: 0,
     bonusRandom: {
@@ -106,6 +108,7 @@ export const initialPromotions: Promotion[] = [
       max: 0
     },
     maxWithdraw: 200,
+    creditLessThan: 1000,
     validFrom: '2024-06-01',
     validTo: '2024-06-30',
     status: 'Active',
@@ -137,14 +140,12 @@ export const initialPromotions: Promotion[] = [
     unlockAmountLose: 500,
     minTimeOfDeposit: 3,
     minDeposit: 200,
-    maxClaimBonus: 2000,
+    maxClaimBonus: 500,
     bonusRate: 6,
     bonusFixedAmount: 0,
-    bonusRandom: {
-      min: 0,
-      max: 0
-    },
+    bonusRandom: { min: 0, max: 0 },
     maxWithdraw: 10000,
+    creditLessThan: 15000,
     validFrom: '2024-01-01',
     validTo: '2025-12-31',
     status: 'Active',
@@ -166,5 +167,116 @@ export const initialPromotions: Promotion[] = [
     },
     memberApplied: 89,
     createdDate: '2024-01-01'
+  },
+  {
+    id: 'PROMO004',
+    promoName: 'Referrer Promotion',
+    promoType: 'Referrer',
+    allowInterTransfer: false,
+    unlockRateWin: 60,
+    unlockAmountLose: 200,
+    minTimeOfDeposit: 1,
+    minDeposit: 100,
+    maxClaimBonus: 1000,
+    bonusRate: 15, // Only bonus rate has value
+    bonusFixedAmount: 0,
+    bonusRandom: {
+      min: 0,
+      max: 0
+    },
+    maxWithdraw: 5000,
+    creditLessThan: 10000,
+    validFrom: '2024-01-01',
+    validTo: '2025-12-31',
+    status: 'Active',
+    targetType: 'Valid Bet',
+    targetMultiplier: 2,
+    recurring: 'One Time',
+    timeFrom: '00:00',
+    timeTo: '23:59',
+    includeRebate: false,
+    requireApproval: true,
+    levelIds: [1, 2, 3],
+    providerIds: [6, 16, 31, 32],
+    translations: {
+      english: { title: 'Referrer Promotion', name: 'Refer a Friend and Earn Bonus', description: '', images: [] },
+      chinese: { title: '推荐人促销', name: '推荐朋友并获得奖金', description: '', images: [] },
+      malay: { title: 'Promosi Rujukan', name: 'Rujuk Rakan dan Dapatkan Bonus', description: '', images: [] }
+    },
+    memberApplied: 156,
+    createdDate: '2024-01-15'
+  },
+  {
+    id: 'PROMO005',
+    promoName: 'VIP Referral Bonus',
+    promoType: 'Referrer',
+    allowInterTransfer: false,
+    unlockRateWin: 70,
+    unlockAmountLose: 300,
+    minTimeOfDeposit: 2,
+    minDeposit: 200,
+    maxClaimBonus: 500,
+    bonusRate: 25,
+    bonusFixedAmount: 0,
+    bonusRandom: {
+      min: 0,
+      max: 0
+    },
+    maxWithdraw: 8000,
+    creditLessThan: 20000,
+    validFrom: '2024-02-01',
+    validTo: '2025-12-31',
+    status: 'Active',
+    targetType: 'Valid Bet',
+    targetMultiplier: 1.5,
+    recurring: 'One Time',
+    timeFrom: '00:00',
+    timeTo: '23:59',
+    includeRebate: false,
+    requireApproval: true,
+    levelIds: [2, 3], // Silver and Gold only
+    providerIds: [6, 16, 17, 31, 32],
+    translations: {
+      english: { title: 'VIP Referral Bonus', name: 'VIP Members Get $150 per Referral', description: '', images: [] },
+      chinese: { title: 'VIP推荐奖金', name: 'VIP会员每推荐获得$150', description: '', images: [] },
+      malay: { title: 'Bonus Rujukan VIP', name: 'Ahli VIP Dapat $150 setiap Rujukan', description: '', images: [] }
+    },
+    memberApplied: 78,
+    createdDate: '2024-02-01'
+  },
+  {
+    id: 'PROMO006',
+    promoName: 'Lucky Referral Reward',
+    promoType: 'Referrer',
+    allowInterTransfer: false,
+    unlockRateWin: 50,
+    unlockAmountLose: 150,
+    minTimeOfDeposit: 1,
+    minDeposit: 50,
+    maxClaimBonus: 500, // Only bonus rate has value
+    bonusRate: 10,
+    bonusFixedAmount: 0,
+    bonusRandom: { min: 0, max: 0 },
+    maxWithdraw: 3000,
+    creditLessThan: 8000,
+    validFrom: '2024-03-01',
+    validTo: '2025-06-30',
+    status: 'Active',
+    targetType: 'By Balance WinOver',
+    targetMultiplier: 2,
+    recurring: 'One Time',
+    timeFrom: '00:00',
+    timeTo: '23:59',
+    includeRebate: true,
+    requireApproval: false,
+    levelIds: [1, 2, 3], // All levels
+    providerIds: [6, 16, 31, 32, 33],
+    translations: {
+      english: { title: 'Lucky Referral Reward', name: 'Win Random Bonus $25-$200 for Each Referral', description: '', images: [] },
+      chinese: { title: '幸运推荐奖励', name: '每次推荐赢取$25-$200随机奖金', description: '', images: [] },
+      malay: { title: 'Ganjaran Rujukan Bertuah', name: 'Menang Bonus Rawak $25-$200 untuk Setiap Rujukan', description: '', images: [] }
+    },
+    memberApplied: 234,
+    createdDate: '2024-03-01'
   }
 ];

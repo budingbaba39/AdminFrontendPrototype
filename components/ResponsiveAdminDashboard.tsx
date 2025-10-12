@@ -29,9 +29,10 @@ import CashBackRecordContent from './CashBackRecordContent';
 import CashBackScheduleContent from './CashBackScheduleContent';
 import CashBackReleaseContent from './CashBackReleaseContent';
 import CommissionRecordContent from './CommissionRecordContent';
+import ReferrerSetupContent from './ReferrerSetupContent';
 
 // Define page type to avoid repetition
-type PageType = 'dashboard' | 'deposit' | 'withdrawal' | 'adjustment' | 'transaction-record' | 'user-record' | 'level' | 'tag' | 'promotion' | 'promotion-record' | 'promotion-list' | 'promotion-ongoing' | 'rebate' | 'rebate-record' | 'rebate-setup' | 'rebate-release' | 'rebate-schedule' | 'cashback' | 'cashback-record' | 'cashback-setup' | 'cashback-release' | 'cashback-schedule' | 'commission' | 'commission-record' | 'game-kiosk' | 'settings' | 'security' | 'bank-list' | 'bank-setup' | 'bank-report' | 'report' | 'admin-tool' | 'api' | 'change-log' | 'display' | 'domain' | 'page' | 'staff' | 'theme' | 'tools';
+type PageType = 'dashboard' | 'deposit' | 'withdrawal' | 'adjustment' | 'transaction-record' | 'user-record' | 'level' | 'tag' | 'promotion' | 'promotion-record' | 'promotion-list' | 'promotion-ongoing' | 'rebate' | 'rebate-record' | 'rebate-setup' | 'rebate-release' | 'rebate-schedule' | 'cashback' | 'cashback-record' | 'cashback-setup' | 'cashback-release' | 'cashback-schedule' | 'commission' | 'commission-record' | 'referrer-setup' | 'game-kiosk' | 'settings' | 'security' | 'bank-list' | 'bank-setup' | 'bank-report' | 'report' | 'admin-tool' | 'api' | 'change-log' | 'display' | 'domain' | 'page' | 'staff' | 'theme' | 'tools';
 
 interface ResponsiveAdminDashboardProps {
   currentPage: PageType;
@@ -41,19 +42,19 @@ interface ResponsiveAdminDashboardProps {
 
 // Individual menu items
 const singleMenuItems = [
-  { id: 'game-kiosk', label: '8. GAME KIOSK' },
-  { id: 'settings', label: '9. SETTINGS' },
-  { id: 'security', label: '10. SECURITY' },
-  { id: 'report', label: '11. REPORT' },
-  { id: 'admin-tool', label: '12. ADMIN TOOL' },
-  { id: 'api', label: '13. API' },
-  { id: 'change-log', label: '14. CHANGE LOG' },
-  { id: 'display', label: '15. DISPLAY' },
-  { id: 'domain', label: '16. DOMAIN' },
-  { id: 'page', label: '17. PAGE' },
-  { id: 'staff', label: '18. STAFF' },
-  { id: 'theme', label: '19. THEME' },
-  { id: 'tools', label: '20. TOOLS' },
+  { id: 'game-kiosk', label: '9. GAME KIOSK' },
+  { id: 'settings', label: '10. SETTINGS' },
+  { id: 'security', label: '11. SECURITY' },
+  { id: 'report', label: '12. REPORT' },
+  { id: 'admin-tool', label: '13. ADMIN TOOL' },
+  { id: 'api', label: '14. API' },
+  { id: 'change-log', label: '15. CHANGE LOG' },
+  { id: 'display', label: '16. DISPLAY' },
+  { id: 'domain', label: '17. DOMAIN' },
+  { id: 'page', label: '18. PAGE' },
+  { id: 'staff', label: '19. STAFF' },
+  { id: 'theme', label: '20. THEME' },
+  { id: 'tools', label: '21. TOOLS' },
 ];
 
 const bottomMenuItems = [
@@ -481,6 +482,51 @@ function CommissionMenuItem({ currentPage, onNavigate }: {
   );
 }
 
+function ReferrerMenuItem({ currentPage, onNavigate }: {
+  currentPage: string;
+  onNavigate: (page: PageType) => void;
+}) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const isReferrerActive = ['referrer-setup'].includes(currentPage);
+
+  useEffect(() => {
+    if (isReferrerActive) {
+      setIsExpanded(true);
+    }
+  }, [isReferrerActive]);
+
+  return (
+    <div>
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className={`w-full flex items-center p-3 rounded-lg text-sm font-semibold uppercase tracking-[-0.14px] transition-colors ${
+          isReferrerActive
+            ? 'bg-white text-[#3949ab]'
+            : 'bg-white text-[#3949ab] hover:bg-[#f0f0f0]'
+        }`}
+      >
+        <span className="flex-1 text-left">7. REFERRER</span>
+        {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+      </button>
+
+      {isExpanded && (
+        <div className="ml-6 mt-2 space-y-1">
+          <button
+            onClick={() => onNavigate('referrer-setup')}
+            className={`w-full flex items-center p-2 rounded-lg text-sm font-medium tracking-[-0.14px] transition-colors ${
+              currentPage === 'referrer-setup'
+                ? 'bg-[#e8eaf6] text-[#3949ab]'
+                : 'text-[#3949ab] hover:bg-[#f0f0f0]'
+            }`}
+          >
+            <span className="text-left">7.1 REFERRER SETUP</span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function BankMenuItem({ currentPage, onNavigate }: {
   currentPage: string;
   onNavigate: (page: PageType) => void;
@@ -504,7 +550,7 @@ function BankMenuItem({ currentPage, onNavigate }: {
             : 'bg-white text-[#3949ab] hover:bg-[#f0f0f0]'
         }`}
       >
-        <span className="flex-1 text-left">7. BANK</span>
+        <span className="flex-1 text-left">8. BANK</span>
         {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
       </button>
 
@@ -518,7 +564,7 @@ function BankMenuItem({ currentPage, onNavigate }: {
                 : 'text-[#3949ab] hover:bg-[#f0f0f0]'
             }`}
           >
-            <span className="text-left">7.1 BANK LIST</span>
+            <span className="text-left">8.1 BANK LIST</span>
           </button>
 
           {/* <button
@@ -529,7 +575,7 @@ function BankMenuItem({ currentPage, onNavigate }: {
                 : 'text-[#3949ab] hover:bg-[#f0f0f0]'
             }`}
           >
-            <span className="text-left">7.2 BANK SETUP</span>
+            <span className="text-left">8.2 BANK SETUP</span>
           </button> */}
 
           <button
@@ -540,7 +586,7 @@ function BankMenuItem({ currentPage, onNavigate }: {
                 : 'text-[#3949ab] hover:bg-[#f0f0f0]'
             }`}
           >
-            <span className="text-left">7.3 BANK REPORT</span>
+            <span className="text-left">8.3 BANK REPORT</span>
           </button>
         </div>
       )}
@@ -584,10 +630,13 @@ function Sidebar({ currentPage, onNavigate, onLogout, className = "" }: {
           {/* 6. Commission Submenu */}
           <CommissionMenuItem currentPage={currentPage} onNavigate={onNavigate} />
 
-          {/* 7. Bank Submenu */}
+          {/* 7. Referrer Submenu */}
+          <ReferrerMenuItem currentPage={currentPage} onNavigate={onNavigate} />
+
+          {/* 8. Bank Submenu */}
           <BankMenuItem currentPage={currentPage} onNavigate={onNavigate} />
 
-          {/* 8-10. Individual menu items */}
+          {/* 9-11. Individual menu items */}
           {singleMenuItems.slice(0, 3).map((item) => (
             <MenuItem
               key={item.id}
@@ -818,6 +867,8 @@ export default function ResponsiveAdminDashboard({ currentPage, onNavigate, onLo
       case 'commission':
       case 'commission-record':
         return <CommissionRecordContent />;
+      case 'referrer-setup':
+        return <ReferrerSetupContent />;
       case 'transaction-record':
         return <TransactionRecordManagement />;
       case 'user-record':
