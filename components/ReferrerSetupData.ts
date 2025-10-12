@@ -7,7 +7,6 @@ export interface ReferrerSetup {
   status: 'Active' | 'Inactive';
   autoApprovedAmount: number;
   maxPayoutPerDownline: number;
-  minTimeOfDeposit: number;
   promoId: string;
   createdDate: string;
   createdBy: string;
@@ -23,9 +22,8 @@ export const initialReferrerSetups: ReferrerSetup[] = [
     status: 'Active',
     autoApprovedAmount: 1000,
     maxPayoutPerDownline: 1000,
-    minTimeOfDeposit: 3,
     promoId: 'PROMO004',
-    createdDate: '2024-01-15 10:30:00',
+    createdDate: '2024-01-15',
     createdBy: 'Admin'
   }
 ];

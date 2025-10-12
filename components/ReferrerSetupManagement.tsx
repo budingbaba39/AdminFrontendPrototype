@@ -24,24 +24,14 @@ const getDefaultFormData = (): ReferrerSetup => ({
   status: 'Active',
   autoApprovedAmount: 1000,
   maxPayoutPerDownline: 1000,
-  minTimeOfDeposit: 3,
   promoId: referrerPromotions.length > 0 ? referrerPromotions[0].id : '',
-  createdDate: new Date().toLocaleString('en-US', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false
-  }).replace(/(\d+)\/(\d+)\/(\d+),/, '$3-$1-$2'),
+  createdDate: new Date().toISOString().split('T')[0],
   createdBy: 'Admin'
 });
 
 export default function ReferrerSetupManagement() {
   const [setups, setSetups] = useState<ReferrerSetup[]>(initialReferrerSetups);
   const [modalMode, setModalMode] = useState<ModalMode>(null);
-  const [editingSetup, setEditingSetup] = useState<ReferrerSetup | null>(null);
 
   // Filter states
   const [filterLevel, setFilterLevel] = useState<string>('all');
@@ -87,16 +77,13 @@ export default function ReferrerSetupManagement() {
       );
       newFormData.id = `REF${String(maxNumericId + 1).padStart(3, '0')}`;
       setFormData(newFormData);
-      setEditingSetup(null);
     } else if (setup) {
       setFormData({ ...setup });
-      setEditingSetup(setup);
     }
   };
 
   const closeModal = () => {
     setModalMode(null);
-    setEditingSetup(null);
     setFormData(getDefaultFormData());
     setValidationErrors({});
   };
@@ -105,9 +92,8 @@ export default function ReferrerSetupManagement() {
     const errors: Record<string, string> = {};
 
     if (!formData.name.trim()) errors.name = 'Name is required';
-    if (formData.autoApprovedAmount < 0) errors.autoApprovedAmount = 'Must be >= 0';
-    if (formData.maxPayoutPerDownline < 0) errors.maxPayoutPerDownline = 'Must be >= 0';
-    if (formData.minTimeOfDeposit < 0) errors.minTimeOfDeposit = 'Must be >= 0';
+    if (typeof formData.autoApprovedAmount !== 'number' || formData.autoApprovedAmount < 0) errors.autoApprovedAmount = 'Must be >= 0';
+    if (typeof formData.maxPayoutPerDownline !== 'number' || formData.maxPayoutPerDownline < 0) errors.maxPayoutPerDownline = 'Must be >= 0';
     if (!formData.promoId) errors.promoId = 'Promo Type is required';
 
     setValidationErrors(errors);
@@ -117,10 +103,16 @@ export default function ReferrerSetupManagement() {
   const handleSave = () => {
     if (!validateForm()) return;
 
+    const dataToSave = {
+      ...formData,
+      createdDate: modalMode === 'create' ? new Date().toISOString().split('T')[0] : formData.createdDate,
+      createdBy: modalMode === 'create' ? 'Admin' : formData.createdBy
+    };
+
     if (modalMode === 'create') {
-      setSetups([...setups, formData]);
+      setSetups([...setups, dataToSave]);
     } else if (modalMode === 'edit') {
-      setSetups(setups.map(s => s.id === formData.id ? formData : s));
+      setSetups(setups.map(s => s.id === dataToSave.id ? dataToSave : s));
     }
     closeModal();
   };
@@ -215,7 +207,6 @@ export default function ReferrerSetupManagement() {
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Name</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Auto Approved Amount &lt;=</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Max Payout Amount (Per Downline)</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Minimum Time of Deposit</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Created Date</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Promo Type</th>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-gray-900 uppercase">Status</th>
@@ -245,7 +236,6 @@ export default function ReferrerSetupManagement() {
                     <td className="px-4 py-3 text-gray-900 font-medium">
                       ${setup.maxPayoutPerDownline.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
-                    <td className="px-4 py-3 text-gray-900">{setup.minTimeOfDeposit}</td>
                     <td className="px-4 py-3 text-gray-900 text-xs">{setup.createdDate}</td>
                     <td className="px-4 py-3 text-gray-900">{promo?.promoName || 'Unknown'}</td>
                     <td className="px-4 py-3 text-center">
@@ -286,7 +276,7 @@ export default function ReferrerSetupManagement() {
               })}
               {filteredSetups.length === 0 && (
                 <tr>
-                  <td colSpan={9} className="px-4 py-8 text-center text-gray-500">
+                  <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
                     No referrer setups found
                   </td>
                 </tr>
@@ -376,7 +366,7 @@ export default function ReferrerSetupManagement() {
                 type="number"
                 min="0"
                 value={formData.autoApprovedAmount}
-                onChange={(e) => handleInputChange('autoApprovedAmount', parseFloat(e.target.value) || 0)}
+                onChange={(e) => handleInputChange('autoApprovedAmount', e.target.value === '' ? '' : parseFloat(e.target.value))}
                 placeholder="1000"
                 className="w-full h-10"
               />
@@ -391,27 +381,12 @@ export default function ReferrerSetupManagement() {
                 type="number"
                 min="0"
                 value={formData.maxPayoutPerDownline}
-                onChange={(e) => handleInputChange('maxPayoutPerDownline', parseFloat(e.target.value) || 0)}
+                onChange={(e) => handleInputChange('maxPayoutPerDownline', e.target.value === '' ? '' : parseFloat(e.target.value))}
                 placeholder="1000"
                 className="w-full h-10"
               />
               {validationErrors.maxPayoutPerDownline && (
                 <p className="text-red-600 text-sm mt-1">{validationErrors.maxPayoutPerDownline}</p>
-              )}
-            </div>
-
-            <div className="w-full">
-              <label className="block text-sm font-semibold mb-2 text-gray-700">Minimum Time of Deposit *</label>
-              <Input
-                type="number"
-                min="0"
-                value={formData.minTimeOfDeposit}
-                onChange={(e) => handleInputChange('minTimeOfDeposit', parseInt(e.target.value) || 0)}
-                placeholder="3"
-                className="w-full h-10"
-              />
-              {validationErrors.minTimeOfDeposit && (
-                <p className="text-red-600 text-sm mt-1">{validationErrors.minTimeOfDeposit}</p>
               )}
             </div>
 
