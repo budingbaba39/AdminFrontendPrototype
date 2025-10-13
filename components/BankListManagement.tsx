@@ -5,6 +5,8 @@ import { Input } from './ui/input';
 import { Badge } from './ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Edit, Trash2, X, RefreshCw } from 'lucide-react';
+import ReactSelect from 'react-select';
+
 
 type ModalMode = 'create' | 'edit' | null;
 
@@ -116,7 +118,6 @@ export default function BankListManagement() {
     if (formData.bankType === 'Online Transfer') {
       if (!formData.accountName.trim()) errors.accountName = 'Account name is required';
       if (!formData.accountNo.trim()) errors.accountNo = 'Account number is required';
-
     }
 
     if (formData.bankType === 'QR') {
@@ -249,56 +250,18 @@ export default function BankListManagement() {
       {/* Filter Section */}
       <div className="bg-white rounded-lg shadow border p-6 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div className="relative">
+          <div>
             <label className="block text-sm font-medium mb-2">Bank Name</label>
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setShowBankNameDropdown(!showBankNameDropdown)}
-                className="w-full px-3 py-2 border rounded-md text-left bg-white"
-              >
-                {filterBankName.length === 0 ? 'Select banks' : `${filterBankName.length} selected`}
-              </button>
-              {showBankNameDropdown && (
-                <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-y-auto">
-                  <div className="p-2 border-b">
-                    <label className="flex items-center space-x-2 hover:bg-gray-100 p-1 rounded cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={filterBankName.length === uniqueBankNames.length}
-                        onChange={toggleAllBankNames}
-                      />
-                      <span className="font-medium">Select All</span>
-                    </label>
-                  </div>
-                  {uniqueBankNames.map(bankName => (
-                    <div key={bankName} className="p-2">
-                      <label className="flex items-center space-x-2 hover:bg-gray-100 p-1 rounded cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={filterBankName.includes(bankName)}
-                          onChange={() => toggleBankNameFilter(bankName)}
-                        />
-                        <span>{bankName}</span>
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            {filterBankName.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-2">
-                {filterBankName.map(bankName => (
-                  <Badge key={bankName} variant="secondary" className="text-xs">
-                    {bankName}
-                    <X
-                      className="ml-1 h-3 w-3 cursor-pointer"
-                      onClick={() => toggleBankNameFilter(bankName)}
-                    />
-                  </Badge>
-                ))}
-              </div>
-            )}
+            <ReactSelect
+              isMulti
+              className="text-sm"
+              menuPortalTarget={document.body}
+              styles={{menuPortal: base => ({ ...base, zIndex: 9999 }),}}
+              options={uniqueBankNames.map(name => ({ value: name, label: name }))}
+              value={filterBankName.map(name => ({ value: name, label: name }))}
+              onChange={(selected) =>setFilterBankName(selected ? selected.map(s => s.value) : [])}
+              placeholder="Select Banks"
+            />
           </div>
 
           <div>
