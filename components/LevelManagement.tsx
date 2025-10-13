@@ -46,7 +46,6 @@ export default function LevelManagement() {
   const [formData, setFormData] = useState<Omit<Level, 'id' | 'createdDate'>>({
     levelName: '',
     levelNameTranslations: {
-      english: '',
       chinese: '',
       malay: ''
     },
@@ -87,7 +86,6 @@ export default function LevelManagement() {
     setFormData({
       levelName: '',
       levelNameTranslations: {
-        english: '',
         chinese: '',
         malay: ''
       },
@@ -137,6 +135,10 @@ export default function LevelManagement() {
     if (!selectedLevel) return;
 
     // Validation
+    if (!formData.levelName || formData.levelName.trim() === '') {
+      alert('Level Name is required');
+      return;
+    }
     if (formData.depositTurnoverRate <= 0) {
       alert('Deposit Turnover Rate must be greater than 0');
       return;
@@ -148,10 +150,18 @@ export default function LevelManagement() {
 
     setLevels(prev => prev.map(level =>
       level.id === selectedLevel.id
-        ? { ...formData, id: level.id, createdDate: level.createdDate }
+        ? {
+            ...formData,
+            id: selectedLevel.id,
+            createdDate: level.createdDate,
+            providerBetLimits: level.providerBetLimits,
+            providerRebateAssignments: level.providerRebateAssignments,
+            providerCashbackAssignments: level.providerCashbackAssignments
+          }
         : level
     ));
 
+    console.log('Updated level:', formData.levelName);
     setShowEditModal(false);
     setSelectedLevel(null);
     resetForm();
@@ -165,13 +175,13 @@ export default function LevelManagement() {
 
   const handleEditClick = (level: Level) => {
     setSelectedLevel(level);
+    const translations = level.levelNameTranslations || {
+      chinese: '',
+      malay: ''
+    };
     setFormData({
       levelName: level.levelName,
-      levelNameTranslations: level.levelNameTranslations || {
-        english: '',
-        chinese: '',
-        malay: ''
-      },
+      levelNameTranslations: translations,
       maxWithdrawAmountPerTransaction: level.maxWithdrawAmountPerTransaction,
       maxWithdrawAmountPerDay: level.maxWithdrawAmountPerDay,
       minWithdrawAmount: level.minWithdrawAmount,
@@ -497,7 +507,8 @@ export default function LevelManagement() {
   };
 
   const getLevelBadgeColors = (levelName: string) => {
-    return levelColors[levelName] || levelColors.Default;
+    const colors = levelColors[levelName] || levelColors['Default'];
+    return colors || { badgeColor: '#6b7280', fontColor: '#ffffff' };
   };
 
   const formatCurrency = (amount: number) => {
@@ -953,13 +964,10 @@ export default function LevelManagement() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Level Name (English) *</label>
                 <Input
-                  value={formData.levelNameTranslations?.english || ''}
+                  value={formData.levelName}
                   onChange={(e) => setFormData(prev => ({
                     ...prev,
-                    levelNameTranslations: {
-                      ...prev.levelNameTranslations!,
-                      english: e.target.value
-                    }
+                    levelName: e.target.value
                   }))}
                   className="w-full h-9"
                   placeholder="e.g., Platinum"
@@ -973,8 +981,8 @@ export default function LevelManagement() {
                   onChange={(e) => setFormData(prev => ({
                     ...prev,
                     levelNameTranslations: {
-                      ...prev.levelNameTranslations!,
-                      chinese: e.target.value
+                      chinese: e.target.value,
+                      malay: prev.levelNameTranslations?.malay || ''
                     }
                   }))}
                   className="w-full h-9"
@@ -989,7 +997,7 @@ export default function LevelManagement() {
                   onChange={(e) => setFormData(prev => ({
                     ...prev,
                     levelNameTranslations: {
-                      ...prev.levelNameTranslations!,
+                      chinese: prev.levelNameTranslations?.chinese || '',
                       malay: e.target.value
                     }
                   }))}
@@ -1270,13 +1278,10 @@ export default function LevelManagement() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Level Name (English) *</label>
                 <Input
-                  value={formData.levelNameTranslations?.english || ''}
+                  value={formData.levelName}
                   onChange={(e) => setFormData(prev => ({
                     ...prev,
-                    levelNameTranslations: {
-                      ...prev.levelNameTranslations!,
-                      english: e.target.value
-                    }
+                    levelName: e.target.value
                   }))}
                   className="w-full h-9"
                   placeholder="e.g., Platinum"
@@ -1290,8 +1295,8 @@ export default function LevelManagement() {
                   onChange={(e) => setFormData(prev => ({
                     ...prev,
                     levelNameTranslations: {
-                      ...prev.levelNameTranslations!,
-                      chinese: e.target.value
+                      chinese: e.target.value,
+                      malay: prev.levelNameTranslations?.malay || ''
                     }
                   }))}
                   className="w-full h-9"
@@ -1306,7 +1311,7 @@ export default function LevelManagement() {
                   onChange={(e) => setFormData(prev => ({
                     ...prev,
                     levelNameTranslations: {
-                      ...prev.levelNameTranslations!,
+                      chinese: prev.levelNameTranslations?.chinese || '',
                       malay: e.target.value
                     }
                   }))}

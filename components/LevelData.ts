@@ -18,7 +18,6 @@ export interface Level {
   id: number;
   levelName: string;
   levelNameTranslations?: {
-    english: string;
     chinese: string;
     malay: string;
   };
@@ -48,7 +47,6 @@ export const initialLevels: Level[] = [
     id: 1,
     levelName: 'Bronze',
     levelNameTranslations: {
-      english: 'Bronze',
       chinese: '青铜',
       malay: 'Gangsa'
     },
@@ -85,7 +83,6 @@ export const initialLevels: Level[] = [
     id: 2,
     levelName: 'Silver',
     levelNameTranslations: {
-      english: 'Silver',
       chinese: '白银',
       malay: 'Perak'
     },
@@ -123,7 +120,6 @@ export const initialLevels: Level[] = [
     id: 3,
     levelName: 'Gold',
     levelNameTranslations: {
-      english: 'Gold',
       chinese: '黄金',
       malay: 'Emas'
     },
@@ -165,4 +161,5 @@ export const levelColors: Record<string, { badgeColor: string; fontColor: string
   Bronze: { badgeColor: '#f4a261', fontColor: '#8a5522' },
   Silver: { badgeColor: '#d9d9d9', fontColor: '#4a4a4a' },
   Gold: { badgeColor: '#f1c40f', fontColor: '#7f6000' },
+  Default: { badgeColor: '#6b7280', fontColor: '#ffffff' }
 };
