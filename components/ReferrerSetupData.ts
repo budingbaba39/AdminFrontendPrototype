@@ -1,6 +1,5 @@
 export interface ReferrerSetup {
   id: string;
-  levelId: number;
   name: string;
   targetType: 'By Deposit' | 'By Register';
   recurring: 'One Time';
@@ -15,7 +14,6 @@ export interface ReferrerSetup {
 export const initialReferrerSetups: ReferrerSetup[] = [
   {
     id: 'REF001',
-    levelId: 1,
     name: 'Bronze Referral Program',
     targetType: 'By Deposit',
     recurring: 'One Time',
