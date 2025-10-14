@@ -201,7 +201,8 @@ export default function RebateRecordManagement() {
           credit: transaction.currentCredit || 0,
           bankAccount: transaction.bankAccountNumber || '',
           bank: transaction.from || '',
-          referrer: 'DIRECT',
+          referrer_code: `REF-${transaction.username}-XXXX`,
+          referrer_by: null,
           agent: 'AGENT001',
           winLoss: 0,
           lastDeposit: transaction.submitTime,
@@ -289,6 +290,30 @@ export default function RebateRecordManagement() {
             ...t,
             status: 'COMPLETED' as const,
             amount: releaseAmount,
+            completeTime: currentTime,
+            completeBy: 'ADMIN001',
+            remark: remark
+          }
+        : t
+    ));
+
+    const newGivenInputs = { ...givenRebateInputs };
+    const newRemarkInputs = { ...remarkInputs };
+    delete newGivenInputs[transaction.id];
+    delete newRemarkInputs[transaction.id];
+    setGivenRebateInputs(newGivenInputs);
+    setRemarkInputs(newRemarkInputs);
+  };
+
+  const handleCancelSingle = (transaction: Transaction) => {
+    const currentTime = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    const remark = remarkInputs[transaction.id] || 'Cancelled by admin';
+
+    setTransactions(prev => prev.map(t =>
+      t.id === transaction.id
+        ? {
+            ...t,
+            status: 'REJECTED' as const,
             completeTime: currentTime,
             completeBy: 'ADMIN001',
             remark: remark
@@ -626,12 +651,20 @@ export default function RebateRecordManagement() {
                       </td>
                       {activeStatus === 'PENDING' && (
                         <td className="px-3 py-2">
-                          <Button
-                            onClick={() => handleSubmitSingle(transaction)}
-                            className="bg-[#4caf50] hover:bg-[#45a049] text-white h-7 text-xs px-3"
-                          >
-                            SUBMIT
-                          </Button>
+                          <div className="flex gap-2">
+                            <Button
+                              onClick={() => handleSubmitSingle(transaction)}
+                              className="bg-[#4caf50] hover:bg-[#45a049] text-white h-7 text-xs px-3"
+                            >
+                              SUBMIT
+                            </Button>
+                            <Button
+                              onClick={() => handleCancelSingle(transaction)}
+                              className="bg-[#f44336] hover:bg-[#d32f2f] text-white h-7 text-xs px-3"
+                            >
+                              CANCEL
+                            </Button>
+                          </div>
                         </td>
                       )}
                     </tr>

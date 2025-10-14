@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Badge } from './ui/badge';
 import { ChevronDown, ChevronUp, Download, RefreshCw } from 'lucide-react';
 import ProfileContent from './ProfileContent';
-import { User, sampleUsers } from './UserData';
+import { User, sampleUsers, getUserNameById, generateReferralCode } from './UserData';
 import { Transaction, allTransactions } from './transactionData';
 import ReactSelect from 'react-select';
 
@@ -53,7 +53,8 @@ export default function UserManagement() {
     lastVisit: '',
     activity: '',
     level: '',
-    tags: [] as string[]
+    tags: [] as string[],
+    referredBy: ''
   });
 
   const [hasSearched, setHasSearched] = useState(true);
@@ -67,8 +68,12 @@ export default function UserManagement() {
     username: '',
     password: '000000',
     fullName: '',
-    referrerCode: ''
+    referralCode: '',
+    referredBy: null as string | null
   });
+
+  const [referralCodeError, setReferralCodeError] = useState('');
+  const [referralCodeValid, setReferralCodeValid] = useState(false);
 
   // Function to mask credit amount
   const maskCreditAmount = (credit: number) => {
@@ -115,7 +120,8 @@ export default function UserManagement() {
       lastVisit: '',
       activity: '',
       level: '',
-      tags: []
+      tags: [],
+      referredBy: ''
     });
     setActiveStatusFilter('ALL');
     setHasSearched(true);
@@ -139,9 +145,36 @@ export default function UserManagement() {
     setSelectedUser(updatedUser);
   };
 
+  const handleReferralCodeChange = (code: string) => {
+    setNewUser(prev => ({ ...prev, referralCode: code }));
+    setReferralCodeError('');
+    setReferralCodeValid(false);
+
+    if (!code.trim()) {
+      setNewUser(prev => ({ ...prev, referredBy: null }));
+      return;
+    }
+
+    // Find user by referral code
+    const referringUser = users.find(u => u.referrer_code === code.trim());
+    if (referringUser) {
+      setNewUser(prev => ({ ...prev, referredBy: referringUser.id }));
+      setReferralCodeValid(true);
+    } else {
+      setReferralCodeError('Invalid referral code');
+      setNewUser(prev => ({ ...prev, referredBy: null }));
+    }
+  };
+
   const handleCreateUser = () => {
+    // Validation
+    if (!newUser.fullName.trim()) {
+      alert('Full Name is required');
+      return;
+    }
+
     const userId = `USR${String(users.length + 1).padStart(3, '0')}`;
-    const newUserData = {
+    const newUserData: User = {
       id: userId,
       registerDate: new Date().toISOString().slice(0, 16).replace('T', ' '),
       name: newUser.fullName.toUpperCase(),
@@ -149,7 +182,8 @@ export default function UserManagement() {
       credit: 0.00,
       bankAccount: '0000000000000000',
       bank: 'N/A',
-      referrer: newUser.referrerCode || 'DIRECT',
+      referrer_code: generateReferralCode(userId),
+      referrer_by: newUser.referredBy,
       agent: 'AGENT001',
       winLoss: 0.00,
       lastDeposit: '-',
@@ -177,8 +211,11 @@ export default function UserManagement() {
       username: '',
       password: '000000',
       fullName: '',
-      referrerCode: ''
+      referralCode: '',
+      referredBy: null
     });
+    setReferralCodeError('');
+    setReferralCodeValid(false);
   };
 
   const getStatusColor = (status: string) => {
@@ -323,6 +360,25 @@ export default function UserManagement() {
               </div>
             </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-3">
+              <Select value={searchFilters.referredBy} onValueChange={(value) => handleInputChange('referredBy', value)}>
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="Referred By User" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All Users</SelectItem>
+                  {users.filter(u => u.referrer_by !== null).map(u => u.referrer_by).filter((value, index, self) => self.indexOf(value) === index).map(referrerId => {
+                    const referrer = users.find(u => u.id === referrerId);
+                    return referrer ? (
+                      <SelectItem key={referrer.id} value={referrer.id}>
+                        {referrer.id} - {referrer.name}
+                      </SelectItem>
+                    ) : null;
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="flex justify-end">
               <Button 
                 onClick={() => console.log('Export data')}
@@ -377,7 +433,8 @@ export default function UserManagement() {
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Name</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Mobile</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Credit</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Referrer</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Referral Code</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Referred By</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Action</th>
                   <th colSpan={2} className="px-3 py-2 text-center text-xs font-semibold text-gray-900 uppercase border-2 border-blue-300 bg-blue-50">
                     DEPOSIT
@@ -400,6 +457,7 @@ export default function UserManagement() {
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Bet History</th>
                 </tr>
                 <tr className="bg-gray-50">
+                  <th className="px-3 py-1"></th>
                   <th className="px-3 py-1"></th>
                   <th className="px-3 py-1"></th>
                   <th className="px-3 py-1"></th>
@@ -440,7 +498,22 @@ export default function UserManagement() {
                         {maskCreditAmount(user.credit)}
                       </span>
                     </td>
-                    <td className="px-3 py-2 text-gray-900 text-xs">{user.referrer}</td>
+                    <td className="px-3 py-2 text-gray-900 text-xs font-mono">{user.referrer_code}</td>
+                    <td className="px-3 py-2 text-xs">
+                      {user.referrer_by ? (
+                        <span
+                          className="text-blue-600 font-medium cursor-pointer hover:underline"
+                          onClick={() => {
+                            const referringUser = users.find(u => u.id === user.referrer_by);
+                            if (referringUser) handleUserNameClick(referringUser);
+                          }}
+                        >
+                          {getUserNameById(user.referrer_by, users)}
+                        </span>
+                      ) : (
+                        <span className="text-gray-500 italic">Direct Signup</span>
+                      )}
+                    </td>
                     <td className="px-3 py-2">
                       <div className="flex flex-col gap-1">
                         <Button
@@ -487,57 +560,100 @@ export default function UserManagement() {
 
       {/* Create Account Modal */}
       <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-4xl w-full max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-[#fa0505] font-semibold">CREATE ACCOUNT</DialogTitle>
+            <DialogTitle className="text-[#3949ab] font-semibold text-lg">
+              Create Account
+            </DialogTitle>
           </DialogHeader>
-          <div className="space-y-3 pt-3">
+
+          <div className="space-y-4 pt-4">
+            {/* Section 1: Account Information */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
-              <Input
-                value={newUser.username}
-                onChange={(e) => setNewUser(prev => ({ ...prev, username: e.target.value }))}
-                className="w-full h-9"
-              />
+              <h3 className="text-lg font-bold mb-4 text-gray-800 pb-2 border-b">Account Information</h3>
+              <div className="space-y-4 pt-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                  <Input
+                    value={newUser.username}
+                    onChange={(e) => setNewUser(prev => ({ ...prev, username: e.target.value }))}
+                    placeholder="Enter username"
+                    className="w-full h-10"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                  <Input
+                    value={newUser.password}
+                    onChange={(e) => setNewUser(prev => ({ ...prev, password: e.target.value }))}
+                    placeholder="Default Password = 000000"
+                    className="w-full h-10"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+                  <Input
+                    value={newUser.fullName}
+                    onChange={(e) => setNewUser(prev => ({ ...prev, fullName: e.target.value }))}
+                    placeholder="Enter full name"
+                    className="w-full h-10"
+                  />
+                </div>
+              </div>
             </div>
-            
+
+            {/* Section 2: Referral Information */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-              <Input
-                value={newUser.password}
-                onChange={(e) => setNewUser(prev => ({ ...prev, password: e.target.value }))}
-                className="w-full h-9"
-                placeholder="Default Password = 000000"
-              />
+              <h3 className="text-lg font-bold mb-4 text-gray-800 pb-2 border-b">Referral Information</h3>
+              <div className="space-y-4 pt-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Referral Code (Optional)</label>
+                  <Input
+                    value={newUser.referralCode}
+                    onChange={(e) => handleReferralCodeChange(e.target.value)}
+                    placeholder="Enter referral code (e.g., REF-USR001-A7K3)"
+                    className={`w-full h-10 ${referralCodeValid ? 'border-green-500 bg-green-50' : referralCodeError ? 'border-red-500' : ''}`}
+                  />
+                  {referralCodeError && (
+                    <p className="text-red-600 text-sm mt-1">{referralCodeError}</p>
+                  )}
+                  {referralCodeValid && newUser.referredBy && (
+                    <p className="text-green-600 text-sm mt-1">
+                      ✓ Valid code - Referred by: {getUserNameById(newUser.referredBy, users)} ({newUser.referredBy})
+                    </p>
+                  )}
+                  {!newUser.referralCode && (
+                    <p className="text-gray-500 text-sm mt-1">
+                      Leave empty for direct signup
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-              <Input
-                value={newUser.fullName}
-                onChange={(e) => setNewUser(prev => ({ ...prev, fullName: e.target.value }))}
-                className="w-full h-9"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Referrer Code</label>
-              <Input
-                value={newUser.referrerCode}
-                onChange={(e) => setNewUser(prev => ({ ...prev, referrerCode: e.target.value }))}
-                className="w-full h-9"
-              />
-            </div>
-            
-            <div className="flex gap-3 pt-3">
-              <Button 
-                onClick={() => setShowCreateModal(false)}
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 pt-4 border-t">
+              <Button
+                onClick={() => {
+                  setShowCreateModal(false);
+                  setNewUser({
+                    username: '',
+                    password: '000000',
+                    fullName: '',
+                    referralCode: '',
+                    referredBy: null
+                  });
+                  setReferralCodeError('');
+                  setReferralCodeValid(false);
+                }}
                 variant="outline"
                 className="flex-1 bg-[#f44336] text-white hover:bg-[#d32f2f] border-[#f44336]"
               >
                 CANCEL
               </Button>
-              <Button 
+              <Button
                 onClick={handleCreateUser}
                 className="flex-1 bg-[#4caf50] hover:bg-[#45a049] text-white"
               >

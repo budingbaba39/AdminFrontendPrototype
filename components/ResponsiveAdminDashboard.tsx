@@ -30,9 +30,10 @@ import CashBackScheduleContent from './CashBackScheduleContent';
 import CashBackReleaseContent from './CashBackReleaseContent';
 import CommissionRecordContent from './CommissionRecordContent';
 import ReferrerSetupContent from './ReferrerSetupContent';
+import ReferrerBonusListContent from './ReferrerBonusListContent';
 
 // Define page type to avoid repetition
-type PageType = 'dashboard' | 'deposit' | 'withdrawal' | 'adjustment' | 'transaction-record' | 'user-record' | 'level' | 'tag' | 'promotion' | 'promotion-record' | 'promotion-list' | 'promotion-ongoing' | 'rebate' | 'rebate-record' | 'rebate-setup' | 'rebate-release' | 'rebate-schedule' | 'cashback' | 'cashback-record' | 'cashback-setup' | 'cashback-release' | 'cashback-schedule' | 'commission' | 'commission-record' | 'referrer-setup' | 'game-kiosk' | 'settings' | 'security' | 'bank-list' | 'bank-setup' | 'bank-report' | 'report' | 'admin-tool' | 'api' | 'change-log' | 'display' | 'domain' | 'page' | 'staff' | 'theme' | 'tools';
+type PageType = 'dashboard' | 'deposit' | 'withdrawal' | 'adjustment' | 'transaction-record' | 'user-record' | 'level' | 'tag' | 'promotion' | 'promotion-record' | 'promotion-list' | 'promotion-ongoing' | 'rebate' | 'rebate-record' | 'rebate-setup' | 'rebate-release' | 'rebate-schedule' | 'cashback' | 'cashback-record' | 'cashback-setup' | 'cashback-release' | 'cashback-schedule' | 'commission' | 'commission-record' | 'referrer-setup' | 'referrer-bonus-list' | 'game-kiosk' | 'settings' | 'security' | 'bank-list' | 'bank-setup' | 'bank-report' | 'report' | 'admin-tool' | 'api' | 'change-log' | 'display' | 'domain' | 'page' | 'staff' | 'theme' | 'tools';
 
 interface ResponsiveAdminDashboardProps {
   currentPage: PageType;
@@ -487,7 +488,7 @@ function ReferrerMenuItem({ currentPage, onNavigate }: {
   onNavigate: (page: PageType) => void;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const isReferrerActive = ['referrer-setup'].includes(currentPage);
+  const isReferrerActive = ['referrer-setup', 'referrer-bonus-list'].includes(currentPage);
 
   useEffect(() => {
     if (isReferrerActive) {
@@ -520,6 +521,17 @@ function ReferrerMenuItem({ currentPage, onNavigate }: {
             }`}
           >
             <span className="text-left">7.1 REFERRER SETUP</span>
+          </button>
+
+          <button
+            onClick={() => onNavigate('referrer-bonus-list')}
+            className={`w-full flex items-center p-2 rounded-lg text-sm font-medium tracking-[-0.14px] transition-colors ${
+              currentPage === 'referrer-bonus-list'
+                ? 'bg-[#e8eaf6] text-[#3949ab]'
+                : 'text-[#3949ab] hover:bg-[#f0f0f0]'
+            }`}
+          >
+            <span className="text-left">7.2 REFERRER BONUS LIST</span>
           </button>
         </div>
       )}
@@ -869,6 +881,8 @@ export default function ResponsiveAdminDashboard({ currentPage, onNavigate, onLo
         return <CommissionRecordContent />;
       case 'referrer-setup':
         return <ReferrerSetupContent />;
+      case 'referrer-bonus-list':
+        return <ReferrerBonusListContent />;
       case 'transaction-record':
         return <TransactionRecordManagement />;
       case 'user-record':

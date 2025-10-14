@@ -7,7 +7,7 @@ import { RefreshCw } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Checkbox } from './ui/checkbox';
 import { Label } from './ui/label';
-import { User } from './UserData';
+import { User, getUserNameById, sampleUsers } from './UserData';
 import { Transaction } from './transactionData';
 
 // Level color mapping
@@ -120,7 +120,8 @@ export default function ProfileManagement({ user, transactions = [], onUserUpdat
     password: '000000',
     mobile: user.mobile || '',
     status: 'Active',
-    referrerCode: user.referrer || ''
+    referralCode: user.referrer_code || '',
+    referredByName: getUserNameById(user.referrer_by, sampleUsers)
   });
 
   // Bank-related states
@@ -1175,11 +1176,23 @@ export default function ProfileManagement({ user, transactions = [], onUserUpdat
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Referrer Code</label>
-                <Input 
-                  value={userInfoForm.referrerCode}
-                  onChange={(e) => setUserInfoForm(prev => ({ ...prev, referrerCode: e.target.value }))}
+                <label className="block text-sm font-medium text-gray-700 mb-1">Your Referral Code</label>
+                <Input
+                  value={userInfoForm.referralCode}
+                  readOnly
+                  className="bg-gray-50 font-mono"
                 />
+                <p className="text-xs text-gray-500 mt-1">Share this code with others to refer them</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Referred By</label>
+                <Input
+                  value={userInfoForm.referredByName}
+                  readOnly
+                  className="bg-gray-50"
+                />
+                <p className="text-xs text-gray-500 mt-1">The user who referred you to this platform</p>
               </div>
               
               <Button className="w-full bg-[#4caf50] hover:bg-[#45a049] text-white">

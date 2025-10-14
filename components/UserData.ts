@@ -7,7 +7,8 @@ export interface User {
   credit: number;
   bankAccount: string;
   bank: string;
-  referrer: string;
+  referrer_code: string; // User's own unique referral code
+  referrer_by: string | null; // User ID of the person who referred them, or null for direct signup
   agent: string;
   winLoss: number;
   lastDeposit: string;
@@ -30,6 +31,25 @@ export interface User {
   ongoingPromotionID?: string; // Current ongoing promotion (user can only have one at a time)
 }
 
+// Helper function to generate unique referral code
+export function generateReferralCode(userId: string): string {
+  const randomChars = Math.random().toString(36).substring(2, 6).toUpperCase();
+  return `REF-${userId}-${randomChars}`;
+}
+
+// Helper function to get user name by ID
+export function getUserNameById(userId: string | null, users: User[]): string {
+  if (!userId) return "Direct Signup";
+  const user = users.find(u => u.id === userId);
+  return user ? user.name : "Unknown User";
+}
+
+// Helper function to validate if referrer exists
+export function isValidReferrer(userId: string | null, users: User[]): boolean {
+  if (!userId) return false;
+  return users.some(u => u.id === userId);
+}
+
 // Sample user data
 export const sampleUsers: User[] = [
 
@@ -41,7 +61,8 @@ export const sampleUsers: User[] = [
     credit: 1500.00,
     bankAccount: '1234567890123456',
     bank: 'MAYBANK',
-    referrer: 'TOPLAYER',
+    referrer_code: 'REF-USR001-A7K3',
+    referrer_by: null, // Was TOPLAYER - converted to direct signup
     agent: 'AGENT001',
     winLoss: -150.00,
     lastDeposit: '2025-10-01 10:00',
@@ -71,7 +92,8 @@ export const sampleUsers: User[] = [
     credit: 750.50,
     bankAccount: '9876543210987654',
     bank: 'PUBLIC BANK',
-    referrer: 'AGENT002',
+    referrer_code: 'REF-USR002-B8M4',
+    referrer_by: 'USR001', // Referred by JOHN ALPHA
     agent: 'AGENT002',
     winLoss: 320.00,
     lastDeposit: '2023-08-22 16:45',
@@ -101,7 +123,8 @@ export const sampleUsers: User[] = [
     credit: 0.00,
     bankAccount: '5555444433332222',
     bank: 'CIMB BANK',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-USR003-C9N5',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT001',
     winLoss: -500.00,
     lastDeposit: '2023-08-20 12:30',
@@ -130,7 +153,8 @@ export const sampleUsers: User[] = [
     credit: 2250.75,
     bankAccount: '1111222233334444',
     bank: 'RHB BANK',
-    referrer: 'AGENT003',
+    referrer_code: 'REF-USR004-D1P6',
+    referrer_by: null, // Was AGENT003 - converted to direct signup
     agent: 'AGENT003',
     winLoss: 875.00,
     lastDeposit: '2023-08-23 08:30',
@@ -159,7 +183,8 @@ export const sampleUsers: User[] = [
     credit: 125.25,
     bankAccount: '6666777788889999',
     bank: 'HONG LEONG BANK',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-USR005-E2Q7',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT002',
     winLoss: -25.00,
     lastDeposit: '2023-08-21 14:15',
@@ -188,7 +213,8 @@ export const sampleUsers: User[] = [
     credit: 3200.80,
     bankAccount: '2222333344445555',
     bank: 'AFFIN BANK',
-    referrer: 'TOPLAYER',
+    referrer_code: 'REF-USR006-F3R8',
+    referrer_by: null, // Was TOPLAYER - converted to direct signup
     agent: 'AGENT001',
     winLoss: 1250.50,
     lastDeposit: '2025-10-02 14:30',
@@ -218,7 +244,8 @@ export const sampleUsers: User[] = [
     credit: 45.75,
     bankAccount: '3333444455556666',
     bank: 'ALLIANCE BANK',
-    referrer: 'AGENT001',
+    referrer_code: 'REF-USR007-G4S9',
+    referrer_by: 'USR002', // Referred by LISA BETA
     agent: 'AGENT001',
     winLoss: -320.25,
     lastDeposit: '2023-08-19 09:30',
@@ -246,7 +273,8 @@ export const sampleUsers: User[] = [
     credit: 1890.30,
     bankAccount: '7777888899990000',
     bank: 'AMBANK',
-    referrer: 'AGENT003',
+    referrer_code: 'REF-USR008-H5T1',
+    referrer_by: 'USR004', // Referred by SARAH DELTA
     agent: 'AGENT003',
     winLoss: 540.75,
     lastDeposit: '2023-08-23 11:20',
@@ -275,7 +303,8 @@ export const sampleUsers: User[] = [
     credit: 0.00,
     bankAccount: '8888999900001111',
     bank: 'BANK ISLAM',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-USR009-I6U2',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT002',
     winLoss: -825.00,
     lastDeposit: '2023-08-16 15:20',
@@ -303,7 +332,8 @@ export const sampleUsers: User[] = [
     credit: 4750.90,
     bankAccount: '9999000011112222',
     bank: 'STANDARD CHARTERED',
-    referrer: 'TOPLAYER',
+    referrer_code: 'REF-USR010-J7V3',
+    referrer_by: 'USR006', // Referred by EMMA FOXTROT
     agent: 'AGENT003',
     winLoss: 2180.45,
     lastDeposit: '2025-10-03 09:15',
@@ -333,7 +363,8 @@ export const sampleUsers: User[] = [
     credit: 680.40,
     bankAccount: '0000111122223333',
     bank: 'OCBC BANK',
-    referrer: 'AGENT002',
+    referrer_code: 'REF-USR011-K8W4',
+    referrer_by: 'USR002', // Referred by LISA BETA
     agent: 'AGENT002',
     winLoss: 95.60,
     lastDeposit: '2023-08-22 13:15',
@@ -362,7 +393,8 @@ export const sampleUsers: User[] = [
     credit: 25.15,
     bankAccount: '1111222233334444',
     bank: 'UOB BANK',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-USR012-L9X5',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT001',
     winLoss: -445.85,
     lastDeposit: '2023-08-18 14:30',
@@ -391,7 +423,8 @@ export const sampleUsers: User[] = [
     credit: 0.00,
     bankAccount: '555555555555555555555555',
     bank: 'Dummy Bank',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-165478067-M1Y6',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT001',
     winLoss: 0,
     lastDeposit: '2023-08-25 14:54',
@@ -420,7 +453,8 @@ export const sampleUsers: User[] = [
     credit: 125.50,
     bankAccount: '444444444444444444444444',
     bank: 'DBS Bank',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-165478068-N2Z7',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT001',
     winLoss: 0,
     lastDeposit: '2023-08-25 15:10',
@@ -449,7 +483,8 @@ export const sampleUsers: User[] = [
     credit: 200.00,
     bankAccount: '333333333333333333333333',
     bank: 'CIMB Bank',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-165478069-O3A8',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT001',
     winLoss: 0,
     lastDeposit: '2023-08-25 13:50',
@@ -478,7 +513,8 @@ export const sampleUsers: User[] = [
     credit: 850.75,
     bankAccount: '222222222222222222222222',
     bank: 'Maybank',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-165478070-P4B9',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT001',
     winLoss: 0,
     lastDeposit: '2023-08-25 12:15',
@@ -507,7 +543,8 @@ export const sampleUsers: User[] = [
     credit: 1200.00,
     bankAccount: '666666666666666666666666',
     bank: 'RHB Bank',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-165478072-Q5C1',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT001',
     winLoss: 0,
     lastDeposit: '2023-08-25 16:20',
@@ -536,7 +573,8 @@ export const sampleUsers: User[] = [
     credit: 450.25,
     bankAccount: '777777777777777777777777',
     bank: 'Standard Chartered',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-165478073-R6D2',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT001',
     winLoss: 0,
     lastDeposit: '2023-08-25 17:30',
@@ -565,7 +603,8 @@ export const sampleUsers: User[] = [
     credit: 3500.00,
     bankAccount: '888888888888888888888888',
     bank: 'OCBC Bank',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-165478074-S7E3',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT001',
     winLoss: 0,
     lastDeposit: '2023-08-25 08:10',
@@ -594,7 +633,8 @@ export const sampleUsers: User[] = [
     credit: 125.50,
     bankAccount: '999999999999999999999999',
     bank: 'Alliance Bank',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-165478075-T8F4',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT001',
     winLoss: 0,
     lastDeposit: '2023-08-25 19:15',
@@ -623,7 +663,8 @@ export const sampleUsers: User[] = [
     credit: 2500.00,
     bankAccount: '101010101010101010101010',
     bank: 'UOB Bank',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-165478076-U9G5',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT001',
     winLoss: 0,
     lastDeposit: '2023-08-25 20:00',
@@ -652,7 +693,8 @@ export const sampleUsers: User[] = [
     credit: 1800.00,
     bankAccount: '121212121212121212121212',
     bank: 'Bank Islam',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-165478077-V1H6',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT001',
     winLoss: 0,
     lastDeposit: '2023-08-25 21:30',
@@ -681,7 +723,8 @@ export const sampleUsers: User[] = [
     credit: 1800.00,
     bankAccount: '777788889999000',
     bank: 'AFFIN BANK',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-GRACE666-W2I7',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT001',
     winLoss: 0,
     lastDeposit: '2023-08-24 16:20:15',
@@ -710,7 +753,8 @@ export const sampleUsers: User[] = [
     credit: 200.75,
     bankAccount: '999900001111222',
     bank: 'ALLIANCE BANK',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-EMMA999-X3J8',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT001',
     winLoss: 0,
     lastDeposit: '2023-08-24 12:15:20',
@@ -739,7 +783,8 @@ export const sampleUsers: User[] = [
     credit: 3500.00,
     bankAccount: '888899990000111',
     bank: 'OCBC BANK',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-ADMIN002-Y4K9',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT001',
     winLoss: 0,
     lastDeposit: '2023-08-24 15:00:20',
@@ -768,7 +813,8 @@ export const sampleUsers: User[] = [
     credit: 350.00,
     bankAccount: '333322221111000',
     bank: 'BANK ISLAM',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-TOM321-Z5L1',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT001',
     winLoss: 0,
     lastDeposit: '2023-08-24 09:20:15',
@@ -797,7 +843,8 @@ export const sampleUsers: User[] = [
     credit: 2500.00,
     bankAccount: '666655554444333',
     bank: 'STANDARD CHARTERED',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-NINA654-A6M2',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT001',
     winLoss: 0,
     lastDeposit: '2023-08-24 15:10:30',
@@ -826,7 +873,8 @@ export const sampleUsers: User[] = [
     credit: 650.00,
     bankAccount: '111100009999888',
     bank: 'AMBANK',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-RACHEL111-B7N3',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT001',
     winLoss: 0,
     lastDeposit: '2023-08-23 16:30:15',
@@ -855,7 +903,8 @@ export const sampleUsers: User[] = [
     credit: 180.75,
     bankAccount: '222211110000999',
     bank: 'BSN BANK',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-HENRY222-C8O4',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT001',
     winLoss: 0,
     lastDeposit: '2023-08-23 13:15:45',
@@ -884,7 +933,8 @@ export const sampleUsers: User[] = [
     credit: 225.50,
     bankAccount: '333344445555666',
     bank: 'KUWAIT FINANCE HOUSE',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-PETER333-D9P5',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT001',
     winLoss: 0,
     lastDeposit: '2023-08-23 18:20:30',
@@ -913,7 +963,8 @@ export const sampleUsers: User[] = [
     credit: 1000.00,
     bankAccount: '444455556666777',
     bank: 'AGRO BANK',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-SOPHIE444-E1Q6',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT001',
     winLoss: 0,
     lastDeposit: '2023-08-23 19:45:20',
@@ -942,7 +993,8 @@ export const sampleUsers: User[] = [
     credit: 1900.00,
     bankAccount: '555566667777888',
     bank: 'BANK RAKYAT',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-MANAGER01-F2R7',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT001',
     winLoss: 0,
     lastDeposit: '2023-08-24 07:30:45',
@@ -971,7 +1023,8 @@ export const sampleUsers: User[] = [
     credit: 320.50,
     bankAccount: '666677778888999',
     bank: 'MUAMALAT BANK',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-WINSTON555-G3S8',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT001',
     winLoss: 0,
     lastDeposit: '2023-08-24 20:15:30',
@@ -1000,7 +1053,8 @@ export const sampleUsers: User[] = [
     credit: 800.00,
     bankAccount: '999988887777666',
     bank: 'HONG LEONG BANK',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-DAVID999-H4T9',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT001',
     winLoss: 0,
     lastDeposit: '2023-08-23 11:50:20',
@@ -1029,7 +1083,8 @@ export const sampleUsers: User[] = [
     credit: 450.00,
     bankAccount: '888877776666555',
     bank: 'PUBLIC BANK',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-KELLY123-I5U1',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT001',
     winLoss: 0,
     lastDeposit: '2023-08-23 17:45:20',
@@ -1058,7 +1113,8 @@ export const sampleUsers: User[] = [
     credit: 425.75,
     bankAccount: '151515151515151515151515',
     bank: 'Maybank',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-165478080-J6V2',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT001',
     winLoss: 0,
     lastDeposit: '2023-08-01',
@@ -1087,7 +1143,8 @@ export const sampleUsers: User[] = [
     credit: 108.80,
     bankAccount: '161616161616161616161616',
     bank: 'Public Bank',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-165478081-K7W3',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT001',
     winLoss: 0,
     lastDeposit: '2023-08-01',
@@ -1116,7 +1173,8 @@ export const sampleUsers: User[] = [
     credit: 165.75,
     bankAccount: '171717171717171717171717',
     bank: 'CIMB Bank',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-165478082-L8X4',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT001',
     winLoss: 0,
     lastDeposit: '2023-08-01',
@@ -1145,7 +1203,8 @@ export const sampleUsers: User[] = [
     credit: 750.00,
     bankAccount: '181818181818181818181818',
     bank: 'Hong Leong Bank',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-165478083-M9Y5',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT001',
     winLoss: 0,
     lastDeposit: '2023-08-01',
@@ -1174,7 +1233,8 @@ export const sampleUsers: User[] = [
     credit: 850.25,
     bankAccount: '202020202020202020202020',
     bank: 'RHB Bank',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-165478084-N1Z6',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT001',
     winLoss: 0,
     lastDeposit: '2023-08-01',
@@ -1203,7 +1263,8 @@ export const sampleUsers: User[] = [
     credit: 275.50,
     bankAccount: '212121212121212121212121',
     bank: 'AmBank',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-165478085-O2A7',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT001',
     winLoss: 0,
     lastDeposit: '2023-08-01',
@@ -1232,7 +1293,8 @@ export const sampleUsers: User[] = [
     credit: 1200.75,
     bankAccount: '222222222222222222222222',
     bank: 'BSN Bank',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-165478086-P3B8',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT001',
     winLoss: 0,
     lastDeposit: '2023-08-25 10:20',
@@ -1261,7 +1323,8 @@ export const sampleUsers: User[] = [
     credit: 5500.00,
     bankAccount: '232323232323232323232323',
     bank: 'OCBC Bank',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-STAFF001-Q4C9',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT001',
     winLoss: 0,
     lastDeposit: '2023-08-01',
@@ -1290,7 +1353,8 @@ export const sampleUsers: User[] = [
     credit: 3200.00,
     bankAccount: '242424242424242424242424',
     bank: 'Standard Chartered',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-STAFF002-R5D1',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT001',
     winLoss: 0,
     lastDeposit: '2023-08-01',
@@ -1319,7 +1383,8 @@ export const sampleUsers: User[] = [
     credit: 325.50,
     bankAccount: '131313131313131313131313',
     bank: 'MAYBANK',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-165478079-S6E2',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT001',
     winLoss: 0,
     lastDeposit: '2023-08-01',
@@ -1348,7 +1413,8 @@ export const sampleUsers: User[] = [
     credit: 475.25,
     bankAccount: '141414141414141414141414',
     bank: 'MAYBANK',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-165478100-T7F3',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT001',
     winLoss: 0,
     lastDeposit: '2023-08-01',
@@ -1377,7 +1443,8 @@ export const sampleUsers: User[] = [
     credit: 325.75,
     bankAccount: '1234567890123456',
     bank: 'MAYBANK',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-165478101-U8G4',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT001',
     winLoss: 0,
     lastDeposit: '2023-08-01',
@@ -1406,7 +1473,8 @@ export const sampleUsers: User[] = [
     credit: 220.60,
     bankAccount: '1234567890123457',
     bank: 'MAYBANK',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-165478102-V9H5',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT001',
     winLoss: 0,
     lastDeposit: '2023-08-01',
@@ -1435,7 +1503,8 @@ export const sampleUsers: User[] = [
     credit: 540.30,
     bankAccount: '1234567890123458',
     bank: 'MAYBANK',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-165478103-W1I6',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT001',
     winLoss: 0,
     lastDeposit: '2023-08-01',
@@ -1464,7 +1533,8 @@ export const sampleUsers: User[] = [
     credit: 398.45,
     bankAccount: '1234567890123459',
     bank: 'MAYBANK',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-165478104-X2J7',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT001',
     winLoss: 0,
     lastDeposit: '2023-08-01',
@@ -1493,7 +1563,8 @@ export const sampleUsers: User[] = [
     credit: 612.85,
     bankAccount: '1234567890123460',
     bank: 'MAYBANK',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-165478105-Y3K8',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT001',
     winLoss: 0,
     lastDeposit: '2023-08-01',
@@ -1523,7 +1594,8 @@ export const sampleUsers: User[] = [
     credit: 580.25,
     bankAccount: '1111222233334444',
     bank: 'MAYBANK',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-USR015-Z4L9',
+    referrer_by: 'USR001', // Referred by JOHN ALPHA
     agent: 'AGENT001',
     winLoss: -350.00,
     lastDeposit: '2025-10-05',
@@ -1552,7 +1624,8 @@ export const sampleUsers: User[] = [
     credit: 3100.50,
     bankAccount: '2222333344445555',
     bank: 'CIMB BANK',
-    referrer: 'TOPLAYER',
+    referrer_code: 'REF-USR016-A5M1',
+    referrer_by: 'USR001', // Referred by JOHN ALPHA
     agent: 'AGENT002',
     winLoss: 1200.00,
     lastDeposit: '2025-10-05',
@@ -1581,7 +1654,8 @@ export const sampleUsers: User[] = [
     credit: 1250.00,
     bankAccount: '3333444455556666',
     bank: 'PUBLIC BANK',
-    referrer: 'AGENT001',
+    referrer_code: 'REF-USR017-B6N2',
+    referrer_by: 'USR006', // Referred by EMMA FOXTROT
     agent: 'AGENT001',
     winLoss: -720.00,
     lastDeposit: '2025-10-05',
@@ -1610,7 +1684,8 @@ export const sampleUsers: User[] = [
     credit: 4800.75,
     bankAccount: '4444555566667777',
     bank: 'HONG LEONG BANK',
-    referrer: 'TOPLAYER',
+    referrer_code: 'REF-USR018-C7O3',
+    referrer_by: 'USR006', // Referred by EMMA FOXTROT
     agent: 'AGENT003',
     winLoss: 850.00,
     lastDeposit: '2025-10-05',
@@ -1639,7 +1714,8 @@ export const sampleUsers: User[] = [
     credit: 920.30,
     bankAccount: '5555666677778888',
     bank: 'RHB BANK',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-USR019-D8P4',
+    referrer_by: 'USR004', // Referred by SARAH DELTA
     agent: 'AGENT001',
     winLoss: -2200.00,
     lastDeposit: '2025-10-04',
@@ -1668,7 +1744,8 @@ export const sampleUsers: User[] = [
     credit: 2450.60,
     bankAccount: '6666777788889999',
     bank: 'MAYBANK',
-    referrer: 'TOPLAYER',
+    referrer_code: 'REF-USR020-E9Q5',
+    referrer_by: 'USR001', // Referred by JOHN ALPHA
     agent: 'AGENT002',
     winLoss: 450.00,
     lastDeposit: '2025-10-04',
@@ -1697,7 +1774,8 @@ export const sampleUsers: User[] = [
     credit: 680.45,
     bankAccount: '7777888899990000',
     bank: 'CIMB BANK',
-    referrer: 'AGENT002',
+    referrer_code: 'REF-USR021-F1R6',
+    referrer_by: null, // Was AGENT002 - converted to direct signup
     agent: 'AGENT002',
     winLoss: -480.00,
     lastDeposit: '2025-10-04',
@@ -1726,7 +1804,8 @@ export const sampleUsers: User[] = [
     credit: 3700.80,
     bankAccount: '8888999900001111',
     bank: 'PUBLIC BANK',
-    referrer: 'TOPLAYER',
+    referrer_code: 'REF-USR022-G2S7',
+    referrer_by: null, // Was TOPLAYER - converted to direct signup
     agent: 'AGENT003',
     winLoss: 650.00,
     lastDeposit: '2025-10-03',
@@ -1755,7 +1834,8 @@ export const sampleUsers: User[] = [
     credit: 1580.20,
     bankAccount: '9999000011112222',
     bank: 'HONG LEONG BANK',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-USR023-H3T8',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT001',
     winLoss: -1100.00,
     lastDeposit: '2025-10-03',
@@ -1784,7 +1864,8 @@ export const sampleUsers: User[] = [
     credit: 890.50,
     bankAccount: '0000111122223333',
     bank: 'RHB BANK',
-    referrer: 'AGENT001',
+    referrer_code: 'REF-USR024-I4U9',
+    referrer_by: null, // Was AGENT001 - converted to direct signup
     agent: 'AGENT001',
     winLoss: -950.00,
     lastDeposit: '2025-10-03',
@@ -1813,7 +1894,8 @@ export const sampleUsers: User[] = [
     credit: 5200.90,
     bankAccount: '1111222233334444',
     bank: 'MAYBANK',
-    referrer: 'TOPLAYER',
+    referrer_code: 'REF-USR025-J5V1',
+    referrer_by: null, // Was TOPLAYER - converted to direct signup
     agent: 'AGENT002',
     winLoss: 1500.00,
     lastDeposit: '2025-10-02',
@@ -1842,7 +1924,8 @@ export const sampleUsers: User[] = [
     credit: 2100.35,
     bankAccount: '2222333344445555',
     bank: 'CIMB BANK',
-    referrer: 'AGENT003',
+    referrer_code: 'REF-USR026-K6W2',
+    referrer_by: null, // Was AGENT003 - converted to direct signup
     agent: 'AGENT003',
     winLoss: 300.00,
     lastDeposit: '2025-10-02',
@@ -1871,7 +1954,8 @@ export const sampleUsers: User[] = [
     credit: 1450.70,
     bankAccount: '3333444455556666',
     bank: 'PUBLIC BANK',
-    referrer: 'DIRECT',
+    referrer_code: 'REF-USR027-L7X3',
+    referrer_by: null, // Was DIRECT - direct signup
     agent: 'AGENT001',
     winLoss: -8500.00,
     lastDeposit: '2025-10-01',
@@ -1900,7 +1984,8 @@ export const sampleUsers: User[] = [
     credit: 8500.00,
     bankAccount: '4444555566667777',
     bank: 'HONG LEONG BANK',
-    referrer: 'TOPLAYER',
+    referrer_code: 'REF-USR028-M8Y4',
+    referrer_by: null, // Was TOPLAYER - converted to direct signup
     agent: 'AGENT002',
     winLoss: -12000.00,
     lastDeposit: '2025-10-07',
@@ -1929,7 +2014,8 @@ export const sampleUsers: User[] = [
     credit: 15200.50,
     bankAccount: '5555666677778888',
     bank: 'RHB BANK',
-    referrer: 'TOPLAYER',
+    referrer_code: 'REF-USR029-N9Z5',
+    referrer_by: null, // Was TOPLAYER - converted to direct signup
     agent: 'AGENT003',
     winLoss: -15000.00,
     lastDeposit: '2025-10-07',
@@ -1958,7 +2044,8 @@ export const sampleUsers: User[] = [
     credit: 18750.80,
     bankAccount: '6666777788889999',
     bank: 'MAYBANK',
-    referrer: 'TOPLAYER',
+    referrer_code: 'REF-USR030-O1A6',
+    referrer_by: null, // Was TOPLAYER - converted to direct signup
     agent: 'AGENT002',
     winLoss: -28000.00,
     lastDeposit: '2025-10-07',
@@ -1987,7 +2074,8 @@ export const sampleUsers: User[] = [
     credit: 22300.25,
     bankAccount: '7777888899990000',
     bank: 'CIMB BANK',
-    referrer: 'TOPLAYER',
+    referrer_code: 'REF-USR031-P2B7',
+    referrer_by: null, // Was TOPLAYER - converted to direct signup
     agent: 'AGENT003',
     winLoss: -35000.00,
     lastDeposit: '2025-10-07',
@@ -2016,7 +2104,8 @@ export const sampleUsers: User[] = [
     credit: 45600.90,
     bankAccount: '8888999900001111',
     bank: 'PUBLIC BANK',
-    referrer: 'TOPLAYER',
+    referrer_code: 'REF-USR032-Q3C8',
+    referrer_by: null, // Was TOPLAYER - converted to direct signup
     agent: 'AGENT002',
     winLoss: -42000.00,
     lastDeposit: '2025-10-07',
@@ -2045,7 +2134,8 @@ export const sampleUsers: User[] = [
     credit: 38200.45,
     bankAccount: '9999000011112222',
     bank: 'HONG LEONG BANK',
-    referrer: 'TOPLAYER',
+    referrer_code: 'REF-USR033-R4D9',
+    referrer_by: null, // Was TOPLAYER - converted to direct signup
     agent: 'AGENT003',
     winLoss: -55000.00,
     lastDeposit: '2025-10-07',
