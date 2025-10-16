@@ -51,6 +51,11 @@ export default function CashBackRecordManagement() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [usersData, setUsersData] = useState<Map<string, User>>(new Map());
 
+  // Remark modal state
+  const [currentModal, setCurrentModal] = useState<'remark' | null>(null);
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [remarkText, setRemarkText] = useState('');
+
   // Bulk actions state
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [autoApprove, setAutoApprove] = useState(false);
@@ -583,9 +588,8 @@ export default function CashBackRecordManagement() {
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">CashBack Amount</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Release Amount</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Remark</th>
-                  {activeStatus === 'PENDING' && (
-                    <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Action</th>
-                  )}
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Status</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 text-sm">
@@ -658,11 +662,11 @@ export default function CashBackRecordManagement() {
                         )}
                       </td>
                       <td className="px-3 py-2">
-                        {activeStatus === 'PENDING' ? (
+                        {transaction.status === 'PENDING' ? (
                           <Input
                             type="text"
-                            value={remarkInputs[transaction.id] || ''}
-                            onChange={(e) => handleRemarkChange(transaction.id, e.target.value)}
+                            value={remarkInputs[transaction.id] || transaction.remark || ''}
+                            onChange={(e) => setRemarkInputs({ ...remarkInputs, [transaction.id]: e.target.value })}
                             className="h-7 w-28 text-xs"
                           />
                         ) : (
@@ -671,24 +675,48 @@ export default function CashBackRecordManagement() {
                           </span>
                         )}
                       </td>
-                      {activeStatus === 'PENDING' && (
-                        <td className="px-3 py-2">
-                          <div className="flex gap-2">
+                      <td className="px-3 py-2">
+                        <Badge className={`${getStatusColor(transaction.status)} text-xs font-semibold px-2 py-1`}>
+                          {transaction.status}
+                        </Badge>
+                      </td>
+                      <td className="px-3 py-2">
+                        <div className="flex gap-1">
+                          {transaction.status === 'PENDING' ? (
+                            <>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleSubmitSingle(transaction)}
+                                className="bg-[#4caf50] text-white hover:bg-[#45a049] border-[#4caf50] text-xs h-6 px-2"
+                              >
+                                SUBMIT
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleCancelSingle(transaction)}
+                                className="bg-[#f44336] text-white hover:bg-[#d32f2f] border-[#f44336] text-xs h-6 px-2"
+                              >
+                                CANCEL
+                              </Button>
+                            </>
+                          ) : (
                             <Button
-                              onClick={() => handleSubmitSingle(transaction)}
-                              className="bg-[#4caf50] hover:bg-[#45a049] text-white h-7 text-xs px-3"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedTransaction(transaction);
+                                setRemarkText(transaction.remark || '');
+                                setCurrentModal('remark');
+                              }}
+                              className="bg-[#3949ab] text-white hover:bg-[#2c3582] border-[#3949ab] text-xs h-6 px-2"
                             >
-                              SUBMIT
+                              REMARK
                             </Button>
-                            <Button
-                              onClick={() => handleCancelSingle(transaction)}
-                              className="bg-[#f44336] hover:bg-[#d32f2f] text-white h-7 text-xs px-3"
-                            >
-                              CANCEL
-                            </Button>
-                          </div>
-                        </td>
-                      )}
+                          )}
+                        </div>
+                      </td>
                     </tr>
                   );
                 })}
@@ -697,6 +725,63 @@ export default function CashBackRecordManagement() {
           </div>
         </div>
       )}
+
+      {/* Remark Modal */}
+      <Dialog open={currentModal === 'remark'} onOpenChange={(open) => !open && setCurrentModal(null)}>
+        <DialogContent className="max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Remark</DialogTitle>
+          </DialogHeader>
+          {selectedTransaction && (
+            <div className="space-y-4 pt-4">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="font-semibold">Transaction ID:</span>
+                  <p className="text-gray-600">{selectedTransaction.id}</p>
+                </div>
+                <div>
+                  <span className="font-semibold">Username:</span>
+                  <p className="text-gray-600">{selectedTransaction.username}</p>
+                </div>
+                <div>
+                  <span className="font-semibold">Amount:</span>
+                  <p className="text-gray-600">${selectedTransaction.amount.toFixed(2)}</p>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold mb-2">Remark:</label>
+                <Textarea
+                  value={remarkText}
+                  onChange={(e) => setRemarkText(e.target.value)}
+                  rows={4}
+                  className="w-full h-10 min-h-[80px]"
+                  placeholder="Enter remark..."
+                />
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentModal(null)}
+                  className="text-xs h-10"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    setTransactions(prev => prev.map(t =>
+                      t.id === selectedTransaction.id ? { ...t, remark: remarkText } : t
+                    ));
+                    setCurrentModal(null);
+                  }}
+                  className="bg-[#4caf50] hover:bg-[#45a049] text-white text-xs h-10"
+                >
+                  Save
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Profile Modal */}
       <Dialog open={showProfileModal} onOpenChange={setShowProfileModal}>

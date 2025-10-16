@@ -8,6 +8,7 @@ import ProfileContent from './ProfileContent';
 import { sampleUsers, User } from './UserData';
 import { ReferrerBonus, referrerBonusList } from './ReferrerBonusListData';
 import { initialReferrerSetups } from './ReferrerSetupData';
+import { getStatusColor } from './transactionData';
 
 type BonusStatus = 'ALL' | 'PENDING' | 'COMPLETED' | 'REJECTED';
 
@@ -26,6 +27,7 @@ const getReferrerSetupDetails = (referrerSetupId: string) => {
   const setup = initialReferrerSetups.find(s => s.id === referrerSetupId);
   return {
     name: setup?.name || 'Unknown Setup',
+    targetType: setup?.targetType || 'N/A',
     createdDate: setup?.createdDate || 'N/A',
     autoApprovedAmount: setup?.autoApprovedAmount || 0
   };
@@ -51,6 +53,9 @@ export default function ReferrerBonusListManagement() {
   const [showRemarkModal, setShowRemarkModal] = useState(false);
   const [remarkBonus, setRemarkBonus] = useState<ReferrerBonus | null>(null);
   const [remarkText, setRemarkText] = useState('');
+
+  // Remark inputs for pending records
+  const [remarkInputs, setRemarkInputs] = useState<Record<string, string>>({});
 
   // Filter bonuses based on search and status
   const filteredBonuses = hasSearched
@@ -171,6 +176,7 @@ export default function ReferrerBonusListManagement() {
 
   const handleSubmitBonus = (bonus: ReferrerBonus) => {
     const currentTime = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    const remark = remarkInputs[bonus.id] || '';
     setBonuses(prev => prev.map(b =>
       b.id === bonus.id
         ? {
@@ -178,14 +184,19 @@ export default function ReferrerBonusListManagement() {
             status: 'COMPLETED' as const,
             completeTime: currentTime,
             handler: 'ADMIN001',
-            remark: 'Completed by admin'
+            remark
           }
         : b
     ));
+
+    const newRemarkInputs = { ...remarkInputs };
+    delete newRemarkInputs[bonus.id];
+    setRemarkInputs(newRemarkInputs);
   };
 
   const handleCancelBonus = (bonus: ReferrerBonus) => {
     const currentTime = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    const remark = remarkInputs[bonus.id] || '';
     setBonuses(prev => prev.map(b =>
       b.id === bonus.id
         ? {
@@ -193,10 +204,14 @@ export default function ReferrerBonusListManagement() {
             status: 'REJECTED' as const,
             rejectTime: currentTime,
             handler: 'ADMIN001',
-            remark: 'Cancelled by admin'
+            remark
           }
         : b
     ));
+
+    const newRemarkInputs = { ...remarkInputs };
+    delete newRemarkInputs[bonus.id];
+    setRemarkInputs(newRemarkInputs);
   };
 
   const handleOpenRemarkModal = (bonus: ReferrerBonus) => {
@@ -224,18 +239,6 @@ export default function ReferrerBonusListManagement() {
     setShowViewModal(true);
   };
 
-  const getStatusBadgeClass = (status: string) => {
-    switch (status) {
-      case 'PENDING':
-        return 'bg-yellow-500 text-white';
-      case 'COMPLETED':
-        return 'bg-green-500 text-white';
-      case 'REJECTED':
-        return 'bg-red-500 text-white';
-      default:
-        return 'bg-gray-500 text-white';
-    }
-  };
 
   return (
     <div className="p-3 space-y-3 bg-gray-50 min-h-screen">
@@ -347,10 +350,12 @@ export default function ReferrerBonusListManagement() {
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Confirmed Amount</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Referee</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Referrer Setup</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Target Type</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Submit Time</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">C/R Time</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Handler</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Status</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Remark</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Action</th>
                 </tr>
               </thead>
@@ -395,48 +400,62 @@ export default function ReferrerBonusListManagement() {
                         <div>Auto Approved: ${referrerSetup.autoApprovedAmount.toFixed(2)}</div>
                       </div>
                     </td>
+                    <td className="px-3 py-2 text-gray-900 text-xs">{referrerSetup.targetType}</td>
                     <td className="px-3 py-2 text-gray-900 text-xs">{bonus.submitTime}</td>
                     <td className="px-3 py-2 text-gray-900 text-xs">
                       {bonus.completeTime || bonus.rejectTime || '-'}
                     </td>
                     <td className="px-3 py-2 text-blue-600 text-xs">{bonus.handler || '-'}</td>
                     <td className="px-3 py-2">
-                      <Badge className={`text-xs font-semibold px-2 py-0.5 ${getStatusBadgeClass(bonus.status)}`}>
+                      <Badge className={`${getStatusColor(bonus.status)} text-xs font-semibold px-2 py-1`}>
                         {bonus.status}
                       </Badge>
                     </td>
                     <td className="px-3 py-2">
+                      {bonus.status === 'PENDING' ? (
+                        <Input
+                          type="text"
+                          value={remarkInputs[bonus.id] || bonus.remark || ''}
+                          onChange={(e) => setRemarkInputs({ ...remarkInputs, [bonus.id]: e.target.value })}
+                          className="h-7 w-28 text-xs"
+                        />
+                      ) : (
+                        <span className="text-gray-900 text-xs max-w-40 truncate block" title={bonus.remark}>
+                          {bonus.remark || '-'}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-3 py-2">
                       <div className="flex gap-1">
-                        {bonus.status === 'PENDING' && (
+                        {bonus.status === 'PENDING' ? (
                           <>
                             <Button
+                              variant="outline"
+                              size="sm"
                               onClick={() => handleSubmitBonus(bonus)}
-                              className="bg-[#4caf50] hover:bg-[#45a049] text-white h-7 text-xs px-3"
+                              className="bg-[#4caf50] text-white hover:bg-[#45a049] border-[#4caf50] text-xs h-6 px-2"
                             >
-                              Submit
+                              SUBMIT
                             </Button>
                             <Button
+                              variant="outline"
+                              size="sm"
                               onClick={() => handleCancelBonus(bonus)}
-                              className="bg-[#f44336] hover:bg-[#d32f2f] text-white h-7 text-xs px-3"
+                              className="bg-[#f44336] text-white hover:bg-[#d32f2f] border-[#f44336] text-xs h-6 px-2"
                             >
-                              Cancel
+                              CANCEL
                             </Button>
                           </>
-                        )}
-                        {(bonus.status === 'COMPLETED' || bonus.status === 'REJECTED') && (
+                        ) : (
                           <Button
-                            onClick={() => handleViewClick(bonus)}
-                            className="bg-gray-500 hover:bg-gray-600 text-white h-7 text-xs px-3"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleOpenRemarkModal(bonus)}
+                            className="bg-[#3949ab] text-white hover:bg-[#2c3582] border-[#3949ab] text-xs h-6 px-2"
                           >
-                            View
+                            REMARK
                           </Button>
                         )}
-                        <Button
-                          onClick={() => handleOpenRemarkModal(bonus)}
-                          className="bg-[#3949ab] hover:bg-[#2c3582] text-white h-7 text-xs px-3"
-                        >
-                          Remark
-                        </Button>
                       </div>
                     </td>
                   </tr>
@@ -566,7 +585,7 @@ export default function ReferrerBonusListManagement() {
                 </div>
                 <div>
                   <label className="text-sm font-semibold text-gray-700">Status:</label>
-                  <Badge className={`text-xs font-semibold px-2 py-0.5 ${getStatusBadgeClass(selectedBonus.status)}`}>
+                  <Badge className={`${getStatusColor(selectedBonus.status)} text-xs font-semibold px-2 py-1`}>
                     {selectedBonus.status}
                   </Badge>
                 </div>

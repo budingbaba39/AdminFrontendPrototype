@@ -29,11 +29,15 @@ import CashBackRecordContent from './CashBackRecordContent';
 import CashBackScheduleContent from './CashBackScheduleContent';
 import CashBackReleaseContent from './CashBackReleaseContent';
 import CommissionRecordContent from './CommissionRecordContent';
+import CommissionSetupContent from './CommissionSetupContent';
+import CommissionReleaseContent from './CommissionReleaseContent';
+import CommissionScheduleContent from './CommissionScheduleContent';
 import ReferrerSetupContent from './ReferrerSetupContent';
 import ReferrerBonusListContent from './ReferrerBonusListContent';
+import KYCContent from './KYCContent';
 
 // Define page type to avoid repetition
-type PageType = 'dashboard' | 'deposit' | 'withdrawal' | 'adjustment' | 'transaction-record' | 'user-record' | 'level' | 'tag' | 'promotion' | 'promotion-record' | 'promotion-list' | 'promotion-ongoing' | 'rebate' | 'rebate-record' | 'rebate-setup' | 'rebate-release' | 'rebate-schedule' | 'cashback' | 'cashback-record' | 'cashback-setup' | 'cashback-release' | 'cashback-schedule' | 'commission' | 'commission-record' | 'referrer-setup' | 'referrer-bonus-list' | 'game-kiosk' | 'settings' | 'security' | 'bank-list' | 'bank-setup' | 'bank-report' | 'report' | 'admin-tool' | 'api' | 'change-log' | 'display' | 'domain' | 'page' | 'staff' | 'theme' | 'tools';
+type PageType = 'dashboard' | 'deposit' | 'withdrawal' | 'adjustment' | 'transaction-record' | 'user-record' | 'level' | 'tag' | 'promotion' | 'promotion-record' | 'promotion-list' | 'promotion-ongoing' | 'rebate' | 'rebate-record' | 'rebate-setup' | 'rebate-release' | 'rebate-schedule' | 'cashback' | 'cashback-record' | 'cashback-setup' | 'cashback-release' | 'cashback-schedule' | 'commission' | 'commission-record' | 'commission-setup' | 'commission-release' | 'commission-schedule' | 'referrer-setup' | 'referrer-bonus-list' | 'game-kiosk' | 'settings' | 'security' | 'bank-list' | 'bank-setup' | 'bank-report' | 'report' | 'admin-tool' | 'api' | 'change-log' | 'display' | 'domain' | 'page' | 'staff' | 'theme' | 'tools' | 'kyc-management';
 
 interface ResponsiveAdminDashboardProps {
   currentPage: PageType;
@@ -60,6 +64,7 @@ const singleMenuItems = [
 
 const bottomMenuItems = [
   { id: 'help', label: 'HELP CENTER' },
+  { id: 'kyc-management', label: 'KYC MANAGEMENT' },
   { id: 'logout', label: 'LOG OUT' },
 ];
 
@@ -443,7 +448,7 @@ function CommissionMenuItem({ currentPage, onNavigate }: {
   onNavigate: (page: PageType) => void;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const isCommissionActive = ['commission', 'commission-record'].includes(currentPage);
+  const isCommissionActive = ['commission', 'commission-record', 'commission-setup', 'commission-release', 'commission-schedule'].includes(currentPage);
 
   useEffect(() => {
     if (isCommissionActive) {
@@ -476,6 +481,36 @@ function CommissionMenuItem({ currentPage, onNavigate }: {
             }`}
           >
             <span className="text-left">6.1 COMMISSION RECORD</span>
+          </button>
+          <button
+            onClick={() => onNavigate('commission-setup')}
+            className={`w-full flex items-center p-2 rounded-lg text-sm font-medium tracking-[-0.14px] transition-colors ${
+              currentPage === 'commission-setup'
+                ? 'bg-[#e8eaf6] text-[#3949ab]'
+                : 'text-[#3949ab] hover:bg-[#f0f0f0]'
+            }`}
+          >
+            <span className="text-left">6.2 COMMISSION SETUP</span>
+          </button>
+          <button
+            onClick={() => onNavigate('commission-release')}
+            className={`w-full flex items-center p-2 rounded-lg text-sm font-medium tracking-[-0.14px] transition-colors ${
+              currentPage === 'commission-release'
+                ? 'bg-[#e8eaf6] text-[#3949ab]'
+                : 'text-[#3949ab] hover:bg-[#f0f0f0]'
+            }`}
+          >
+            <span className="text-left">6.3 COMMISSION RELEASE</span>
+          </button>
+          <button
+            onClick={() => onNavigate('commission-schedule')}
+            className={`w-full flex items-center p-2 rounded-lg text-sm font-medium tracking-[-0.14px] transition-colors ${
+              currentPage === 'commission-schedule'
+                ? 'bg-[#e8eaf6] text-[#3949ab]'
+                : 'text-[#3949ab] hover:bg-[#f0f0f0]'
+            }`}
+          >
+            <span className="text-left">6.4 COMMISSION SCHEDULE</span>
           </button>
         </div>
       )}
@@ -598,7 +633,7 @@ function BankMenuItem({ currentPage, onNavigate }: {
                 : 'text-[#3949ab] hover:bg-[#f0f0f0]'
             }`}
           >
-            <span className="text-left">8.3 BANK REPORT</span>
+            <span className="text-left">8.2 BANK REPORT</span>
           </button>
         </div>
       )}
@@ -679,6 +714,12 @@ function Sidebar({ currentPage, onNavigate, onLogout, className = "" }: {
           <div className="h-px bg-[#e8eaf6] my-2" />
           <MenuItem
             item={bottomMenuItems[1]}
+            isActive={currentPage === 'kyc-management'}
+            onClick={() => onNavigate('kyc-management')}
+          />
+          <div className="h-px bg-[#e8eaf6] my-2" />
+          <MenuItem
+            item={bottomMenuItems[2]}
             isActive={false}
             onClick={onLogout}
           />
@@ -879,6 +920,12 @@ export default function ResponsiveAdminDashboard({ currentPage, onNavigate, onLo
       case 'commission':
       case 'commission-record':
         return <CommissionRecordContent />;
+      case 'commission-setup':
+        return <CommissionSetupContent />;
+      case 'commission-release':
+        return <CommissionReleaseContent />;
+      case 'commission-schedule':
+        return <CommissionScheduleContent />;
       case 'referrer-setup':
         return <ReferrerSetupContent />;
       case 'referrer-bonus-list':
@@ -903,6 +950,8 @@ export default function ResponsiveAdminDashboard({ currentPage, onNavigate, onLo
         return <BankSetupContent />;
       case 'bank-report':
         return <BankManagement />;
+      case 'kyc-management':
+        return <KYCContent />;
       case 'report':
       case 'admin-tool':
       case 'api':

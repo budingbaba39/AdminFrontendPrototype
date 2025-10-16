@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Checkbox } from './ui/checkbox';
 import { Label } from './ui/label';
 import { User, getUserNameById, sampleUsers } from './UserData';
-import { Transaction } from './transactionData';
+import { Transaction, allTransactions } from './transactionData';
 
 // Level color mapping
 const levelColorMap = {
@@ -305,15 +305,20 @@ export default function ProfileManagement({ user, transactions = [], onUserUpdat
                     <th className="px-4 py-2 text-left text-xs font-semibold text-gray-900 uppercase border">ID</th>
                     <th className="px-4 py-2 text-left text-xs font-semibold text-gray-900 uppercase border">Type</th>
                     <th className="px-4 py-2 text-left text-xs font-semibold text-gray-900 uppercase border">Description</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-900 uppercase border">Promotion</th>
                     <th className="px-4 py-2 text-left text-xs font-semibold text-gray-900 uppercase border">Amount</th>
                     <th className="px-4 py-2 text-left text-xs font-semibold text-gray-900 uppercase border">Status</th>
                     <th className="px-4 py-2 text-left text-xs font-semibold text-gray-900 uppercase border">Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {sampleTransactionData.map((transaction, index) => (
+                  {(() => {
+                    // Get user's transactions from allTransactions
+                    const userTransactions = allTransactions.filter(t => t.username === currentUser.id);
+                    return userTransactions.length > 0 ? userTransactions : sampleTransactionData;
+                  })().map((transaction, index) => (
                     <tr key={index} className="hover:bg-gray-50">
-                      <td className="px-4 py-2 text-sm border">{transaction.date}</td>
+                      <td className="px-4 py-2 text-sm border">{('submitTime' in transaction) ? transaction.submitTime : transaction.date}</td>
                       <td className="px-4 py-2 text-sm border">{transaction.id}</td>
                       <td className="px-4 py-2 text-sm border">
                         <Badge className={`${
@@ -324,7 +329,14 @@ export default function ProfileManagement({ user, transactions = [], onUserUpdat
                           {transaction.type}
                         </Badge>
                       </td>
-                      <td className="px-4 py-2 text-sm border">{transaction.description}</td>
+                      <td className="px-4 py-2 text-sm border">{('remark' in transaction) ? transaction.remark : transaction.description}</td>
+                      <td className="px-4 py-2 text-sm border">
+                        {('promotionID' in transaction && transaction.promotionID) ? (
+                          <Badge className="bg-purple-100 text-purple-700 border border-purple-200">
+                            {transaction.promotionID}
+                          </Badge>
+                        ) : '-'}
+                      </td>
                       <td className={`px-4 py-2 text-sm font-semibold border ${transaction.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                         {transaction.amount >= 0 ? '+' : ''}{transaction.amount.toFixed(2)}
                       </td>
@@ -540,24 +552,26 @@ export default function ProfileManagement({ user, transactions = [], onUserUpdat
                   </div>
 
                   {currentUser.ongoingPromotionID &&
-                    transactions &&
                     (() => {
+                      // Use passed transactions or fallback to allTransactions
+                      const txList = transactions && transactions.length > 0 ? transactions : allTransactions;
+
                       // Find the BONUS transaction linked to this user's ongoing promotion
                       console.log('Promo Check:', {
                         userID: currentUser.id,
                         userName: currentUser.name,
                         ongoingPromo: currentUser.ongoingPromotionID,
-                        allTransactions: transactions,
+                        allTransactions: txList,
                       });
 
-                      const promoTx = transactions.find(
+                      const promoTx = txList.find(
                         (t) =>
                           t.username === currentUser.id &&
                           t.type === 'BONUS' &&
                           t.promotionID === currentUser.ongoingPromotionID
                       );
 
-                      // If not found, don’t show anything
+                      // If not found, don't show anything
                       if (!promoTx) return null;
 
                       return (
