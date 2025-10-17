@@ -314,7 +314,7 @@ export default function ProfileManagement({ user, transactions = [], onUserUpdat
                 <tbody>
                   {(() => {
                     // Get user's transactions from allTransactions
-                    const userTransactions = allTransactions.filter(t => t.username === currentUser.id);
+                    const userTransactions = allTransactions.filter(t => t.userID === currentUser.id);
                     return userTransactions.length > 0 ? userTransactions : sampleTransactionData;
                   })().map((transaction, index) => (
                     <tr key={index} className="hover:bg-gray-50">
@@ -566,7 +566,7 @@ export default function ProfileManagement({ user, transactions = [], onUserUpdat
 
                       const promoTx = txList.find(
                         (t) =>
-                          t.username === currentUser.id &&
+                          t.userID === currentUser.id &&
                           t.type === 'BONUS' &&
                           t.promotionID === currentUser.ongoingPromotionID
                       );

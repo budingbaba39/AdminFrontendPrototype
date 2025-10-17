@@ -74,15 +74,15 @@ export default function PromotionManagement() {
         // Search filters
         if (searchFilters.transactionId && !transaction.id.toLowerCase().includes(searchFilters.transactionId.toLowerCase())) return false;
         if (searchFilters.username) {
-          const user = sampleUsers.find(u => u.id === transaction.username);
-          const userName = user?.name || transaction.username;
+          const user = sampleUsers.find(u => u.id === transaction.userID);
+          const userName = user?.name || transaction.userID;
           if (!userName.toLowerCase().includes(searchFilters.username.toLowerCase()) &&
               !transaction.mobile.includes(searchFilters.username)) return false;
         }
         if (searchFilters.dateFrom && new Date(transaction.submitTime) < new Date(searchFilters.dateFrom)) return false;
         if (searchFilters.dateTo && new Date(transaction.submitTime) > new Date(searchFilters.dateTo + ' 23:59:59')) return false;
         if (searchFilters.level && searchFilters.level !== 'all') {
-          const user = sampleUsers.find(u => u.mobile === transaction.mobile || u.id === transaction.username);
+          const user = sampleUsers.find(u => u.mobile === transaction.mobile || u.id === transaction.userID);
           if (!user || user.level !== searchFilters.level) return false;
         }
         if (searchFilters.status && searchFilters.status !== 'all' && transaction.status !== searchFilters.status.toUpperCase()) return false;
@@ -162,29 +162,29 @@ export default function PromotionManagement() {
   };
 
   const handleUserNameClick = (transaction: Transaction) => {
-    let user = usersData.get(transaction.username);
+    let user = usersData.get(transaction.userID);
 
     if (!user) {
       // First, try to find the user in sampleUsers by mobile or username
       const foundUser = sampleUsers.find(
-        u => u.mobile === transaction.mobile || u.id === transaction.username
+        u => u.mobile === transaction.mobile || u.id === transaction.userID
       );
 
       if (foundUser) {
-        // Use the found user data (override id with transaction.username for keying)
-        user = { ...foundUser, id: transaction.username };
+        // Use the found user data (override id with transaction.userID for keying)
+        user = { ...foundUser, id: transaction.userID };
       } else {
         // Fallback: create basic user with default level/tags (shouldn't happen with complete sampleUsers)
         user = {
-          id: transaction.username,
+          id: transaction.userID,
           registerDate: transaction.submitTime,
-          name: transaction.name || transaction.username,
-          username: transaction.username,
+          name: transaction.name || transaction.userID,
+          username: transaction.userID,
           mobile: transaction.mobile,
           credit: transaction.currentCredit || 0,
           bankAccount: transaction.bankAccountNumber || '',
           bank: transaction.from || '',
-          referrer_code: `REF-${sampleUsers.find(u => u.id === transaction.username)?.name || transaction.username}-XXXX`,
+          referrer_code: `REF-${sampleUsers.find(u => u.id === transaction.userID)?.name || transaction.userID}-XXXX`,
           referrer_by: null,
           agent: 'AGENT001',
           winLoss: 0,
@@ -208,7 +208,7 @@ export default function PromotionManagement() {
         };
       }
 
-      setUsersData(prev => new Map(prev).set(transaction.username, user!));
+      setUsersData(prev => new Map(prev).set(transaction.userID, user!));
     }
 
     setSelectedUser(user);
@@ -561,10 +561,10 @@ export default function PromotionManagement() {
                           className="text-gray-900 font-medium cursor-pointer hover:text-blue-600 hover:underline"
                           onClick={() => handleUserNameClick(transaction)}
                         >
-                          {sampleUsers.find(u => u.id === transaction.username)?.name || transaction.username}
+                          {sampleUsers.find(u => u.id === transaction.userID)?.name || transaction.userID}
                         </span>
                       </td>
-                      <td className="px-3 py-2 text-gray-900 text-xs">{sampleUsers.find(u => u.id === transaction.username)?.username || transaction.username}</td>
+                      <td className="px-3 py-2 text-gray-900 text-xs">{sampleUsers.find(u => u.id === transaction.userID)?.username || transaction.userID}</td>
                       <td className="px-3 py-2 text-gray-900 text-xs">{transaction.mobile}</td>
                       <td className="px-3 py-2 text-gray-900 text-xs">{promotionType}</td>
                       <td className="px-3 py-2 text-gray-900 text-xs">{promotionName}</td>
@@ -700,7 +700,7 @@ export default function PromotionManagement() {
               <div className="bg-gray-50 p-4 rounded-lg space-y-2">
                 <div><strong>Transaction ID:</strong> {selectedTransaction.id}</div>
                 <div><strong>Name:</strong> {selectedTransaction.name}</div>
-                <div><strong>Username:</strong> {selectedTransaction.username}</div>
+                <div><strong>Username:</strong> {selectedTransaction.userID}</div>
                 <div><strong>Type:</strong> {selectedTransaction.type}</div>
                 <div><strong>Amount:</strong> ${selectedTransaction.amount.toFixed(2)}</div>
               </div>
@@ -865,7 +865,7 @@ export default function PromotionManagement() {
             <div className="space-y-4">
               <div className="bg-gray-50 p-4 rounded-lg space-y-2">
                 <div><strong>Transaction ID:</strong> {selectedTransaction.id}</div>
-                <div><strong>Username:</strong> {selectedTransaction.username}</div>
+                <div><strong>Username:</strong> {selectedTransaction.userID}</div>
                 <div><strong>Amount:</strong> ${selectedTransaction.amount.toFixed(2)}</div>
               </div>
               <Textarea
@@ -915,7 +915,7 @@ export default function PromotionManagement() {
             {selectedTransaction && (
               <div className="bg-gray-50 p-4 rounded-lg space-y-2 text-sm">
                 <div><strong>Transaction ID:</strong> {selectedTransaction.id}</div>
-                <div><strong>Username:</strong> {selectedTransaction.username}</div>
+                <div><strong>Username:</strong> {selectedTransaction.userID}</div>
                 <div><strong>Amount:</strong> ${selectedTransaction.amount.toFixed(2)}</div>
               </div>
             )}

@@ -40,7 +40,7 @@ export default function CashBackReleaseManagement() {
 
   // Helper Functions
   const getUserLevel = (transaction: Transaction): string => {
-    const user = sampleUsers.find(u => u.mobile === transaction.mobile || u.id === transaction.username);
+    const user = sampleUsers.find(u => u.mobile === transaction.mobile || u.id === transaction.userID);
     return user?.level || 'bronze';
   };
 
@@ -129,26 +129,26 @@ export default function CashBackReleaseManagement() {
   };
 
   const handleUserNameClick = (transaction: Transaction) => {
-    let user = usersData.get(transaction.username);
+    let user = usersData.get(transaction.userID);
 
     if (!user) {
       const foundUser = sampleUsers.find(
-        u => u.mobile === transaction.mobile || u.id === transaction.username
+        u => u.mobile === transaction.mobile || u.id === transaction.userID
       );
 
       if (foundUser) {
-        user = { ...foundUser, id: transaction.username };
+        user = { ...foundUser, id: transaction.userID };
       } else {
         user = {
-          id: transaction.username,
+          id: transaction.userID,
           registerDate: transaction.submitTime,
-          name: transaction.name || transaction.username,
-          username: transaction.username,
+          name: transaction.name || transaction.userID,
+          username: transaction.userID,
           mobile: transaction.mobile,
           credit: transaction.currentCredit || 0,
           bankAccount: transaction.bankAccountNumber || '',
           bank: transaction.from || '',
-          referrer_code: `REF-${sampleUsers.find(u => u.id === transaction.username)?.name || transaction.username}-XXXX`,
+          referrer_code: `REF-${sampleUsers.find(u => u.id === transaction.userID)?.name || transaction.userID}-XXXX`,
           referrer_by: null,
           agent: 'AGENT001',
           winLoss: 0,
@@ -172,7 +172,7 @@ export default function CashBackReleaseManagement() {
         };
       }
 
-      setUsersData(prev => new Map(prev).set(transaction.username, user!));
+      setUsersData(prev => new Map(prev).set(transaction.userID, user!));
     }
 
     setSelectedUser(user);
@@ -468,7 +468,7 @@ export default function CashBackReleaseManagement() {
                           className="text-gray-900 font-medium cursor-pointer hover:text-blue-600 hover:underline"
                           onClick={() => handleUserNameClick(transaction)}
                         >
-                          {sampleUsers.find(u => u.id === transaction.username)?.name || transaction.username}
+                          {sampleUsers.find(u => u.id === transaction.userID)?.name || transaction.userID}
                         </span>
                       </td>
                       <td className="px-3 py-2">

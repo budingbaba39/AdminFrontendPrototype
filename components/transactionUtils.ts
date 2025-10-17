@@ -71,7 +71,7 @@ export const filterTransactions = (
       // Customer ID filter (search in both username and mobile)
       if (searchFilters.customerId) {
         const customerSearch = searchFilters.customerId.toLowerCase();
-        if (!transaction.username.toLowerCase().includes(customerSearch) && 
+        if (!transaction.userID.toLowerCase().includes(customerSearch) && 
             !transaction.mobile.toLowerCase().includes(customerSearch)) {
           return false;
         }

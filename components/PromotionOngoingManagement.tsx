@@ -62,7 +62,7 @@ export default function PromotionOngoingManagement() {
         if (tx.type !== 'BONUS' || tx.status !== 'APPROVED') return false;
 
         // Username filter
-        if (searchFilters.username && !tx.username.toLowerCase().includes(searchFilters.username.toLowerCase()) && !tx.name?.toLowerCase().includes(searchFilters.username.toLowerCase())) {
+        if (searchFilters.username && !tx.userID.toLowerCase().includes(searchFilters.username.toLowerCase()) && !tx.name?.toLowerCase().includes(searchFilters.username.toLowerCase())) {
           return false;
         }
 
@@ -120,7 +120,7 @@ export default function PromotionOngoingManagement() {
   };
 
   const handleUserNameClick = (tx: Transaction) => {
-    const user = sampleUsers.find(u => u.id === tx.username || u.name === tx.name);
+    const user = sampleUsers.find(u => u.id === tx.userID || u.name === tx.name);
     if (user) {
       setSelectedUser(user);
       setShowProfileModal(true);
@@ -282,17 +282,17 @@ export default function PromotionOngoingManagement() {
                           className="text-gray-900 font-medium cursor-pointer hover:text-blue-600 hover:underline"
                           onClick={() => handleUserNameClick(tx)}
                         >
-                          {sampleUsers.find(u => u.id === tx.username)?.name || tx.username}
+                          {sampleUsers.find(u => u.id === tx.userID)?.name || tx.userID}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-gray-900">
-                        {sampleUsers.find(u => u.id === tx.username)?.username || tx.username}
+                        {sampleUsers.find(u => u.id === tx.userID)?.username || tx.userID}
                       </td>
                       <td className="px-4 py-3 text-gray-900">
                         {promotion?.promoName || '-'}
                       </td>
                       <td className="px-4 py-3 text-gray-900 font-medium">
-                        {formatCurrency(getUserCredit(tx.username))}
+                        {formatCurrency(getUserCredit(tx.userID))}
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex flex-wrap gap-1 max-w-xs">

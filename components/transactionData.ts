@@ -1,7 +1,7 @@
 export interface Transaction {
   id: string;
   type: string;
-  username: string;
+  userID: string;
   name?: string;
   mobile: string;
   bankAccountName: string;
@@ -88,7 +88,7 @@ export const sampleDepositTransactions: Transaction[] = [
   {
     id: '#1394795345',
     type: 'DEPOSIT',
-    username: 'USR013',
+    userID: 'USR013',
     mobile: '601877771111',
     bankAccountName: 'Ahmad Abdullah',
     bankAccountNumber: '555555555555555555555555',
@@ -110,7 +110,7 @@ export const sampleDepositTransactions: Transaction[] = [
   {
     id: '#1394795346',
     type: 'DEPOSIT',
-    username: 'USR014',
+    userID: 'USR014',
     mobile: '601877771112',
     bankAccountName: 'Lewis Bank Account',
     bankAccountNumber: '444444444444444444444444',
@@ -128,7 +128,7 @@ export const sampleDepositTransactions: Transaction[] = [
   {
     id: '#1394795347',
     type: 'DEPOSIT',
-    username: 'USR015',
+    userID: 'USR015',
     mobile: '601877771113',
     bankAccountName: 'Sarah Connor Account',
     bankAccountNumber: '333333333333333333333333',
@@ -150,7 +150,7 @@ export const sampleDepositTransactions: Transaction[] = [
   {
     id: '#1394795348',
     type: 'DEPOSIT',
-    username: 'USR016',
+    userID: 'USR016',
     mobile: '601877771114',
     bankAccountName: 'John Matrix Banking',
     bankAccountNumber: '222222222222222222222222',
@@ -170,7 +170,7 @@ export const sampleDepositTransactions: Transaction[] = [
   {
     id: '#1394795350',
     type: 'DEPOSIT',
-    username: 'USR017',
+    userID: 'USR017',
     mobile: '601877771116',
     bankAccountName: 'Dutch S Account',
     bankAccountNumber: '666666666666666666666666',
@@ -191,7 +191,7 @@ export const sampleDepositTransactions: Transaction[] = [
   {
     id: '#1394795351',
     type: 'DEPOSIT',
-    username: 'USR018',
+    userID: 'USR018',
     mobile: '601877771117',
     bankAccountName: 'Isabella M Account',
     bankAccountNumber: '777777777777777777777777',
@@ -209,7 +209,7 @@ export const sampleDepositTransactions: Transaction[] = [
   {
     id: '#1394795352',
     type: 'STAFF DEPOSIT',
-    username: 'USR019',
+    userID: 'USR019',
     mobile: '601877771118',
     bankAccountName: 'Carlos R Staff',
     bankAccountNumber: '888888888888888888888888',
@@ -231,7 +231,7 @@ export const sampleDepositTransactions: Transaction[] = [
   {
     id: '#1394795353',
     type: 'DEPOSIT',
-    username: 'USR020',
+    userID: 'USR020',
     mobile: '601877771119',
     bankAccountName: 'Raj Patel Banking',
     bankAccountNumber: '999999999999999999999999',
@@ -253,7 +253,7 @@ export const sampleDepositTransactions: Transaction[] = [
   {
     id: '#1394795354',
     type: 'DEPOSIT',
-    username: 'USR021',
+    userID: 'USR021',
     mobile: '601877771120',
     bankAccountName: 'Emma T Account',
     bankAccountNumber: '101010101010101010101010',
@@ -273,7 +273,7 @@ export const sampleDepositTransactions: Transaction[] = [
   {
     id: '#1394795355',
     type: 'STAFF DEPOSIT',
-    username: 'USR022',
+    userID: 'USR022',
     mobile: '601877771199',
     bankAccountName: 'Michael C Staff',
     bankAccountNumber: '121212121212121212121212',
@@ -296,7 +296,7 @@ export const sampleDepositTransactions: Transaction[] = [
   {
     id: '#1394795356',
     type: 'DEPOSIT',
-    username: 'GRACE666',
+    userID: 'GRACE666',
     mobile: '60177777777',
     bankAccountName: 'Alex Thompson',
     bankAccountNumber: '777788889999000',
@@ -314,7 +314,7 @@ export const sampleDepositTransactions: Transaction[] = [
   {
     id: '#1394795357',
     type: 'DEPOSIT',
-    username: 'EMMA999',
+    userID: 'EMMA999',
     mobile: '601877771198',
     bankAccountName: 'Emma Wilson',
     bankAccountNumber: '999900001111222',
@@ -332,7 +332,7 @@ export const sampleDepositTransactions: Transaction[] = [
   {
     id: '#1394795358',
     type: 'STAFF DEPOSIT',
-    username: 'ADMIN002',
+    userID: 'ADMIN002',
     mobile: '60188888888',
     bankAccountName: 'Admin User 2',
     bankAccountNumber: '888899990000111',
@@ -354,7 +354,7 @@ export const sampleDepositTransactions: Transaction[] = [
   {
     id: '#1394795359',
     type: 'DEPOSIT',
-    username: 'TOM321',
+    userID: 'TOM321',
     mobile: '60132132132',
     bankAccountName: 'Tom Anderson',
     bankAccountNumber: '333322221111000',
@@ -372,7 +372,7 @@ export const sampleDepositTransactions: Transaction[] = [
   {
     id: '#1394795360',
     type: 'DEPOSIT',
-    username: 'NINA654',
+    userID: 'NINA654',
     mobile: '60165465465',
     bankAccountName: 'Nina Rodriguez',
     bankAccountNumber: '666655554444333',
@@ -392,7 +392,7 @@ export const sampleDepositTransactions: Transaction[] = [
   {
     id: '#1394795361',
     type: 'DEPOSIT',
-    username: 'RACHEL111',
+    userID: 'RACHEL111',
     mobile: '60111111111',
     bankAccountName: 'Rachel Green',
     bankAccountNumber: '111100009999888',
@@ -410,7 +410,7 @@ export const sampleDepositTransactions: Transaction[] = [
   {
     id: '#1394795362',
     type: 'DEPOSIT',
-    username: 'HENRY222',
+    userID: 'HENRY222',
     mobile: '60122222222',
     bankAccountName: 'Henry Lee',
     bankAccountNumber: '222211110000999',
@@ -430,7 +430,7 @@ export const sampleDepositTransactions: Transaction[] = [
   {
     id: '#1394795363',
     type: 'DEPOSIT',
-    username: 'PETER333',
+    userID: 'PETER333',
     mobile: '60133333333',
     bankAccountName: 'Peter Johnson',
     bankAccountNumber: '333344445555666',
@@ -448,7 +448,7 @@ export const sampleDepositTransactions: Transaction[] = [
   {
     id: '#1394795364',
     type: 'DEPOSIT',
-    username: 'SOPHIE444',
+    userID: 'SOPHIE444',
     mobile: '60144444444',
     bankAccountName: 'Sophie Martinez',
     bankAccountNumber: '444455556666777',
@@ -468,7 +468,7 @@ export const sampleDepositTransactions: Transaction[] = [
   {
     id: '#1394795365',
     type: 'DEPOSIT',
-    username: 'MANAGER01',
+    userID: 'MANAGER01',
     mobile: '60155555555',
     bankAccountName: 'Manager User',
     bankAccountNumber: '555566667777888',
@@ -488,7 +488,7 @@ export const sampleDepositTransactions: Transaction[] = [
   {
     id: '#1394795366',
     type: 'DEPOSIT',
-    username: 'WINSTON555',
+    userID: 'WINSTON555',
     mobile: '60166666666',
     bankAccountName: 'Winston Taylor',
     bankAccountNumber: '666677778888999',
@@ -506,7 +506,7 @@ export const sampleDepositTransactions: Transaction[] = [
   {
     id: '#1394795367',
     type: 'DEPOSIT',
-    username: 'GRACE666',
+    userID: 'GRACE666',
     mobile: '60177777777',
     bankAccountName: 'Grace Kim',
     bankAccountNumber: '777788889999000',
@@ -526,7 +526,7 @@ export const sampleDepositTransactions: Transaction[] = [
   {
     id: '#1394795368',
     type: 'DEPOSIT',
-    username: 'DAVID999',
+    userID: 'DAVID999',
     mobile: '60199988877',
     bankAccountName: 'David Brown',
     bankAccountNumber: '999988887777666',
@@ -548,7 +548,7 @@ export const sampleDepositTransactions: Transaction[] = [
   {
     id: '#1394795369',
     type: 'DEPOSIT',
-    username: 'KELLY123',
+    userID: 'KELLY123',
     mobile: '60188776655',
     bankAccountName: 'Kelly Davis',
     bankAccountNumber: '888877776666555',
@@ -574,7 +574,7 @@ export const sampleWithdrawalTransactions: Transaction[] = [
   {
     id: '#1394795400',
     type: 'WITHDRAW',
-    username: 'USR023',
+    userID: 'USR023',
     mobile: '601877771124',
     bankAccountName: 'Hassan Ali',
     bankAccountNumber: '151515151515151515151515',
@@ -591,7 +591,7 @@ export const sampleWithdrawalTransactions: Transaction[] = [
   {
     id: '#1394795401',
     type: 'WITHDRAW',
-    username: 'USR024',
+    userID: 'USR024',
     mobile: '601877771125',
     bankAccountName: 'Lee Xiao Ming',
     bankAccountNumber: '161616161616161616161616',
@@ -610,7 +610,7 @@ export const sampleWithdrawalTransactions: Transaction[] = [
   {
     id: '#1394795402',
     type: 'WITHDRAW',
-    username: 'USR025',
+    userID: 'USR025',
     mobile: '601877771126',
     bankAccountName: 'Maria Santos',
     bankAccountNumber: '171717171717171717171717',
@@ -631,7 +631,7 @@ export const sampleWithdrawalTransactions: Transaction[] = [
   {
     id: '#1394795403',
     type: 'WITHDRAW',
-    username: 'USR026',
+    userID: 'USR026',
     mobile: '601877771127',
     bankAccountName: 'Wong Kar Wai',
     bankAccountNumber: '181818181818181818181818',
@@ -653,7 +653,7 @@ export const sampleWithdrawalTransactions: Transaction[] = [
   {
     id: '#1394795404',
     type: 'WITHDRAW',
-    username: 'USR027',
+    userID: 'USR027',
     mobile: '601877771128',
     bankAccountName: 'Jennifer Wang',
     bankAccountNumber: '202020202020202020202020',
@@ -670,7 +670,7 @@ export const sampleWithdrawalTransactions: Transaction[] = [
   {
     id: '#1394795405',
     type: 'WITHDRAW',
-    username: 'USR028',
+    userID: 'USR028',
     mobile: '601877771129',
     bankAccountName: 'Ahmad Rahman',
     bankAccountNumber: '212121212121212121212121',
@@ -689,7 +689,7 @@ export const sampleWithdrawalTransactions: Transaction[] = [
   {
     id: '#1394795406',
     type: 'WITHDRAW',
-    username: 'USR029',
+    userID: 'USR029',
     mobile: '601877771130',
     bankAccountName: 'Sarah Kim',
     bankAccountNumber: '222222222222222222222222',
@@ -707,7 +707,7 @@ export const sampleWithdrawalTransactions: Transaction[] = [
   {
     id: '#1394795407',
     type: 'STAFF WITHDRAW',
-    username: 'STAFF001',
+    userID: 'STAFF001',
     mobile: '601877771131',
     bankAccountName: 'Admin Lee',
     bankAccountNumber: '232323232323232323232323',
@@ -728,7 +728,7 @@ export const sampleWithdrawalTransactions: Transaction[] = [
   {
     id: '#1394795408',
     type: 'STAFF WITHDRAW',
-    username: 'STAFF002',
+    userID: 'STAFF002',
     mobile: '601877771132',
     bankAccountName: 'Manager Chen',
     bankAccountNumber: '242424242424242424242424',
@@ -753,7 +753,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795352',
     type: 'STAFF DEPOSIT',
-    username: 'USR019',
+    userID: 'USR019',
     mobile: '601877771118',
     bankAccountName: 'Lim Wei Ming',
     bankAccountNumber: '888888888888888888888888',
@@ -772,7 +772,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795354',
     type: 'REBATE',
-    username: 'USR021',
+    userID: 'USR021',
     mobile: '601877771121',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -794,7 +794,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795355',
     type: 'STAFF WITHDRAW',
-    username: 'USR022',
+    userID: 'USR022',
     mobile: '601877771122',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -813,7 +813,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795356',
     type: 'MANUAL',
-    username: 'USR084',
+    userID: 'USR084',
     mobile: '601877771123',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -832,7 +832,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795357',
     type: 'FORFEITED',
-    username: 'USR030',
+    userID: 'USR030',
     mobile: '601877771198',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -851,7 +851,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795358',
     type: 'LOSSCREDIT',
-    username: 'USR023',
+    userID: 'USR023',
     mobile: '601877771125',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -871,7 +871,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795361',
     type: 'BONUS',
-    username: 'USR086',
+    userID: 'USR086',
     mobile: '601877771132',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -892,7 +892,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795359',
     type: 'DEPOSIT',
-    username: 'USR085',
+    userID: 'USR085',
     mobile: '601877771130',
     bankAccountName: 'Amanda Smith',
     bankAccountNumber: '191919191919191919191919',
@@ -914,7 +914,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795362',
     type: 'BONUS',
-    username: 'USR087',
+    userID: 'USR087',
     mobile: '601877771133',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -930,7 +930,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795363',
     type: 'BONUS',
-    username: 'USR088',
+    userID: 'USR088',
     mobile: '601877771134',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -948,7 +948,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795364',
     type: 'BONUS',
-    username: 'USR089',
+    userID: 'USR089',
     mobile: '601877771135',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -968,7 +968,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795365',
     type: 'BONUS',
-    username: 'USR090',
+    userID: 'USR090',
     mobile: '601877771136',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -989,7 +989,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795366',
     type: 'MANUAL',
-    username: 'USR091',
+    userID: 'USR091',
     mobile: '601877771137',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1008,7 +1008,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795367',
     type: 'MANUAL',
-    username: 'USR092',
+    userID: 'USR092',
     mobile: '601877771138',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1027,7 +1027,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795368',
     type: 'MANUAL',
-    username: 'USR093',
+    userID: 'USR093',
     mobile: '601877771139',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1047,7 +1047,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795369',
     type: 'FORFEITED',
-    username: 'USR031',
+    userID: 'USR031',
     mobile: '601877771140',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1066,7 +1066,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795370',
     type: 'FORFEITED',
-    username: 'USR032',
+    userID: 'USR032',
     mobile: '601877771141',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1085,7 +1085,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795371',
     type: 'FORFEITED',
-    username: 'USR033',
+    userID: 'USR033',
     mobile: '601877771142',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1105,7 +1105,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795372',
     type: 'LOSSCREDIT',
-    username: 'USR034',
+    userID: 'USR034',
     mobile: '601877771143',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1124,7 +1124,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795373',
     type: 'LOSSCREDIT',
-    username: 'USR035',
+    userID: 'USR035',
     mobile: '601877771144',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1143,7 +1143,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795374',
     type: 'LOSSCREDIT',
-    username: 'USR036',
+    userID: 'USR036',
     mobile: '601877771145',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1163,7 +1163,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795375',
     type: 'BONUS',
-    username: 'USR094',
+    userID: 'USR094',
     mobile: '601877771146',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1179,7 +1179,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795376',
     type: 'BONUS',
-    username: 'USR097',
+    userID: 'USR097',
     mobile: '601877771147',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1196,7 +1196,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795377',
     type: 'REBATE',
-    username: 'USR032',
+    userID: 'USR032',
     mobile: '601877771141',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1218,7 +1218,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795378',
     type: 'REBATE',
-    username: 'USR033',
+    userID: 'USR033',
     mobile: '601877771142',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1240,7 +1240,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795379',
     type: 'REBATE',
-    username: 'USR034',
+    userID: 'USR034',
     mobile: '601877771143',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1262,7 +1262,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795385',
     type: 'REBATE',
-    username: 'USR035',
+    userID: 'USR035',
     mobile: '601877771144',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1284,7 +1284,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795386',
     type: 'REBATE',
-    username: 'USR036',
+    userID: 'USR036',
     mobile: '601877771145',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1307,7 +1307,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795390',
     type: 'REBATE',
-    username: 'USR001',
+    userID: 'USR001',
     mobile: '60123456789',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1325,7 +1325,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795391',
     type: 'REBATE',
-    username: 'USR002',
+    userID: 'USR002',
     mobile: '60987654321',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1343,7 +1343,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795392',
     type: 'REBATE',
-    username: 'USR004',
+    userID: 'USR004',
     mobile: '60111222333',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1361,7 +1361,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795393',
     type: 'REBATE',
-    username: 'USR006',
+    userID: 'USR006',
     mobile: '60222333444',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1379,7 +1379,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795394',
     type: 'REBATE',
-    username: 'USR010',
+    userID: 'USR010',
     mobile: '60888999000',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1398,7 +1398,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795450',
     type: 'REBATE',
-    username: 'USR015',
+    userID: 'USR015',
     mobile: '60123123123',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1416,7 +1416,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795451',
     type: 'REBATE',
-    username: 'USR016',
+    userID: 'USR016',
     mobile: '60234234234',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1434,7 +1434,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795452',
     type: 'REBATE',
-    username: 'USR017',
+    userID: 'USR017',
     mobile: '60345345345',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1452,7 +1452,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795453',
     type: 'REBATE',
-    username: 'USR018',
+    userID: 'USR018',
     mobile: '60456456456',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1470,7 +1470,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795454',
     type: 'REBATE',
-    username: 'USR019',
+    userID: 'USR019',
     mobile: '60567567567',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1488,7 +1488,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795455',
     type: 'REBATE',
-    username: 'USR020',
+    userID: 'USR020',
     mobile: '60678678678',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1506,7 +1506,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795456',
     type: 'REBATE',
-    username: 'USR021',
+    userID: 'USR021',
     mobile: '60789789789',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1524,7 +1524,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795457',
     type: 'REBATE',
-    username: 'USR022',
+    userID: 'USR022',
     mobile: '60890890890',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1542,7 +1542,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795458',
     type: 'REBATE',
-    username: 'USR023',
+    userID: 'USR023',
     mobile: '60901901901',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1560,7 +1560,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795459',
     type: 'REBATE',
-    username: 'USR024',
+    userID: 'USR024',
     mobile: '60912912912',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1578,7 +1578,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795460',
     type: 'REBATE',
-    username: 'USR025',
+    userID: 'USR025',
     mobile: '60923923923',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1596,7 +1596,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795461',
     type: 'REBATE',
-    username: 'USR026',
+    userID: 'USR026',
     mobile: '60934934934',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1615,7 +1615,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795462',
     type: 'REBATE',
-    username: 'USR027',
+    userID: 'USR027',
     mobile: '60945945945',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1633,7 +1633,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795463',
     type: 'REBATE',
-    username: 'USR028',
+    userID: 'USR028',
     mobile: '60956956956',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1651,7 +1651,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795464',
     type: 'REBATE',
-    username: 'USR029',
+    userID: 'USR029',
     mobile: '60967967967',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1669,7 +1669,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795465',
     type: 'REBATE',
-    username: 'USR030',
+    userID: 'USR030',
     mobile: '60978978978',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1687,7 +1687,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795466',
     type: 'REBATE',
-    username: 'USR031',
+    userID: 'USR031',
     mobile: '60989989989',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1705,7 +1705,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795467',
     type: 'REBATE',
-    username: 'USR032',
+    userID: 'USR032',
     mobile: '60990990990',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1724,7 +1724,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795388',
     type: 'BONUS',
-    username: 'USR001',
+    userID: 'USR001',
     mobile: '60123456789',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1747,7 +1747,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795389',
     type: 'BONUS',
-    username: 'USR006',
+    userID: 'USR006',
     mobile: '60222333444',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1770,7 +1770,7 @@ export const sampleOtherTransactions: Transaction[] = [
   {
     id: '#1394795387',
     type: 'BONUS',
-    username: 'USR010',
+    userID: 'USR010',
     mobile: '60888999000',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1797,7 +1797,7 @@ export const sampleCashbackTransactions: Transaction[] = [
   {
     id: '#1394795395',
     type: 'CASHBACK',
-    username: 'USR001',
+    userID: 'USR001',
     mobile: '60123456789',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1815,7 +1815,7 @@ export const sampleCashbackTransactions: Transaction[] = [
   {
     id: '#1394795396',
     type: 'CASHBACK',
-    username: 'USR002',
+    userID: 'USR002',
     mobile: '60987654321',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1833,7 +1833,7 @@ export const sampleCashbackTransactions: Transaction[] = [
   {
     id: '#1394795397',
     type: 'CASHBACK',
-    username: 'USR004',
+    userID: 'USR004',
     mobile: '60111222333',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1851,7 +1851,7 @@ export const sampleCashbackTransactions: Transaction[] = [
   {
     id: '#1394795398',
     type: 'CASHBACK',
-    username: 'USR006',
+    userID: 'USR006',
     mobile: '60222333444',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1869,7 +1869,7 @@ export const sampleCashbackTransactions: Transaction[] = [
   {
     id: '#1394795399',
     type: 'CASHBACK',
-    username: 'USR010',
+    userID: 'USR010',
     mobile: '60888999000',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1888,7 +1888,7 @@ export const sampleCashbackTransactions: Transaction[] = [
   {
     id: '#1394795410',
     type: 'CASHBACK',
-    username: 'USR015',
+    userID: 'USR015',
     mobile: '60123123123',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1906,7 +1906,7 @@ export const sampleCashbackTransactions: Transaction[] = [
   {
     id: '#1394795411',
     type: 'CASHBACK',
-    username: 'USR016',
+    userID: 'USR016',
     mobile: '60234234234',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1924,7 +1924,7 @@ export const sampleCashbackTransactions: Transaction[] = [
   {
     id: '#1394795412',
     type: 'CASHBACK',
-    username: 'USR017',
+    userID: 'USR017',
     mobile: '60345345345',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1942,7 +1942,7 @@ export const sampleCashbackTransactions: Transaction[] = [
   {
     id: '#1394795413',
     type: 'CASHBACK',
-    username: 'USR018',
+    userID: 'USR018',
     mobile: '60456456456',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1960,7 +1960,7 @@ export const sampleCashbackTransactions: Transaction[] = [
   {
     id: '#1394795414',
     type: 'CASHBACK',
-    username: 'USR019',
+    userID: 'USR019',
     mobile: '60567567567',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1978,7 +1978,7 @@ export const sampleCashbackTransactions: Transaction[] = [
   {
     id: '#1394795415',
     type: 'CASHBACK',
-    username: 'USR020',
+    userID: 'USR020',
     mobile: '60678678678',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -1996,7 +1996,7 @@ export const sampleCashbackTransactions: Transaction[] = [
   {
     id: '#1394795416',
     type: 'CASHBACK',
-    username: 'USR021',
+    userID: 'USR021',
     mobile: '60789789789',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -2014,7 +2014,7 @@ export const sampleCashbackTransactions: Transaction[] = [
   {
     id: '#1394795417',
     type: 'CASHBACK',
-    username: 'USR022',
+    userID: 'USR022',
     mobile: '60890890890',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -2032,7 +2032,7 @@ export const sampleCashbackTransactions: Transaction[] = [
   {
     id: '#1394795418',
     type: 'CASHBACK',
-    username: 'USR023',
+    userID: 'USR023',
     mobile: '60901901901',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -2050,7 +2050,7 @@ export const sampleCashbackTransactions: Transaction[] = [
   {
     id: '#1394795419',
     type: 'CASHBACK',
-    username: 'USR024',
+    userID: 'USR024',
     mobile: '60912912912',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -2068,7 +2068,7 @@ export const sampleCashbackTransactions: Transaction[] = [
   {
     id: '#1394795420',
     type: 'CASHBACK',
-    username: 'USR025',
+    userID: 'USR025',
     mobile: '60923923923',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -2086,7 +2086,7 @@ export const sampleCashbackTransactions: Transaction[] = [
   {
     id: '#1394795421',
     type: 'CASHBACK',
-    username: 'USR026',
+    userID: 'USR026',
     mobile: '60934934934',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -2104,7 +2104,7 @@ export const sampleCashbackTransactions: Transaction[] = [
   {
     id: '#1394795422',
     type: 'CASHBACK',
-    username: 'USR027',
+    userID: 'USR027',
     mobile: '60945945945',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -2123,7 +2123,7 @@ export const sampleCashbackTransactions: Transaction[] = [
   {
     id: '#1394795423',
     type: 'CASHBACK',
-    username: 'USR028',
+    userID: 'USR028',
     mobile: '60956956956',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -2141,7 +2141,7 @@ export const sampleCashbackTransactions: Transaction[] = [
   {
     id: '#1394795424',
     type: 'CASHBACK',
-    username: 'USR029',
+    userID: 'USR029',
     mobile: '60967967967',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -2159,7 +2159,7 @@ export const sampleCashbackTransactions: Transaction[] = [
   {
     id: '#1394795425',
     type: 'CASHBACK',
-    username: 'USR030',
+    userID: 'USR030',
     mobile: '60978978978',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -2177,7 +2177,7 @@ export const sampleCashbackTransactions: Transaction[] = [
   {
     id: '#1394795426',
     type: 'CASHBACK',
-    username: 'USR031',
+    userID: 'USR031',
     mobile: '60989989989',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -2195,7 +2195,7 @@ export const sampleCashbackTransactions: Transaction[] = [
   {
     id: '#1394795427',
     type: 'CASHBACK',
-    username: 'USR032',
+    userID: 'USR032',
     mobile: '60990990990',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -2213,7 +2213,7 @@ export const sampleCashbackTransactions: Transaction[] = [
   {
     id: '#1394795428',
     type: 'CASHBACK',
-    username: 'USR033',
+    userID: 'USR033',
     mobile: '60991991991',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -2232,7 +2232,7 @@ export const sampleCashbackTransactions: Transaction[] = [
   {
     id: '#1394795400',
     type: 'CASHBACK',
-    username: 'USR031',
+    userID: 'USR031',
     mobile: '601877771121',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -2254,7 +2254,7 @@ export const sampleCashbackTransactions: Transaction[] = [
   {
     id: '#1394795401',
     type: 'CASHBACK',
-    username: 'USR032',
+    userID: 'USR032',
     mobile: '601877771141',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -2276,7 +2276,7 @@ export const sampleCashbackTransactions: Transaction[] = [
   {
     id: '#1394795402',
     type: 'CASHBACK',
-    username: 'USR033',
+    userID: 'USR033',
     mobile: '601877771142',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -2298,7 +2298,7 @@ export const sampleCashbackTransactions: Transaction[] = [
   {
     id: '#1394795403',
     type: 'CASHBACK',
-    username: 'USR034',
+    userID: 'USR034',
     mobile: '601877771143',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -2320,7 +2320,7 @@ export const sampleCashbackTransactions: Transaction[] = [
   {
     id: '#1394795404',
     type: 'CASHBACK',
-    username: 'USR035',
+    userID: 'USR035',
     mobile: '601877771144',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -2348,7 +2348,7 @@ export const sampleCommissionTransactions: Transaction[] = [
   {
     id: '#1394795405',
     type: 'COMMISSION',
-    username: 'USR001',
+    userID: 'USR001',
     mobile: '60123456789',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -2368,7 +2368,7 @@ export const sampleCommissionTransactions: Transaction[] = [
   {
     id: '#1394795406',
     type: 'COMMISSION',
-    username: 'USR002',
+    userID: 'USR002',
     mobile: '60987654321',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -2388,7 +2388,7 @@ export const sampleCommissionTransactions: Transaction[] = [
   {
     id: '#1394795407',
     type: 'COMMISSION',
-    username: 'USR003',
+    userID: 'USR003',
     mobile: '60112233445',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -2408,7 +2408,7 @@ export const sampleCommissionTransactions: Transaction[] = [
   {
     id: '#1394795408',
     type: 'COMMISSION',
-    username: 'USR004',
+    userID: 'USR004',
     mobile: '60198765432',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -2428,7 +2428,7 @@ export const sampleCommissionTransactions: Transaction[] = [
   {
     id: '#1394795409',
     type: 'COMMISSION',
-    username: 'USR005',
+    userID: 'USR005',
     mobile: '60176543210',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -2449,7 +2449,7 @@ export const sampleCommissionTransactions: Transaction[] = [
   {
     id: '#1394795410',
     type: 'COMMISSION',
-    username: 'USR006',
+    userID: 'USR006',
     mobile: '60165432109',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -2473,7 +2473,7 @@ export const sampleCommissionTransactions: Transaction[] = [
   {
     id: '#1394795411',
     type: 'COMMISSION',
-    username: 'USR007',
+    userID: 'USR007',
     mobile: '60154321098',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -2497,7 +2497,7 @@ export const sampleCommissionTransactions: Transaction[] = [
   {
     id: '#1394795412',
     type: 'COMMISSION',
-    username: 'USR008',
+    userID: 'USR008',
     mobile: '60143210987',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -2521,7 +2521,7 @@ export const sampleCommissionTransactions: Transaction[] = [
   {
     id: '#1394795413',
     type: 'COMMISSION',
-    username: 'USR009',
+    userID: 'USR009',
     mobile: '60132109876',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -2545,7 +2545,7 @@ export const sampleCommissionTransactions: Transaction[] = [
   {
     id: '#1394795414',
     type: 'COMMISSION',
-    username: 'USR010',
+    userID: 'USR010',
     mobile: '60121098765',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -2569,7 +2569,7 @@ export const sampleCommissionTransactions: Transaction[] = [
   {
     id: '#1394795415',
     type: 'COMMISSION',
-    username: 'USR011',
+    userID: 'USR011',
     mobile: '60110987654',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -2593,7 +2593,7 @@ export const sampleCommissionTransactions: Transaction[] = [
   {
     id: '#1394795416',
     type: 'COMMISSION',
-    username: 'USR012',
+    userID: 'USR012',
     mobile: '60109876543',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -2618,7 +2618,7 @@ export const sampleCommissionTransactions: Transaction[] = [
   {
     id: '#1394795417',
     type: 'COMMISSION',
-    username: 'USR013',
+    userID: 'USR013',
     mobile: '60198765432',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -2642,7 +2642,7 @@ export const sampleCommissionTransactions: Transaction[] = [
   {
     id: '#1394795418',
     type: 'COMMISSION',
-    username: 'USR014',
+    userID: 'USR014',
     mobile: '60187654321',
     bankAccountName: '',
     bankAccountNumber: '',
@@ -2666,7 +2666,7 @@ export const sampleCommissionTransactions: Transaction[] = [
   {
     id: '#1394795419',
     type: 'COMMISSION',
-    username: 'USR015',
+    userID: 'USR015',
     mobile: '60176543210',
     bankAccountName: '',
     bankAccountNumber: '',

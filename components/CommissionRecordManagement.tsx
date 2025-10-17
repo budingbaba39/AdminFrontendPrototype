@@ -63,7 +63,7 @@ export default function CommissionRecordManagement() {
 
   // Helper Functions
   const getUserLevel = (transaction: Transaction): string => {
-    const user = sampleUsers.find(u => u.mobile === transaction.mobile || u.id === transaction.username);
+    const user = sampleUsers.find(u => u.mobile === transaction.mobile || u.id === transaction.userID);
     return user?.level || 'bronze';
   };
 
@@ -100,15 +100,15 @@ export default function CommissionRecordManagement() {
 
         // Search filters
         if (searchFilters.username) {
-          const user = sampleUsers.find(u => u.id === transaction.username);
-          const userName = user?.name || transaction.username;
+          const user = sampleUsers.find(u => u.id === transaction.userID);
+          const userName = user?.name || transaction.userID;
           if (!userName.toLowerCase().includes(searchFilters.username.toLowerCase()) &&
               !transaction.mobile.includes(searchFilters.username)) return false;
         }
         if (searchFilters.dateFrom && new Date(transaction.completeTime || transaction.submitTime) < new Date(searchFilters.dateFrom)) return false;
         if (searchFilters.dateTo && new Date(transaction.completeTime || transaction.submitTime) > new Date(searchFilters.dateTo + ' 23:59:59')) return false;
         if (searchFilters.level && searchFilters.level !== 'all') {
-          const user = sampleUsers.find(u => u.mobile === transaction.mobile || u.id === transaction.username);
+          const user = sampleUsers.find(u => u.mobile === transaction.mobile || u.id === transaction.userID);
           if (!user || user.level !== searchFilters.level) return false;
         }
         if (searchFilters.handler && !transaction.completeBy?.toLowerCase().includes(searchFilters.handler.toLowerCase())) return false;
@@ -159,26 +159,26 @@ export default function CommissionRecordManagement() {
   };
 
   const handleUserNameClick = (transaction: Transaction) => {
-    let user = usersData.get(transaction.username);
+    let user = usersData.get(transaction.userID);
 
     if (!user) {
       const foundUser = sampleUsers.find(
-        u => u.mobile === transaction.mobile || u.id === transaction.username
+        u => u.mobile === transaction.mobile || u.id === transaction.userID
       );
 
       if (foundUser) {
-        user = { ...foundUser, id: transaction.username };
+        user = { ...foundUser, id: transaction.userID };
       } else {
         user = {
-          id: transaction.username,
+          id: transaction.userID,
           registerDate: transaction.submitTime,
-          name: transaction.name || transaction.username,
-          username: transaction.username,
+          name: transaction.name || transaction.userID,
+          username: transaction.userID,
           mobile: transaction.mobile,
           credit: transaction.currentCredit || 0,
           bankAccount: transaction.bankAccountNumber || '',
           bank: transaction.from || '',
-          referrer_code: `REF-${transaction.username}-XXXX`,
+          referrer_code: `REF-${transaction.userID}-XXXX`,
           referrer_by: null,
           agent: 'AGENT001',
           winLoss: 0,
@@ -202,7 +202,7 @@ export default function CommissionRecordManagement() {
         };
       }
 
-      setUsersData(prev => new Map(prev).set(transaction.username, user!));
+      setUsersData(prev => new Map(prev).set(transaction.userID, user!));
     }
 
     setSelectedUser(user);
@@ -549,7 +549,7 @@ export default function CommissionRecordManagement() {
                           className="text-gray-900 font-medium cursor-pointer hover:text-blue-600 hover:underline"
                           onClick={() => handleUserNameClick(transaction)}
                         >
-                          {sampleUsers.find(u => u.id === transaction.username)?.name || transaction.username}
+                          {sampleUsers.find(u => u.id === transaction.userID)?.name || transaction.userID}
                         </span>
                       </td>
                       <td className="px-3 py-2">
@@ -660,7 +660,7 @@ export default function CommissionRecordManagement() {
             <div className="space-y-4 pt-4">
               <div className="bg-gray-50 p-4 rounded-lg space-y-2">
                 <div><strong>Transaction ID:</strong> {selectedTransaction.id}</div>
-                <div><strong>Username:</strong> {selectedTransaction.username}</div>
+                <div><strong>Username:</strong> {selectedTransaction.userID}</div>
                 <div><strong>Amount:</strong> ${selectedTransaction.amount.toFixed(2)}</div>
               </div>
               <Textarea
