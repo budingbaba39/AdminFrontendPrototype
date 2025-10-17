@@ -3,12 +3,14 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Badge } from './ui/badge';
-import { Trash2, Edit, Eye, List, TrendingUp, RefreshCw, Percent, DollarSign, X } from 'lucide-react';
+import { Trash2, Edit, Eye, List, TrendingUp, RefreshCw, Percent, DollarSign, X, UserPlus } from 'lucide-react';
 import { Level, initialLevels, levelColors, ProviderBetLimit, ProviderRebateAssignment, ProviderCashbackAssignment } from './LevelData';
 import { Bank, banksData } from './BankData';
 import { Provider, providersData, categoryLabels } from './ProviderData';
 import { rebateSetupsData } from './RebateSetupData';
 import { cashBackSetupsData } from './CashBackSetupData';
+import { sampleCommissionSetups, CommissionSetup } from './CommissionSetupData';
+import { initialReferrerSetups, ReferrerSetup } from './ReferrerSetupData';
 
 export default function LevelManagement() {
   const [levels, setLevels] = useState<Level[]>(initialLevels);
@@ -42,6 +44,20 @@ export default function LevelManagement() {
   const [cashbackProviderSearch, setCashbackProviderSearch] = useState('');
   const [cashbackCategoryFilter, setCashbackCategoryFilter] = useState<number | 'all'>('all');
   const [cashbackCategoryToApply, setCashbackCategoryToApply] = useState<number | ''>('');
+
+  // Commission Setup Modal
+  const [showCommissionSetupModal, setShowCommissionSetupModal] = useState(false);
+  const [selectedLevelForCommission, setSelectedLevelForCommission] = useState<Level | null>(null);
+  const [selectedCommissionId, setSelectedCommissionId] = useState<string | null>(null);
+  const [commissionNameFilter, setCommissionNameFilter] = useState('');
+  const [commissionTargetTypeFilter, setCommissionTargetTypeFilter] = useState<string>('all');
+
+  // Referrer Setup Modal
+  const [showReferrerSetupModal, setShowReferrerSetupModal] = useState(false);
+  const [selectedLevelForReferrer, setSelectedLevelForReferrer] = useState<Level | null>(null);
+  const [selectedReferrerId, setSelectedReferrerId] = useState<string | null>(null);
+  const [referrerNameFilter, setReferrerNameFilter] = useState('');
+  const [referrerTargetTypeFilter, setReferrerTargetTypeFilter] = useState<string>('all');
 
   const [formData, setFormData] = useState<Omit<Level, 'id' | 'createdDate'>>({
     levelName: '',
@@ -230,6 +246,48 @@ export default function LevelManagement() {
   const handleCashbackSetup = (level: Level) => {
     setSelectedLevelForCashback(level);
     setShowCashbackSetupModal(true);
+  };
+
+  // Handler to open Commission Setup Modal
+  const handleCommissionSetup = (level: Level) => {
+    setSelectedLevelForCommission(level);
+    setSelectedCommissionId(level.commissionSetupId || null);
+    setShowCommissionSetupModal(true);
+  };
+
+  // Handler to save Commission Setup
+  const handleSaveCommissionSetup = () => {
+    if (!selectedLevelForCommission) return;
+
+    setLevels(prev => prev.map(level =>
+      level.id === selectedLevelForCommission.id
+        ? { ...level, commissionSetupId: selectedCommissionId || undefined }
+        : level
+    ));
+
+    console.log(`Saved commission setup for ${selectedLevelForCommission.levelName}:`, selectedCommissionId);
+    setShowCommissionSetupModal(false);
+  };
+
+  // Handler to open Referrer Setup Modal
+  const handleReferrerSetup = (level: Level) => {
+    setSelectedLevelForReferrer(level);
+    setSelectedReferrerId(level.referrerSetupId || null);
+    setShowReferrerSetupModal(true);
+  };
+
+  // Handler to save Referrer Setup
+  const handleSaveReferrerSetup = () => {
+    if (!selectedLevelForReferrer) return;
+
+    setLevels(prev => prev.map(level =>
+      level.id === selectedLevelForReferrer.id
+        ? { ...level, referrerSetupId: selectedReferrerId || undefined }
+        : level
+    ));
+
+    console.log(`Saved referrer setup for ${selectedLevelForReferrer.levelName}:`, selectedReferrerId);
+    setShowReferrerSetupModal(false);
   };
 
   // Initialize rebate assignments when modal opens
@@ -688,6 +746,24 @@ export default function LevelManagement() {
                       >
                         <DollarSign className="w-3 h-3 mr-1" />
                         CASHBACK SETUP
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleCommissionSetup(level)}
+                        className="bg-[#ff9800] text-white hover:bg-[#f57c00] border-[#ff9800] h-7 px-2"
+                      >
+                        <DollarSign className="w-3 h-3 mr-1" />
+                        COMMISSION SETUP
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleReferrerSetup(level)}
+                        className="bg-[#9c27b0] text-white hover:bg-[#7b1fa2] border-[#9c27b0] h-7 px-2"
+                      >
+                        <UserPlus className="w-3 h-3 mr-1" />
+                        REFERRER SETUP
                       </Button>
                       <Button
                         variant="outline"
@@ -2045,6 +2121,265 @@ export default function LevelManagement() {
               </Button>
               <Button
                 onClick={handleSaveCashbackSetup}
+                className="flex-1 bg-[#4caf50] hover:bg-[#45a049] text-white"
+              >
+                SAVE
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Commission Setup Modal */}
+      <Dialog open={showCommissionSetupModal} onOpenChange={setShowCommissionSetupModal}>
+        <DialogContent className="max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-[#3949ab] font-semibold text-lg">
+              Commission Setup - {selectedLevelForCommission?.levelName}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 pt-4">
+            <p className="text-sm text-gray-700">
+              Select a commission setup for <strong>{selectedLevelForCommission?.levelName}</strong> level.
+              Only one commission setup can be assigned per level.
+            </p>
+
+            {/* Filter Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-gray-50 p-3 rounded-lg border">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Search Name</label>
+                <Input
+                  placeholder="Search commission name..."
+                  value={commissionNameFilter}
+                  onChange={(e) => setCommissionNameFilter(e.target.value)}
+                  className="w-full h-9"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Target Type</label>
+                <select
+                  value={commissionTargetTypeFilter}
+                  onChange={(e) => setCommissionTargetTypeFilter(e.target.value)}
+                  className="w-full h-9 px-3 rounded-md border border-gray-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="all">All Target Types</option>
+                  <option value="Deposit - Withdraw">Deposit - Withdraw</option>
+                  <option value="Deposit - Withdraw - Rebate - Bonus">Deposit - Withdraw - Rebate - Bonus</option>
+                  <option value="Valid Bet">Valid Bet</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="border rounded-lg overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b">
+                  <tr>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-900 uppercase w-16">SELECT</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Commission Name</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Target Type</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Commission %</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-900 uppercase">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {sampleCommissionSetups.filter((commission) => {
+                    if (commissionNameFilter && !commission.name.toLowerCase().includes(commissionNameFilter.toLowerCase())) {
+                      return false;
+                    }
+                    if (commissionTargetTypeFilter !== 'all' && commission.targetType !== commissionTargetTypeFilter) {
+                      return false;
+                    }
+                    return true;
+                  }).map((commission) => (
+                    <tr
+                      key={commission.id}
+                      className={`hover:bg-gray-50 cursor-pointer ${
+                        selectedCommissionId === commission.id ? 'bg-blue-50' : ''
+                      }`}
+                      onClick={() => setSelectedCommissionId(commission.id)}
+                    >
+                      <td className="px-4 py-3 text-center">
+                        <input
+                          type="radio"
+                          name="commissionSetup"
+                          checked={selectedCommissionId === commission.id}
+                          onChange={() => setSelectedCommissionId(commission.id)}
+                          className="w-4 h-4 text-[#3949ab] border-gray-300 focus:ring-[#3949ab]"
+                        />
+                      </td>
+                      <td className="px-4 py-3 font-medium text-gray-900 text-sm">{commission.name}</td>
+                      <td className="px-4 py-3 text-sm">
+                        <Badge className="bg-blue-100 text-blue-800 font-semibold text-xs">
+                          {commission.targetType}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-900 font-medium">{commission.commissionPercentage}%</td>
+                      <td className="px-4 py-3 text-center">
+                        <Badge className={`font-semibold text-xs ${
+                          commission.status === 'Active'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {commission.status}
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {selectedCommissionId && (
+              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded">
+                <p className="text-sm text-gray-700">
+                  Selected: <span className="font-semibold">
+                    {sampleCommissionSetups.find(c => c.id === selectedCommissionId)?.name}
+                  </span>
+                </p>
+              </div>
+            )}
+
+            <div className="flex gap-3 pt-3 border-t">
+              <Button
+                onClick={() => setShowCommissionSetupModal(false)}
+                variant="outline"
+                className="flex-1 bg-[#f44336] text-white hover:bg-[#d32f2f] border-[#f44336]"
+              >
+                CANCEL
+              </Button>
+              <Button
+                onClick={handleSaveCommissionSetup}
+                className="flex-1 bg-[#4caf50] hover:bg-[#45a049] text-white"
+              >
+                SAVE
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Referrer Setup Modal */}
+      <Dialog open={showReferrerSetupModal} onOpenChange={setShowReferrerSetupModal}>
+        <DialogContent className="max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-[#3949ab] font-semibold text-lg">
+              Referrer Setup - {selectedLevelForReferrer?.levelName}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 pt-4">
+            <p className="text-sm text-gray-700">
+              Select a referrer setup for <strong>{selectedLevelForReferrer?.levelName}</strong> level.
+              Only one referrer setup can be assigned per level.
+            </p>
+
+            {/* Filter Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-gray-50 p-3 rounded-lg border">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Search Name</label>
+                <Input
+                  placeholder="Search referrer name..."
+                  value={referrerNameFilter}
+                  onChange={(e) => setReferrerNameFilter(e.target.value)}
+                  className="w-full h-9"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Target Type</label>
+                <select
+                  value={referrerTargetTypeFilter}
+                  onChange={(e) => setReferrerTargetTypeFilter(e.target.value)}
+                  className="w-full h-9 px-3 rounded-md border border-gray-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="all">All Target Types</option>
+                  <option value="By Deposit">By Deposit</option>
+                  <option value="By Register">By Register</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="border rounded-lg overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b">
+                  <tr>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-900 uppercase w-16">SELECT</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Referrer Name</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Target Type</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Max Payout</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-900 uppercase">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {initialReferrerSetups.filter((referrer) => {
+                    if (referrerNameFilter && !referrer.name.toLowerCase().includes(referrerNameFilter.toLowerCase())) {
+                      return false;
+                    }
+                    if (referrerTargetTypeFilter !== 'all' && referrer.targetType !== referrerTargetTypeFilter) {
+                      return false;
+                    }
+                    return true;
+                  }).map((referrer) => (
+                    <tr
+                      key={referrer.id}
+                      className={`hover:bg-gray-50 cursor-pointer ${
+                        selectedReferrerId === referrer.id ? 'bg-blue-50' : ''
+                      }`}
+                      onClick={() => setSelectedReferrerId(referrer.id)}
+                    >
+                      <td className="px-4 py-3 text-center">
+                        <input
+                          type="radio"
+                          name="referrerSetup"
+                          checked={selectedReferrerId === referrer.id}
+                          onChange={() => setSelectedReferrerId(referrer.id)}
+                          className="w-4 h-4 text-[#3949ab] border-gray-300 focus:ring-[#3949ab]"
+                        />
+                      </td>
+                      <td className="px-4 py-3 font-medium text-gray-900 text-sm">{referrer.name}</td>
+                      <td className="px-4 py-3 text-sm">
+                        <Badge className="bg-purple-100 text-purple-800 font-semibold text-xs">
+                          {referrer.targetType}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-900 font-medium">
+                        ${referrer.maxPayoutPerDownline.toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <Badge className={`font-semibold text-xs ${
+                          referrer.status === 'Active'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {referrer.status}
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {selectedReferrerId && (
+              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded">
+                <p className="text-sm text-gray-700">
+                  Selected: <span className="font-semibold">
+                    {initialReferrerSetups.find(r => r.id === selectedReferrerId)?.name}
+                  </span>
+                </p>
+              </div>
+            )}
+
+            <div className="flex gap-3 pt-3 border-t">
+              <Button
+                onClick={() => setShowReferrerSetupModal(false)}
+                variant="outline"
+                className="flex-1 bg-[#f44336] text-white hover:bg-[#d32f2f] border-[#f44336]"
+              >
+                CANCEL
+              </Button>
+              <Button
+                onClick={handleSaveReferrerSetup}
                 className="flex-1 bg-[#4caf50] hover:bg-[#45a049] text-white"
               >
                 SAVE

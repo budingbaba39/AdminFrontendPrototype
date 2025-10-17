@@ -162,7 +162,12 @@ export default function PromotionListManagement() {
       errors.validTo = 'Valid to must be after valid from';
     }
     if (formData.timeTo <= formData.timeFrom) errors.timeTo = 'Time to must be after time from';
-    if (formData.levelIds.length === 0) errors.levelIds = 'At least one level must be selected';
+
+    // Level validation - NOT required for Referrer type
+    if (formData.promoType !== 'Referrer' && formData.levelIds.length === 0) {
+      errors.levelIds = 'At least one level must be selected';
+    }
+
     if (formData.providerIds.length === 0) errors.providerIds = 'At least one provider must be selected';
 
     setValidationErrors(errors);
@@ -200,6 +205,11 @@ export default function PromotionListManagement() {
       // Clear day when changing reset frequency
       if (field === 'resetFrequency') {
         updated.resetFrequencyDay = undefined;
+      }
+
+      // Clear level selection when changing to Referrer type
+      if (field === 'promoType' && value === 'Referrer') {
+        updated.levelIds = [];
       }
 
       return updated;
@@ -1176,7 +1186,8 @@ export default function PromotionListManagement() {
 
               {activeTab === 'eligibility' && (
                 <div className="space-y-4 min-h-[500px]">
-                  {/* Level Selection */}
+                  {/* Only show level selection if NOT Referrer type */}
+                  {formData.promoType !== 'Referrer' && (
                   <div>
                     <h3 className="text-lg font-bold mb-4 text-gray-800 pb-2 border-b">Level Selection</h3>
                     <div className="bg-white rounded-lg border overflow-hidden">
@@ -1231,8 +1242,9 @@ export default function PromotionListManagement() {
                       <p className="text-red-600 text-sm mt-1">{validationErrors.levelIds}</p>
                     )}
                   </div>
+                  )}
 
-                  {/* Provider Selection */}
+                  {/* Provider Selection - always show */}
                   <div>
                     <h3 className="text-lg font-bold mb-4 text-gray-800 pb-2 border-b">Provider Selection</h3>
                     {/* Category Filter */}
@@ -1411,6 +1423,19 @@ export default function PromotionListManagement() {
                       <p className="text-red-600 text-sm mt-1">{validationErrors.providerIds}</p>
                     )}
                   </div>
+
+                  {/* Info message for Referrer type */}
+                  {formData.promoType === 'Referrer' && (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center mt-4">
+                      <p className="text-lg font-semibold text-yellow-800 mb-2">
+                        Level Selection Not Applicable
+                      </p>
+                      <p className="text-sm text-yellow-700">
+                        For Referrer promotions, level selection is managed through the Referrer Setup in Level Management.
+                        Only provider selection is available here.
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

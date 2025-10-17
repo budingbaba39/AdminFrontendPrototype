@@ -30,6 +30,7 @@ const getDefaultFormData = (): ReferrerSetup => ({
   autoApprovedAmount: 1000,
   maxPayoutPerDownline: 1000,
   promoId: referrerPromotions.length > 0 ? referrerPromotions[0].id : '',
+  levelId: undefined,
   createdDate: new Date().toISOString().split('T')[0],
   createdBy: 'Admin'
 });
@@ -201,33 +202,25 @@ export default function ReferrerSetupManagement() {
             <tbody className="divide-y divide-gray-200 text-sm">
               {filteredSetups.map((setup) => {
                 const promo = initialPromotions.find(p => p.id === setup.promoId);
-                // Get levels from promotion's levelIds
-                const levels = promo?.levelIds.map(levelId =>
-                  initialLevels.find(l => l.id === levelId)
-                ).filter(Boolean) || [];
 
                 return (
                   <tr key={setup.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3">
-                      <div className="flex flex-wrap gap-1">
-                        {levels.length > 0 ? (
-                          levels.map(level => {
-                            if (!level) return null;
-                            const colors = getLevelBadgeColors(level.levelName);
-                            return (
-                              <Badge
-                                key={level.id}
-                                className="text-xs font-semibold px-2 py-0.5"
-                                style={{ backgroundColor: colors.badgeColor, color: colors.fontColor }}
-                              >
-                                {level.levelName.toUpperCase()}
-                              </Badge>
-                            );
-                          })
-                        ) : (
-                          <span className="text-gray-400 text-xs">No levels</span>
-                        )}
-                      </div>
+                      {setup.levelId ? (() => {
+                        const level = initialLevels.find(l => l.id === setup.levelId);
+                        const levelName = level?.levelName?.toLowerCase() || 'bronze';
+                        return (
+                          <Badge className={`text-xs font-semibold px-2 py-0.5 ${
+                            levelName === 'gold' ? 'bg-yellow-500 text-white' :
+                            levelName === 'silver' ? 'bg-gray-400 text-white' :
+                            'bg-amber-700 text-white'
+                          }`}>
+                            {levelName.toUpperCase()}
+                          </Badge>
+                        );
+                      })() : (
+                        <span className="text-gray-400 text-xs">No level</span>
+                      )}
                     </td>
                     <td className="px-4 py-3 font-semibold text-gray-900">{setup.name}</td>
                     <td className="px-4 py-3 text-gray-900 font-medium">
@@ -395,6 +388,25 @@ export default function ReferrerSetupManagement() {
               {validationErrors.promoId && (
                 <p className="text-red-600 text-sm mt-1">{validationErrors.promoId}</p>
               )}
+            </div>
+
+            <div className="w-full">
+              <label className="block text-sm font-semibold mb-2 text-gray-700">Level</label>
+              <select
+                value={formData.levelId || ''}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  levelId: e.target.value ? parseInt(e.target.value) : undefined
+                }))}
+                className="w-full h-10 px-3 py-2 border rounded-md"
+              >
+                <option value="">Select Level</option>
+                {initialLevels.map(level => (
+                  <option key={level.id} value={level.id}>
+                    {level.levelName}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 

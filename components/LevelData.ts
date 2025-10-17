@@ -40,6 +40,8 @@ export interface Level {
   providerBetLimits?: ProviderBetLimit[]; // Bet limits for providers
   providerRebateAssignments?: ProviderRebateAssignment[]; // Rebate assignments
   providerCashbackAssignments?: ProviderCashbackAssignment[]; // Cashback assignments
+  commissionSetupId?: string; // Links to CommissionSetup.id
+  referrerSetupId?: string;   // Links to ReferrerSetup.id
 }
 
 export const initialLevels: Level[] = [
@@ -75,9 +77,11 @@ export const initialLevels: Level[] = [
       { providerId: 16, rebateSetupIds: [1] } 
     ],
     providerCashbackAssignments: [
-      { providerId: 6, cashbackSetupIds: [1] }, 
-      { providerId: 31, cashbackSetupIds: [1] } 
-    ]
+      { providerId: 6, cashbackSetupIds: [1] },
+      { providerId: 31, cashbackSetupIds: [1] }
+    ],
+    commissionSetupId: 'COMM001', // Deposit-Withdraw Commission
+    referrerSetupId: 'REF001' // Bronze Referral Program
   },
   {
     id: 2,
@@ -113,8 +117,10 @@ export const initialLevels: Level[] = [
     ],
     providerCashbackAssignments: [
       { providerId: 7, cashbackSetupIds: [2] },
-      { providerId: 17, cashbackSetupIds: [2] } 
-    ]
+      { providerId: 17, cashbackSetupIds: [2] }
+    ],
+    commissionSetupId: 'COMM002', // Full Activity Commission (Silver eligible for both COMM001 and COMM002)
+    referrerSetupId: 'REF002' // Silver Registration Bonus
   },
   {
     id: 3,
@@ -149,10 +155,12 @@ export const initialLevels: Level[] = [
       { providerId: 33, rebateSetupIds: [3] } 
     ],
     providerCashbackAssignments: [
-      { providerId: 8, cashbackSetupIds: [3] }, 
-      { providerId: 18, cashbackSetupIds: [3] }, 
-      { providerId: 33, cashbackSetupIds: [3] } 
-    ]
+      { providerId: 8, cashbackSetupIds: [3] },
+      { providerId: 18, cashbackSetupIds: [3] },
+      { providerId: 33, cashbackSetupIds: [3] }
+    ],
+    commissionSetupId: 'COMM002', // Full Activity Commission (Gold eligible for COMM002)
+    referrerSetupId: 'REF003' // Gold VIP Referral
   }
 ];
 

@@ -657,6 +657,13 @@ function Sidebar({ currentPage, onNavigate, onLogout, className = "" }: {
           </span>
         </div>
 
+        {/* SMS Credit */}
+        <div className="px-3">
+          <span className="text-[#3949ab] text-sm font-medium">
+            SMS Credit: 0.00
+          </span>
+        </div>
+
         {/* Main Menu */}
         <div className="flex-1 flex flex-col gap-2 overflow-y-auto">
           {/* 1. User Submenu */}
@@ -770,49 +777,6 @@ function Header({ onToggleSidebar, currentPage, onNavigate }: {
           </div>
         </div>
 
-        {/* Navigation */}
-        <div className="hidden md:flex items-center gap-9">
-          <button 
-            onClick={() => onNavigate('dashboard')}
-            className={`text-sm font-medium transition-colors ${
-              currentPage === 'dashboard' 
-                ? 'text-[#3949ab] border-b-2 border-[#3949ab] pb-1' 
-                : 'text-[#171212] hover:text-[#3949ab]'
-            }`}
-          >
-            Home
-          </button>
-          <button 
-            onClick={() => onNavigate('transaction-record')}
-            className={`text-sm font-medium transition-colors ${
-              ['deposit', 'withdrawal', 'adjustment'].includes(currentPage)
-                ? 'text-[#3949ab] border-b-2 border-[#3949ab] pb-1'
-                : 'text-[#171212] hover:text-[#3949ab]'
-            }`}
-          >
-            Transactions
-          </button>
-          <button 
-            onClick={() => onNavigate('user-record')}
-            className={`text-sm font-medium transition-colors ${
-              ['user-record', 'level','tag'].includes(currentPage) 
-                ? 'text-[#3949ab] border-b-2 border-[#3949ab] pb-1' 
-                : 'text-[#171212] hover:text-[#3949ab]'
-            }`}
-          >
-            Users
-          </button>
-          <button 
-            onClick={() => onNavigate('dashboard')}
-            className={`text-sm font-medium transition-colors ${
-              currentPage === 'reports' 
-                ? 'text-[#3949ab] border-b-2 border-[#3949ab] pb-1' 
-                : 'text-[#171212] hover:text-[#3949ab]'
-            }`}
-          >
-            Reports
-          </button>
-        </div>
 
         {/* Right side */}
         <div className="flex items-center gap-2">

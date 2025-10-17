@@ -6,9 +6,9 @@ export interface CommissionSetup {
   targetMultiplier: number; // 1x, 2x, 3x
   creditLessThan: number; // Maximum credit to be eligible
 
-  // Eligibility (ONLY when targetType === 'Valid Bet')
-  levelIds?: number[]; // Array of level IDs
-  providerIds?: number[]; // Array of provider IDs
+  // Eligibility
+  levelIds?: number[]; // Array of level IDs - can be selected in commission setup
+  providerIds?: number[]; // ONLY for 'Valid Bet'
 
   status: 'Active' | 'Inactive';
   createdDate: string;
@@ -24,6 +24,7 @@ export const sampleCommissionSetups: CommissionSetup[] = [
     commissionPercentage: 10,
     targetMultiplier: 2,
     creditLessThan: 10000,
+    levelIds: [1], // Bronze
     status: 'Active',
     createdDate: '2025-01-15 10:00',
     createdBy: 'ADMIN001'
@@ -35,6 +36,7 @@ export const sampleCommissionSetups: CommissionSetup[] = [
     commissionPercentage: 15,
     targetMultiplier: 1,
     creditLessThan: 5000,
+    levelIds: [2, 3], // Silver and Gold
     status: 'Active',
     createdDate: '2025-02-10 14:30',
     createdBy: 'ADMIN001'
@@ -46,8 +48,7 @@ export const sampleCommissionSetups: CommissionSetup[] = [
     commissionPercentage: 20,
     targetMultiplier: 3,
     creditLessThan: 15000,
-    // Eligibility for Valid Bet
-    levelIds: [1, 2, 3], // Bronze, Silver, Gold
+    levelIds: [], 
     providerIds: [6, 16, 31, 32, 33], // Pragmatic Play, Evolution Gaming, PG Soft, Spadegaming, Habanero
     status: 'Active',
     createdDate: '2025-03-05 09:15',

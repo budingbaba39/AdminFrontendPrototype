@@ -196,7 +196,7 @@ export const initialPromotions: Promotion[] = [
     timeTo: '23:59',
     includeRebate: false,
     requireApproval: true,
-    levelIds: [1, 2, 3],
+    levelIds: [1],
     providerIds: [6, 16, 31, 32],
     translations: {
       english: { title: 'Referrer Promotion', name: 'Refer a Friend and Earn Bonus', description: '', images: [] },
@@ -234,7 +234,7 @@ export const initialPromotions: Promotion[] = [
     timeTo: '23:59',
     includeRebate: false,
     requireApproval: true,
-    levelIds: [2, 3], // Silver and Gold only
+    levelIds: [2], // Silver and Gold only
     providerIds: [6, 16, 17, 31, 32],
     translations: {
       english: { title: 'VIP Referral Bonus', name: 'VIP Members Get $150 per Referral', description: '', images: [] },
@@ -269,7 +269,7 @@ export const initialPromotions: Promotion[] = [
     timeTo: '23:59',
     includeRebate: true,
     requireApproval: false,
-    levelIds: [1, 2, 3], // All levels
+    levelIds: [3], // All levels
     providerIds: [6, 16, 31, 32, 33],
     translations: {
       english: { title: 'Lucky Referral Reward', name: 'Win Random Bonus $25-$200 for Each Referral', description: '', images: [] },

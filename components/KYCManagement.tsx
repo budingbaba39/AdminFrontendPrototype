@@ -316,7 +316,7 @@ export default function KYCManagement() {
                 <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Submission Date</th>
                 <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Status</th>
                 <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Documents</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Complete/Reject Time</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">C/R Time</th>
                 <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Handler</th>
                 <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Remark</th>
                 <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Action</th>

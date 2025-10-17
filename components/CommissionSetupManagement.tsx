@@ -95,11 +95,13 @@ export default function CommissionSetupManagement() {
     if (formData.targetMultiplier <= 0) errors.targetMultiplier = 'Target multiplier must be greater than 0';
     if (formData.creditLessThan <= 0) errors.creditLessThan = 'Credit less than must be greater than 0';
 
-    // Validate eligibility for Valid Bet target type
+    // Level validation for all types
+    if (!formData.levelIds || formData.levelIds.length === 0) {
+      errors.levelIds = 'At least one level must be selected';
+    }
+
+    // Provider validation ONLY for Valid Bet
     if (formData.targetType === 'Valid Bet') {
-      if (!formData.levelIds || formData.levelIds.length === 0) {
-        errors.levelIds = 'At least one level must be selected for Valid Bet target type';
-      }
       if (!formData.providerIds || formData.providerIds.length === 0) {
         errors.providerIds = 'At least one provider must be selected for Valid Bet target type';
       }
@@ -112,10 +114,9 @@ export default function CommissionSetupManagement() {
   const handleSave = () => {
     if (!validateForm()) return;
 
-    // Clear eligibility fields if not Valid Bet
+    // Clear provider fields if not Valid Bet
     const dataToSave = { ...formData };
     if (dataToSave.targetType !== 'Valid Bet') {
-      dataToSave.levelIds = [];
       dataToSave.providerIds = [];
     }
 
@@ -137,9 +138,8 @@ export default function CommissionSetupManagement() {
     setFormData(prev => {
       const updated = { ...prev, [field]: value };
 
-      // Clear eligibility when changing away from Valid Bet
+      // Clear providers when changing away from Valid Bet
       if (field === 'targetType' && value !== 'Valid Bet') {
-        updated.levelIds = [];
         updated.providerIds = [];
       }
 
@@ -225,6 +225,7 @@ export default function CommissionSetupManagement() {
           <table className="w-full">
             <thead className="bg-gray-50 border-b">
               <tr>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Level</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Commission Name</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Target Type</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Commission Percentage</th>
@@ -235,6 +236,27 @@ export default function CommissionSetupManagement() {
             <tbody className="divide-y divide-gray-200">
               {filteredCommissions.map((commission) => (
                 <tr key={commission.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-3">
+                    <div className="flex flex-wrap gap-1">
+                      {commission.levelIds && commission.levelIds.length > 0 ? (
+                        commission.levelIds.map(levelId => {
+                          const level = initialLevels.find(l => l.id === levelId);
+                          const levelName = level?.levelName?.toLowerCase() || 'bronze';
+                          return level ? (
+                            <Badge key={levelId} className={`text-xs font-semibold px-2 py-0.5 ${
+                              levelName === 'gold' ? 'bg-yellow-500 text-white' :
+                              levelName === 'silver' ? 'bg-gray-400 text-white' :
+                              'bg-amber-700 text-white'
+                            }`}>
+                              {levelName.toUpperCase()}
+                            </Badge>
+                          ) : null;
+                        })
+                      ) : (
+                        <span className="text-gray-400 text-xs">No levels</span>
+                      )}
+                    </div>
+                  </td>
                   <td className="px-4 py-3 text-sm text-gray-900 font-medium">{commission.name}</td>
                   <td className="px-4 py-3 text-sm">
                     <Badge
@@ -419,73 +441,62 @@ export default function CommissionSetupManagement() {
 
               {activeTab === 'eligibility' && (
                 <div className="space-y-4 min-h-[500px]">
-                  {formData.targetType !== 'Valid Bet' ? (
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
-                      <p className="text-lg font-semibold text-yellow-800 mb-2">
-                        Eligibility Settings Not Applicable
-                      </p>
-                      <p className="text-sm text-yellow-700">
-                        Eligibility settings are only applicable for "Valid Bet" target type.
-                        Please change the target type to "Valid Bet" in the Basic Info tab to configure eligibility.
+                  {/* Level Selection */}
+                  <div>
+                    <h3 className="text-lg font-bold mb-4 text-gray-800 pb-2 border-b">Level Selection</h3>
+                    <div className="bg-white rounded-lg border overflow-hidden">
+                      <table className="w-full">
+                        <thead className="bg-gray-50 border-b">
+                          <tr>
+                            <th className="px-4 py-3 text-center text-xs font-semibold text-gray-900 uppercase w-12">
+                              <input
+                                type="checkbox"
+                                checked={(formData.levelIds?.length || 0) === initialLevels.length}
+                                onChange={toggleAllLevels}
+                                className="w-4 h-4 text-[#3949ab] border-gray-300 rounded focus:ring-[#3949ab]"
+                              />
+                            </th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Level Name</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200 text-sm">
+                          {initialLevels.map((level) => (
+                            <tr
+                              key={level.id}
+                              className={`hover:bg-gray-50 cursor-pointer ${
+                                formData.levelIds?.includes(level.id) ? 'bg-blue-50' : ''
+                              }`}
+                              onClick={() => toggleLevel(level.id)}
+                            >
+                              <td className="px-4 py-3 text-center">
+                                <input
+                                  type="checkbox"
+                                  checked={formData.levelIds?.includes(level.id) || false}
+                                  onChange={() => toggleLevel(level.id)}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="w-4 h-4 text-[#3949ab] border-gray-300 rounded focus:ring-[#3949ab]"
+                                />
+                              </td>
+                              <td className="px-4 py-3 font-semibold text-gray-900">
+                                {level.levelName}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded">
+                      <p className="text-sm text-gray-700">
+                        <span className="font-semibold">{formData.levelIds?.length || 0}</span> level(s) selected out of <span className="font-semibold">{initialLevels.length}</span>
                       </p>
                     </div>
-                  ) : (
-                    <>
-                      {/* Level Selection */}
-                      <div>
-                        <h3 className="text-lg font-bold mb-4 text-gray-800 pb-2 border-b">Level Selection</h3>
-                        <div className="bg-white rounded-lg border overflow-hidden">
-                          <table className="w-full">
-                            <thead className="bg-gray-50 border-b">
-                              <tr>
-                                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-900 uppercase w-12">
-                                  <input
-                                    type="checkbox"
-                                    checked={(formData.levelIds?.length || 0) === initialLevels.length}
-                                    onChange={toggleAllLevels}
-                                    className="w-4 h-4 text-[#3949ab] border-gray-300 rounded focus:ring-[#3949ab]"
-                                  />
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Level Name</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200 text-sm">
-                              {initialLevels.map((level) => (
-                                <tr
-                                  key={level.id}
-                                  className={`hover:bg-gray-50 cursor-pointer ${
-                                    formData.levelIds?.includes(level.id) ? 'bg-blue-50' : ''
-                                  }`}
-                                  onClick={() => toggleLevel(level.id)}
-                                >
-                                  <td className="px-4 py-3 text-center">
-                                    <input
-                                      type="checkbox"
-                                      checked={formData.levelIds?.includes(level.id) || false}
-                                      onChange={() => toggleLevel(level.id)}
-                                      onClick={(e) => e.stopPropagation()}
-                                      className="w-4 h-4 text-[#3949ab] border-gray-300 rounded focus:ring-[#3949ab]"
-                                    />
-                                  </td>
-                                  <td className="px-4 py-3 font-semibold text-gray-900">
-                                    {level.levelName}
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded">
-                          <p className="text-sm text-gray-700">
-                            <span className="font-semibold">{formData.levelIds?.length || 0}</span> level(s) selected out of <span className="font-semibold">{initialLevels.length}</span>
-                          </p>
-                        </div>
-                        {validationErrors.levelIds && (
-                          <p className="text-red-600 text-sm mt-1">{validationErrors.levelIds}</p>
-                        )}
-                      </div>
+                    {validationErrors.levelIds && (
+                      <p className="text-red-600 text-sm mt-1">{validationErrors.levelIds}</p>
+                    )}
+                  </div>
 
-                      {/* Provider Selection */}
+                  {/* Provider Selection - ONLY show for 'Valid Bet' */}
+                  {formData.targetType === 'Valid Bet' && (
                       <div>
                         <h3 className="text-lg font-bold mb-4 text-gray-800 pb-2 border-b">Provider Selection</h3>
                         {/* Category Filter */}
@@ -654,7 +665,19 @@ export default function CommissionSetupManagement() {
                           <p className="text-red-600 text-sm mt-1">{validationErrors.providerIds}</p>
                         )}
                       </div>
-                    </>
+                  )}
+
+                  {/* Info message for non-Valid Bet types */}
+                  {formData.targetType !== 'Valid Bet' && (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+                      <p className="text-lg font-semibold text-yellow-800 mb-2">
+                        Provider Selection Not Applicable
+                      </p>
+                      <p className="text-sm text-yellow-700">
+                        Provider selection is only applicable for "Valid Bet" target type.
+                        For "{formData.targetType}", only level selection is required.
+                      </p>
+                    </div>
                   )}
                 </div>
               )}

@@ -178,6 +178,7 @@ export default function UserManagement() {
       id: userId,
       registerDate: new Date().toISOString().slice(0, 16).replace('T', ' '),
       name: newUser.fullName.toUpperCase(),
+      username: newUser.username || newUser.fullName.toLowerCase().replace(/\s+/g, '.'),
       mobile: '60123456789',
       credit: 0.00,
       bankAccount: '0000000000000000',
@@ -431,6 +432,7 @@ export default function UserManagement() {
                 <tr>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Register Date</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Name</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Username</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Mobile</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Credit</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Referral Code</th>
@@ -464,6 +466,7 @@ export default function UserManagement() {
                   <th className="px-3 py-1"></th>
                   <th className="px-3 py-1"></th>
                   <th className="px-3 py-1"></th>
+                  <th className="px-3 py-1"></th>
                   <th className="px-3 py-1 text-center text-xs font-semibold text-gray-900 uppercase border-l-2 border-r border-blue-300">Count</th>
                   <th className="px-3 py-1 text-center text-xs font-semibold text-gray-900 uppercase border-r-2 border-l border-blue-300">Total</th>
                   <th className="px-3 py-1 text-center text-xs font-semibold text-gray-900 uppercase border-l-2 border-r border-green-300">Count</th>
@@ -484,14 +487,15 @@ export default function UserManagement() {
                 {filteredUsers.map((user) => (
                   <tr key={user.id} className="hover:bg-gray-50">
                     <td className="px-3 py-2 text-gray-900 text-xs">{user.registerDate}</td>
-                    <td className="px-3 py-2 flex items-center flex-wrap gap-1">
-                      <span 
-                        className="text-gray-900 font-medium cursor-pointer hover:text-blue-600 hover:underline"
+                    <td className="px-3 py-2">
+                      <span
+                        className="text-gray-900 font-medium cursor-pointer hover:text-blue-600 hover:underline text-xs"
                         onClick={() => handleUserNameClick(user)}
                       >
                         {user.name}
-                      </span> 
+                      </span>
                     </td>
+                    <td className="px-3 py-2 text-gray-900 text-xs">{user.username}</td>
                     <td className="px-3 py-2 text-gray-900 text-xs">{user.mobile}</td>
                     <td className="px-3 py-2">
                       <span className="text-gray-900 font-semibold text-xs">
