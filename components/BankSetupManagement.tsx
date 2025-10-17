@@ -151,7 +151,7 @@ export default function BankSetupManagement() {
   };
 
   const getBankTransferBanks = () => {
-    return banksData.filter(bank => bank.bankType === 'Bank Transfer');
+    return banksData.filter(bank => bank.bankType === 'Online Transfer');
   };
 
   const getBadgeClassName = (type: string, value: string) => {

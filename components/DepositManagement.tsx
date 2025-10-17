@@ -64,8 +64,12 @@ export default function DepositManagement() {
 
         // Search filters
         if (searchFilters.transactionId && !transaction.id.toLowerCase().includes(searchFilters.transactionId.toLowerCase())) return false;
-        if (searchFilters.username && !transaction.username.toLowerCase().includes(searchFilters.username.toLowerCase()) &&
-            !transaction.mobile.includes(searchFilters.username)) return false;
+        if (searchFilters.username) {
+          const user = sampleUsers.find(u => u.id === transaction.username);
+          const userName = user?.name || transaction.username;
+          if (!userName.toLowerCase().includes(searchFilters.username.toLowerCase()) &&
+              !transaction.mobile.includes(searchFilters.username)) return false;
+        }
         if (searchFilters.dateFrom && new Date(transaction.submitTime) < new Date(searchFilters.dateFrom)) return false;
         if (searchFilters.dateTo && new Date(transaction.submitTime) > new Date(searchFilters.dateTo + ' 23:59:59')) return false;
         if (searchFilters.level && searchFilters.level !== 'all') {
@@ -158,11 +162,12 @@ export default function DepositManagement() {
           id: transaction.username,
           registerDate: transaction.submitTime,
           name: transaction.name || transaction.username,
+          username: transaction.username,
           mobile: transaction.mobile,
           credit: transaction.currentCredit || 0,
           bankAccount: transaction.bankAccountNumber || '',
           bank: transaction.from || '',
-          referrer_code: `REF-${transaction.username}-XXXX`,
+          referrer_code: `REF-${sampleUsers.find(u => u.id === transaction.username)?.name || transaction.username}-XXXX`,
           referrer_by: null,
           agent: 'AGENT001',
           winLoss: 0,
@@ -439,10 +444,10 @@ export default function DepositManagement() {
                           className="text-gray-900 font-medium cursor-pointer hover:text-blue-600 hover:underline"
                           onClick={() => handleUserNameClick(transaction)}
                         >
-                          {transaction.name || transaction.username}
+                          {sampleUsers.find(u => u.id === transaction.username)?.name || transaction.username}
                         </span>
                       </td>
-                      <td className="px-3 py-2 text-gray-900 text-xs">{transaction.username}</td>
+                      <td className="px-3 py-2 text-gray-900 text-xs">{sampleUsers.find(u => u.id === transaction.username)?.username || transaction.username}</td>
                       <td className="px-3 py-2 text-gray-900 text-xs">{transaction.mobile}</td>
                       <td className="px-3 py-2 text-gray-900 text-xs">{transaction.method}</td>
                       <td className="px-3 py-2 text-gray-900 text-xs">{transaction.from}</td>

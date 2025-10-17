@@ -62,7 +62,7 @@ export default function PromotionOngoingManagement() {
         if (tx.type !== 'BONUS' || tx.status !== 'APPROVED') return false;
 
         // Username filter
-        if (searchFilters.username && !tx.username.toLowerCase().includes(searchFilters.username.toLowerCase()) && !tx.name.toLowerCase().includes(searchFilters.username.toLowerCase())) {
+        if (searchFilters.username && !tx.username.toLowerCase().includes(searchFilters.username.toLowerCase()) && !tx.name?.toLowerCase().includes(searchFilters.username.toLowerCase())) {
           return false;
         }
 
@@ -256,6 +256,7 @@ export default function PromotionOngoingManagement() {
             <table className="w-full">
               <thead className="bg-gray-50 border-b">
                 <tr>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Name</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Username</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Promotion Name</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">User Credit</th>
@@ -281,8 +282,11 @@ export default function PromotionOngoingManagement() {
                           className="text-gray-900 font-medium cursor-pointer hover:text-blue-600 hover:underline"
                           onClick={() => handleUserNameClick(tx)}
                         >
-                          {tx.username}
+                          {sampleUsers.find(u => u.id === tx.username)?.name || tx.username}
                         </span>
+                      </td>
+                      <td className="px-4 py-3 text-gray-900">
+                        {sampleUsers.find(u => u.id === tx.username)?.username || tx.username}
                       </td>
                       <td className="px-4 py-3 text-gray-900">
                         {promotion?.promoName || '-'}

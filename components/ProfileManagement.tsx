@@ -1236,7 +1236,7 @@ export default function ProfileManagement({ user, transactions = [], onUserUpdat
                   ].map((gameRecord, index) => (
                     <tr key={index} className="hover:bg-gray-50">
                       <td className="px-4 py-2 text-sm border">{gameRecord.game}</td>
-                      <td className="px-4 py-2 text-sm border">{gameRecord.username}</td>
+                      <td className="px-4 py-2 text-sm border">{sampleUsers.find(u => u.id === gameRecord.username)?.name || gameRecord.username}</td>
                       <td className="px-4 py-2 text-sm border">{gameRecord.password}</td>
                       <td className="px-4 py-2 text-sm border">{gameRecord.dateTime}</td>
                     </tr>

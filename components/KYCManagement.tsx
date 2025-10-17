@@ -162,6 +162,7 @@ export default function KYCManagement() {
           id: submission.userId,
           registerDate: submission.submissionDate.split(' ')[0],
           name: submission.username,
+          username: submission.username,
           mobile: '1234567890',
           credit: 0,
           bankAccount: 'N/A',
@@ -204,7 +205,9 @@ export default function KYCManagement() {
 
   // Filter Submissions
   const filteredSubmissions = submissions.filter(sub => {
-    const matchesSearch = sub.userId.toLowerCase().includes(searchTerm.toLowerCase());
+    const user = sampleUsers.find(u => u.id === sub.userId);
+    const userName = user?.name || sub.userId;
+    const matchesSearch = userName.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = activeStatus === 'ALL' || sub.status === activeStatus;
     return matchesSearch && matchesStatus;
   });
@@ -330,7 +333,7 @@ export default function KYCManagement() {
                       className="text-gray-900 font-medium cursor-pointer hover:text-blue-600 hover:underline text-xs"
                       onClick={() => handleUserClick(submission)}
                     >
-                      {submission.userId}
+                      {sampleUsers.find(u => u.id === submission.userId)?.name || submission.userId}
                     </span>
                   </td>
                   <td className="px-3 py-2 text-gray-900 text-xs">{submission.submissionDate}</td>
@@ -631,7 +634,7 @@ export default function KYCManagement() {
           {selectedUser && (
             <ProfileContent
               user={selectedUser}
-              onUpdate={handleUserUpdate}
+              onUserUpdate={handleUserUpdate}
             />
           )}
         </DialogContent>

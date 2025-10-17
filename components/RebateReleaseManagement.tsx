@@ -144,11 +144,12 @@ export default function RebateReleaseManagement() {
           id: transaction.username,
           registerDate: transaction.submitTime,
           name: transaction.name || transaction.username,
+          username: transaction.username,
           mobile: transaction.mobile,
           credit: transaction.currentCredit || 0,
           bankAccount: transaction.bankAccountNumber || '',
           bank: transaction.from || '',
-          referrer_code: `REF-${transaction.username}-XXXX`,
+          referrer_code: `REF-${sampleUsers.find(u => u.id === transaction.username)?.name || transaction.username}-XXXX`,
           referrer_by: null,
           agent: 'AGENT001',
           winLoss: 0,
@@ -468,7 +469,7 @@ export default function RebateReleaseManagement() {
                           className="text-gray-900 font-medium cursor-pointer hover:text-blue-600 hover:underline"
                           onClick={() => handleUserNameClick(transaction)}
                         >
-                          {transaction.username}
+                          {sampleUsers.find(u => u.id === transaction.username)?.name || transaction.username}
                         </span>
                       </td>
                       <td className="px-3 py-2">

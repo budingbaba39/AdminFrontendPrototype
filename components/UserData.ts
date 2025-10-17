@@ -429,7 +429,7 @@ export const sampleUsers: User[] = [
     tags: ['FAKE RECEIPT', 'VIPBRONZE']
   },
   {
-    id: '165478067',
+    id: 'USR013',
     registerDate: '2023-08-01',
     name: 'Ahmad Bin Abdullah',
     username: 'ahmad.abdullah',
@@ -460,7 +460,7 @@ export const sampleUsers: User[] = [
     tags: []
   },
   {
-    id: '165478068',
+    id: 'USR014',
     registerDate: '2023-08-01',
     name: 'Lewis Dementus',
     username: 'lewis.dementus',
@@ -491,7 +491,7 @@ export const sampleUsers: User[] = [
     tags: []
   },
   {
-    id: '165478069',
+    id: 'USR015',
     registerDate: '2023-08-01',
     name: 'Sarah Connor',
     username: 'sarah.connor',
@@ -522,7 +522,7 @@ export const sampleUsers: User[] = [
     tags: []
   },
   {
-    id: '165478070',
+    id: 'USR016',
     registerDate: '2023-08-01',
     name: 'John Matrix',
     username: 'john.matrix',
@@ -553,7 +553,7 @@ export const sampleUsers: User[] = [
     tags: []
   },
   {
-    id: '165478072',
+    id: 'USR017',
     registerDate: '2023-08-01',
     name: 'Dutch Schaefer',
     username: 'dutch.schaefer',
@@ -584,7 +584,7 @@ export const sampleUsers: User[] = [
     tags: []
   },
   {
-    id: '165478073',
+    id: 'USR018',
     registerDate: '2023-08-01',
     name: 'Isabella Martinez',
     username: 'isabella.martinez',
@@ -615,7 +615,7 @@ export const sampleUsers: User[] = [
     tags: []
   },
   {
-    id: '165478074',
+    id: 'USR019',
     registerDate: '2023-08-01',
     name: 'Carlos Rodriguez',
     username: 'carlos.rodriguez',
@@ -646,7 +646,7 @@ export const sampleUsers: User[] = [
     tags: []
   },
   {
-    id: '165478075',
+    id: 'USR020',
     registerDate: '2023-08-01',
     name: 'Raj Patel',
     username: 'raj.patel',
@@ -677,7 +677,7 @@ export const sampleUsers: User[] = [
     tags: []
   },
   {
-    id: '165478076',
+    id: 'USR021',
     registerDate: '2023-08-01',
     name: 'Emma Thompson',
     username: 'emma.thompson',
@@ -708,7 +708,7 @@ export const sampleUsers: User[] = [
     tags: []
   },
   {
-    id: '165478077',
+    id: 'USR022',
     registerDate: '2023-08-01',
     name: 'Michael Chen',
     username: 'michael.chen',
@@ -1142,7 +1142,7 @@ export const sampleUsers: User[] = [
     tags: []
   },
   {
-    id: '165478080',
+    id: 'USR023',
     registerDate: '2023-08-01',
     name: 'Hassan Ali',
     username: 'hassan.ali',
@@ -1173,7 +1173,7 @@ export const sampleUsers: User[] = [
     tags: []
   },
   {
-    id: '165478081',
+    id: 'USR024',
     registerDate: '2023-08-01',
     name: 'Lee Xiao Ming',
     username: 'lee.xiaoming',
@@ -1204,7 +1204,7 @@ export const sampleUsers: User[] = [
     tags: []
   },
   {
-    id: '165478082',
+    id: 'USR025',
     registerDate: '2023-08-01',
     name: 'Maria Santos',
     username: 'maria.santos',
@@ -1235,7 +1235,7 @@ export const sampleUsers: User[] = [
     tags: []
   },
   {
-    id: '165478083',
+    id: 'USR026',
     registerDate: '2023-08-01',
     name: 'Wong Kar Wai',
     username: 'wong.karwai',
@@ -1266,7 +1266,7 @@ export const sampleUsers: User[] = [
     tags: []
   },
   {
-    id: '165478084',
+    id: 'USR027',
     registerDate: '2023-08-01',
     name: 'Jennifer Wang',
     username: 'jennifer.wang',
@@ -1297,7 +1297,7 @@ export const sampleUsers: User[] = [
     tags: []
   },
   {
-    id: '165478085',
+    id: 'USR028',
     registerDate: '2023-08-01',
     name: 'Ahmad Rahman',
     username: 'ahmad.rahman',
@@ -1328,7 +1328,7 @@ export const sampleUsers: User[] = [
     tags: []
   },
   {
-    id: '165478086',
+    id: 'USR029',
     registerDate: '2023-08-01',
     name: 'Sarah Kim',
     username: 'sarah.kim',
@@ -1421,7 +1421,7 @@ export const sampleUsers: User[] = [
     tags: []
   },
   {
-    id: '165478079',
+    id: 'USR030',
     registerDate: '2023-08-01',
     name: 'David Williams',
     username: 'david.williams',
@@ -1452,7 +1452,7 @@ export const sampleUsers: User[] = [
     tags: []
   },
   {
-    id: '165478100',
+    id: 'USR031',
     registerDate: '2023-08-01',
     name: 'Kumar Raj',
     username: 'kumar.raj',
@@ -1483,7 +1483,7 @@ export const sampleUsers: User[] = [
     tags: []
   },
   {
-    id: '165478101',
+    id: 'USR032',
     registerDate: '2023-08-01',
     name: 'Iron Man',
     username: 'iron.man',
@@ -1514,7 +1514,7 @@ export const sampleUsers: User[] = [
     tags: []
   },
   {
-    id: '165478102',
+    id: 'USR033',
     registerDate: '2023-08-01',
     name: 'Jack Sparrow',
     username: 'jack.sparrow',
@@ -1545,7 +1545,7 @@ export const sampleUsers: User[] = [
     tags: []
   },
   {
-    id: '165478103',
+    id: 'USR034',
     registerDate: '2023-08-01',
     name: 'Kate Middleton',
     username: 'kate.middleton',
@@ -1576,7 +1576,7 @@ export const sampleUsers: User[] = [
     tags: []
   },
   {
-    id: '165478104',
+    id: 'USR035',
     registerDate: '2023-08-01',
     name: 'Leonardo DiCaprio',
     username: 'leonardo.dicaprio',
@@ -1607,7 +1607,7 @@ export const sampleUsers: User[] = [
     tags: []
   },
   {
-    id: '165478105',
+    id: 'USR036',
     registerDate: '2023-08-01',
     name: 'Madonna Louise',
     username: 'madonna.louise',
@@ -1639,7 +1639,7 @@ export const sampleUsers: User[] = [
   },
   // Additional users for cashback transactions
   {
-    id: 'USR015',
+    id: 'USR065',
     registerDate: '2023-07-15 10:00',
     name: 'MICHAEL KILO',
     username: 'michael.kilo',
@@ -1670,7 +1670,7 @@ export const sampleUsers: User[] = [
     tags: []
   },
   {
-    id: 'USR016',
+    id: 'USR066',
     registerDate: '2023-06-20 14:30',
     name: 'SOPHIA LIMA',
     username: 'sophia.lima',
@@ -1701,7 +1701,7 @@ export const sampleUsers: User[] = [
     tags: ['VIP']
   },
   {
-    id: 'USR017',
+    id: 'USR067',
     registerDate: '2023-08-10 09:00',
     name: 'DAVID MIKE',
     username: 'david.mike',
@@ -1732,7 +1732,7 @@ export const sampleUsers: User[] = [
     tags: []
   },
   {
-    id: 'USR018',
+    id: 'USR068',
     registerDate: '2023-05-15 16:00',
     name: 'OLIVIA NOVEMBER',
     username: 'olivia.november',
@@ -1763,7 +1763,7 @@ export const sampleUsers: User[] = [
     tags: ['HighRoller']
   },
   {
-    id: 'USR019',
+    id: 'USR069',
     registerDate: '2023-07-01 11:30',
     name: 'ETHAN OSCAR',
     username: 'ethan.oscar',
@@ -1794,7 +1794,7 @@ export const sampleUsers: User[] = [
     tags: []
   },
   {
-    id: 'USR020',
+    id: 'USR070',
     registerDate: '2023-04-20 13:00',
     name: 'ISABELLA PAPA',
     username: 'isabella.papa',
@@ -1825,7 +1825,7 @@ export const sampleUsers: User[] = [
     tags: ['VIP', 'LifetimeDeposit']
   },
   {
-    id: 'USR021',
+    id: 'USR071',
     registerDate: '2023-09-05 15:45',
     name: 'LIAM QUEBEC',
     username: 'liam.quebec',
@@ -1856,7 +1856,7 @@ export const sampleUsers: User[] = [
     tags: []
   },
   {
-    id: 'USR022',
+    id: 'USR072',
     registerDate: '2023-03-10 12:00',
     name: 'MIA ROMEO',
     username: 'mia.romeo',
@@ -1887,7 +1887,7 @@ export const sampleUsers: User[] = [
     tags: ['VIP']
   },
   {
-    id: 'USR023',
+    id: 'USR073',
     registerDate: '2023-06-25 10:30',
     name: 'NOAH SIERRA',
     username: 'noah.sierra',
@@ -1918,7 +1918,7 @@ export const sampleUsers: User[] = [
     tags: []
   },
   {
-    id: 'USR024',
+    id: 'USR074',
     registerDate: '2023-08-30 14:00',
     name: 'AVA TANGO',
     username: 'ava.tango',
@@ -1949,7 +1949,7 @@ export const sampleUsers: User[] = [
     tags: []
   },
   {
-    id: 'USR025',
+    id: 'USR075',
     registerDate: '2023-02-15 09:15',
     name: 'WILLIAM UNIFORM',
     username: 'william.uniform',
@@ -1980,7 +1980,7 @@ export const sampleUsers: User[] = [
     tags: ['VIP', 'HighRoller']
   },
   {
-    id: 'USR026',
+    id: 'USR076',
     registerDate: '2023-05-05 11:00',
     name: 'CHARLOTTE VICTOR',
     username: 'charlotte.victor',
@@ -2011,7 +2011,7 @@ export const sampleUsers: User[] = [
     tags: ['VIP']
   },
   {
-    id: 'USR027',
+    id: 'USR046',
     registerDate: '2023-07-20 16:30',
     name: 'JAMES WHISKEY',
     username: 'james.whiskey',
@@ -2042,7 +2042,7 @@ export const sampleUsers: User[] = [
     tags: []
   },
   {
-    id: 'USR028',
+    id: 'USR078',
     registerDate: '2023-04-10 08:00',
     name: 'HENRY XRAY',
     username: 'henry.xray',
@@ -2073,7 +2073,7 @@ export const sampleUsers: User[] = [
     tags: ['HighRoller']
   },
   {
-    id: 'USR029',
+    id: 'USR079',
     registerDate: '2023-03-25 13:30',
     name: 'ALICE YANKEE',
     username: 'alice.yankee',
@@ -2104,7 +2104,7 @@ export const sampleUsers: User[] = [
     tags: ['VIP', 'LifetimeDeposit']
   },
   {
-    id: 'USR030',
+    id: 'USR080',
     registerDate: '2023-02-10 10:00',
     name: 'ROBERT ZULU',
     username: 'robert.zulu',
@@ -2135,7 +2135,7 @@ export const sampleUsers: User[] = [
     tags: ['VIP', 'HighRoller', 'LifetimeDeposit']
   },
   {
-    id: 'USR031',
+    id: 'USR081',
     registerDate: '2023-01-15 14:20',
     name: 'PATRICIA ALPHA2',
     username: 'patricia.alpha2',
@@ -2166,7 +2166,7 @@ export const sampleUsers: User[] = [
     tags: ['VIP', 'HighRoller', 'LifetimeDeposit']
   },
   {
-    id: 'USR032',
+    id: 'USR082',
     registerDate: '2023-06-01 09:45',
     name: 'DANIEL BRAVO2',
     username: 'daniel.bravo2',
@@ -2197,7 +2197,7 @@ export const sampleUsers: User[] = [
     tags: ['VIP', 'HighRoller', 'LifetimeDeposit']
   },
   {
-    id: 'USR033',
+    id: 'USR083',
     registerDate: '2023-05-20 11:15',
     name: 'JENNIFER CHARLIE2',
     username: 'jennifer.charlie2',
@@ -2226,5 +2226,408 @@ export const sampleUsers: User[] = [
     commissionTotal: 1200.00,
     level: 'gold',
     tags: ['VIP', 'HighRoller', 'LifetimeDeposit', 'WHALE']
+  },
+  {
+    id: 'USR084',
+    registerDate: '2023-08-15',
+    name: 'Manuel Adjustment',
+    username: 'manuel.adjustment',
+    mobile: '601877771123',
+    credit: 100.00,
+    bankAccount: '000000000000000000000000',
+    bank: 'DBS Bank',
+    referrer_code: 'REF-USR084-X1Y2',
+    referrer_by: null,
+    agent: 'AGENT001',
+    winLoss: 0,
+    lastDeposit: '2023-08-24 11:00',
+    lastLogin: '2023-08-24 11:00',
+    betHistory: 'View',
+    status: 'ACTIVE',
+    ip: '192.168.1.100',
+    depositCount: 0,
+    depositTotal: 0.00,
+    withdrawCount: 0,
+    withdrawTotal: 0.00,
+    bonusCount: 0,
+    bonusTotal: 0.00,
+    manualCount: 1,
+    manualTotal: 100.00,
+    commissionCount: 0,
+    commissionTotal: 0.00,
+    level: 'bronze',
+    tags: []
+  },
+  {
+    id: 'USR096',
+    registerDate: '2023-08-15',
+    name: 'Carlos Rivera',
+    username: 'carlos.rivera',
+    mobile: '601877771123',
+    credit: 100.00,
+    bankAccount: '000000000000000000000000',
+    bank: 'DBS Bank',
+    referrer_code: 'REF-USR084-X1Y2',
+    referrer_by: null,
+    agent: 'AGENT001',
+    winLoss: 0,
+    lastDeposit: '2023-08-24 11:00',
+    lastLogin: '2023-08-24 11:00',
+    betHistory: 'View',
+    status: 'ACTIVE',
+    ip: '192.168.1.100',
+    depositCount: 0,
+    depositTotal: 0.00,
+    withdrawCount: 0,
+    withdrawTotal: 0.00,
+    bonusCount: 0,
+    bonusTotal: 0.00,
+    manualCount: 1,
+    manualTotal: 100.00,
+    commissionCount: 0,
+    commissionTotal: 0.00,
+    level: 'bronze',
+    tags: []
+  },
+  {
+    id: 'USR085',
+    registerDate: '2023-08-20',
+    name: 'Amanda Smith',
+    username: 'amanda.smith',
+    mobile: '601877771130',
+    credit: 650.00,
+    bankAccount: '191919191919191919191919',
+    bank: 'Standard Chartered',
+    referrer_code: 'REF-USR085-Z3W4',
+    referrer_by: null,
+    agent: 'AGENT001',
+    winLoss: 0,
+    lastDeposit: '2023-08-25 10:00',
+    lastLogin: '2023-08-25 10:00',
+    betHistory: 'View',
+    status: 'ACTIVE',
+    ip: '192.168.1.100',
+    depositCount: 1,
+    depositTotal: 150.00,
+    withdrawCount: 0,
+    withdrawTotal: 0.00,
+    bonusCount: 0,
+    bonusTotal: 0.00,
+    manualCount: 0,
+    manualTotal: 0.00,
+    commissionCount: 0,
+    commissionTotal: 0.00,
+    level: 'bronze',
+    tags: []
+  },
+  {
+    id: 'USR086',
+    registerDate: '2023-08-22',
+    name: 'Ethan Patel',
+    username: 'ethan.patel',
+    mobile: '601877771132',
+    credit: 1100.00,
+    bankAccount: '111111111111111111111111',
+    bank: 'Maybank',
+    referrer_code: 'REF-USR086-A5B6',
+    referrer_by: null,
+    agent: 'AGENT001',
+    winLoss: 0,
+    lastDeposit: '2023-08-24 14:00',
+    lastLogin: '2023-08-24 14:00',
+    betHistory: 'View',
+    status: 'ACTIVE',
+    ip: '192.168.1.100',
+    depositCount: 0,
+    depositTotal: 0.00,
+    withdrawCount: 0,
+    withdrawTotal: 0.00,
+    bonusCount: 1,
+    bonusTotal: 100.00,
+    manualCount: 0,
+    manualTotal: 0.00,
+    commissionCount: 0,
+    commissionTotal: 0.00,
+    level: 'bronze',
+    tags: []
+  },
+  {
+    id: 'USR087',
+    registerDate: '2025-09-20',
+    name: 'Sophia Chen',
+    username: 'sophia.chen',
+    mobile: '601877771133',
+    credit: 200.00,
+    bankAccount: '222222222222222222222222',
+    bank: 'CIMB Bank',
+    referrer_code: 'REF-USR087-C7D8',
+    referrer_by: null,
+    agent: 'AGENT001',
+    winLoss: 0,
+    lastDeposit: '2025-09-26 09:00',
+    lastLogin: '2025-09-26 09:00',
+    betHistory: 'View',
+    status: 'ACTIVE',
+    ip: '192.168.1.100',
+    depositCount: 0,
+    depositTotal: 0.00,
+    withdrawCount: 0,
+    withdrawTotal: 0.00,
+    bonusCount: 1,
+    bonusTotal: 30.00,
+    manualCount: 0,
+    manualTotal: 0.00,
+    commissionCount: 0,
+    commissionTotal: 0.00,
+    level: 'silver',
+    tags: []
+  },
+  {
+    id: 'USR088',
+    registerDate: '2025-09-18',
+    name: 'Liam Wong',
+    username: 'liam.wong',
+    mobile: '601877771134',
+    credit: 300.00,
+    bankAccount: '333333333333333333333333',
+    bank: 'Public Bank',
+    referrer_code: 'REF-USR088-E9F0',
+    referrer_by: null,
+    agent: 'AGENT002',
+    winLoss: 0,
+    lastDeposit: '2025-09-25 14:00',
+    lastLogin: '2025-09-25 14:00',
+    betHistory: 'View',
+    status: 'ACTIVE',
+    ip: '192.168.1.100',
+    depositCount: 0,
+    depositTotal: 0.00,
+    withdrawCount: 0,
+    withdrawTotal: 0.00,
+    bonusCount: 1,
+    bonusTotal: 75.00,
+    manualCount: 0,
+    manualTotal: 0.00,
+    commissionCount: 0,
+    commissionTotal: 0.00,
+    level: 'gold',
+    tags: ['VIP']
+  },
+  {
+    id: 'USR089',
+    registerDate: '2025-09-15',
+    name: 'Isabella Garcia',
+    username: 'isabella.garcia',
+    mobile: '601877771135',
+    credit: 100.00,
+    bankAccount: '444444444444444444444444',
+    bank: 'RHB Bank',
+    referrer_code: 'REF-USR089-G1H2',
+    referrer_by: null,
+    agent: 'AGENT001',
+    winLoss: 0,
+    lastDeposit: '2025-09-24 11:00',
+    lastLogin: '2025-09-24 11:00',
+    betHistory: 'View',
+    status: 'ACTIVE',
+    ip: '192.168.1.100',
+    depositCount: 0,
+    depositTotal: 0.00,
+    withdrawCount: 0,
+    withdrawTotal: 0.00,
+    bonusCount: 0,
+    bonusTotal: 0.00,
+    manualCount: 0,
+    manualTotal: 0.00,
+    commissionCount: 0,
+    commissionTotal: 0.00,
+    level: 'bronze',
+    tags: []
+  },
+  {
+    id: 'USR090',
+    registerDate: '2025-09-10',
+    name: 'Noah Lim',
+    username: 'noah.lim',
+    mobile: '601877771136',
+    credit: 500.00,
+    bankAccount: '555555555555555555555555',
+    bank: 'Hong Leong Bank',
+    referrer_code: 'REF-USR090-I3J4',
+    referrer_by: null,
+    agent: 'AGENT002',
+    winLoss: 0,
+    lastDeposit: '2025-09-23 16:00',
+    lastLogin: '2025-09-23 16:00',
+    betHistory: 'View',
+    status: 'ACTIVE',
+    ip: '192.168.1.100',
+    depositCount: 0,
+    depositTotal: 0.00,
+    withdrawCount: 0,
+    withdrawTotal: 0.00,
+    bonusCount: 1,
+    bonusTotal: 150.00,
+    manualCount: 0,
+    manualTotal: 0.00,
+    commissionCount: 0,
+    commissionTotal: 0.00,
+    level: 'gold',
+    tags: ['VIP']
+  },
+  {
+    id: 'USR091',
+    registerDate: '2025-09-12',
+    name: 'Olivia Tan',
+    username: 'olivia.tan',
+    mobile: '601877771137',
+    credit: 1200.00,
+    bankAccount: '666666666666666666666666',
+    bank: 'Affin Bank',
+    referrer_code: 'REF-USR091-K5L6',
+    referrer_by: null,
+    agent: 'AGENT001',
+    winLoss: 0,
+    lastDeposit: '2025-09-25 10:00',
+    lastLogin: '2025-09-25 10:00',
+    betHistory: 'View',
+    status: 'ACTIVE',
+    ip: '192.168.1.100',
+    depositCount: 0,
+    depositTotal: 0.00,
+    withdrawCount: 0,
+    withdrawTotal: 0.00,
+    bonusCount: 0,
+    bonusTotal: 0.00,
+    manualCount: 1,
+    manualTotal: 200.00,
+    commissionCount: 0,
+    commissionTotal: 0.00,
+    level: 'silver',
+    tags: []
+  },
+  {
+    id: 'USR092',
+    registerDate: '2025-09-08',
+    name: 'Mason Lee',
+    username: 'mason.lee',
+    mobile: '601877771138',
+    credit: 425.00,
+    bankAccount: '777777777777777777777777',
+    bank: 'AmBank',
+    referrer_code: 'REF-USR092-M7N8',
+    referrer_by: null,
+    agent: 'AGENT001',
+    winLoss: 0,
+    lastDeposit: '2025-09-24 14:30',
+    lastLogin: '2025-09-24 14:30',
+    betHistory: 'View',
+    status: 'ACTIVE',
+    ip: '192.168.1.100',
+    depositCount: 0,
+    depositTotal: 0.00,
+    withdrawCount: 0,
+    withdrawTotal: 0.00,
+    bonusCount: 0,
+    bonusTotal: 0.00,
+    manualCount: 1,
+    manualTotal: -75.00,
+    commissionCount: 0,
+    commissionTotal: 0.00,
+    level: 'bronze',
+    tags: []
+  },
+  {
+    id: 'USR093',
+    registerDate: '2025-09-05',
+    name: 'Ava Ng',
+    username: 'ava.ng',
+    mobile: '601877771139',
+    credit: 550.00,
+    bankAccount: '888888888888888888888888',
+    bank: 'Alliance Bank',
+    referrer_code: 'REF-USR077-O9P0',
+    referrer_by: null,
+    agent: 'AGENT001',
+    winLoss: 0,
+    lastDeposit: '2025-09-23 09:15',
+    lastLogin: '2025-09-23 09:15',
+    betHistory: 'View',
+    status: 'ACTIVE',
+    ip: '192.168.1.100',
+    depositCount: 0,
+    depositTotal: 0.00,
+    withdrawCount: 0,
+    withdrawTotal: 0.00,
+    bonusCount: 0,
+    bonusTotal: 0.00,
+    manualCount: 1,
+    manualTotal: 50.00,
+    commissionCount: 0,
+    commissionTotal: 0.00,
+    level: 'bronze',
+    tags: []
+  },
+  {
+    id: 'USR094',
+    registerDate: '2025-09-28',
+    name: 'Lucas Ahmad',
+    username: 'lucas.ahmad',
+    mobile: '601877771146',
+    credit: 650.00,
+    bankAccount: '999999999999999999999999',
+    bank: 'Bank Islam',
+    referrer_code: 'REF-USR078-Q1R2',
+    referrer_by: null,
+    agent: 'AGENT002',
+    winLoss: 0,
+    lastDeposit: '2025-09-30 14:30',
+    lastLogin: '2025-09-30 14:30',
+    betHistory: 'View',
+    status: 'ACTIVE',
+    ip: '192.168.1.100',
+    depositCount: 0,
+    depositTotal: 0.00,
+    withdrawCount: 0,
+    withdrawTotal: 0.00,
+    bonusCount: 1,
+    bonusTotal: 125.00,
+    manualCount: 0,
+    manualTotal: 0.00,
+    commissionCount: 0,
+    commissionTotal: 0.00,
+    level: 'gold',
+    tags: ['VIP']
+  },
+  {
+    id: 'USR097',
+    registerDate: '2025-09-29',
+    name: 'Emma Rahman',
+    username: 'emma.rahman',
+    mobile: '601877771147',
+    credit: 420.00,
+    bankAccount: '101010101010101010101010',
+    bank: 'Bank Rakyat',
+    referrer_code: 'REF-USR079-S3T4',
+    referrer_by: null,
+    agent: 'AGENT001',
+    winLoss: 0,
+    lastDeposit: '2025-09-30 16:45',
+    lastLogin: '2025-09-30 16:45',
+    betHistory: 'View',
+    status: 'ACTIVE',
+    ip: '192.168.1.100',
+    depositCount: 0,
+    depositTotal: 0.00,
+    withdrawCount: 0,
+    withdrawTotal: 0.00,
+    bonusCount: 1,
+    bonusTotal: 88.00,
+    manualCount: 0,
+    manualTotal: 0.00,
+    commissionCount: 0,
+    commissionTotal: 0.00,
+    level: 'silver',
+    tags: []
   }
 ];

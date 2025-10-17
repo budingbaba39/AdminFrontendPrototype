@@ -69,7 +69,7 @@ export default function ReferrerBonusListManagement() {
         // Search filters
         if (searchFilters.username) {
           const searchTerm = searchFilters.username.toLowerCase();
-          const matchesUsername = bonus.username.toLowerCase().includes(searchTerm);
+          const matchesUsername = userDetails.name.toLowerCase().includes(searchTerm);
           const matchesMobile = userDetails.mobile.includes(searchFilters.username);
           if (!matchesUsername && !matchesMobile) return false;
         }
@@ -126,6 +126,7 @@ export default function ReferrerBonusListManagement() {
           id: bonus.username,
           registerDate: bonus.submitTime,
           name: userDetails.name,
+          username: bonus.username,
           mobile: userDetails.mobile,
           credit: 0,
           bankAccount: '',
@@ -372,7 +373,7 @@ export default function ReferrerBonusListManagement() {
                         className="text-gray-900 font-medium cursor-pointer hover:text-blue-600 hover:underline"
                         onClick={() => handleUserNameClick(bonus)}
                       >
-                        {bonus.username}
+                        {userDetails.name}
                       </span>
                     </td>
                     <td className="px-3 py-2 text-green-600 font-semibold text-xs">
@@ -387,7 +388,7 @@ export default function ReferrerBonusListManagement() {
                           className="text-blue-600 font-medium cursor-pointer hover:underline"
                           onClick={() => handleReferrerNameClick(bonus.referee)}
                         >
-                          {bonus.referee}
+                          {refereeDetails.name}
                         </span>
                       ) : (
                         '-'

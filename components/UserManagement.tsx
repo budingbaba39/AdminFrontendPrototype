@@ -89,10 +89,74 @@ export default function UserManagement() {
   };
 
   // Filter users based on search and status
-  const filteredUsers = hasSearched 
+  const filteredUsers = hasSearched
     ? users.filter(user => {
-        if (activeStatusFilter === 'ALL') return true;
-        return user.status === activeStatusFilter;
+        // Status filter
+        if (activeStatusFilter !== 'ALL' && user.status !== activeStatusFilter) return false;
+
+        // Name filter (searches both name and username)
+        if (searchFilters.name) {
+          const searchLower = searchFilters.name.toLowerCase();
+          const matchesName = user.name.toLowerCase().includes(searchLower);
+          const matchesUsername = user.username.toLowerCase().includes(searchLower);
+          if (!matchesName && !matchesUsername) return false;
+        }
+
+        // Mobile filter
+        if (searchFilters.mobileNo && !user.mobile.includes(searchFilters.mobileNo)) return false;
+
+        // Agent filter
+        if (searchFilters.agent && !user.agent.toLowerCase().includes(searchFilters.agent.toLowerCase())) return false;
+
+        // Bank filter
+        if (searchFilters.bank && !user.bank.toLowerCase().includes(searchFilters.bank.toLowerCase())) return false;
+
+        // IP filter
+        if (searchFilters.ip && !user.ip.includes(searchFilters.ip)) return false;
+
+        // Level filter
+        if (searchFilters.level && searchFilters.level !== '-' && searchFilters.level !== '' && user.level !== searchFilters.level) return false;
+
+        // Tags filter
+        if (searchFilters.tags.length > 0) {
+          const hasMatchingTag = searchFilters.tags.some(tag => user.tags?.includes(tag));
+          if (!hasMatchingTag) return false;
+        }
+
+        // Referred by filter
+        if (searchFilters.referredBy && searchFilters.referredBy !== '') {
+          if (user.referrer_by !== searchFilters.referredBy) return false;
+        }
+
+        // Last visit filter
+        if (searchFilters.lastVisit && searchFilters.lastVisit !== '') {
+          const lastLoginDate = new Date(user.lastLogin);
+          const now = new Date();
+          const diffDays = Math.floor((now.getTime() - lastLoginDate.getTime()) / (1000 * 60 * 60 * 24));
+
+          switch (searchFilters.lastVisit) {
+            case '3days':
+              if (diffDays > 3) return false;
+              break;
+            case '1week':
+              if (diffDays > 7) return false;
+              break;
+            case '1month':
+              if (diffDays > 30) return false;
+              break;
+            case '3months':
+              if (diffDays > 90) return false;
+              break;
+          }
+        }
+
+        // Activity filter
+        if (searchFilters.activity && searchFilters.activity !== '') {
+          if (searchFilters.activity === 'deposit' && user.depositCount === 0) return false;
+          if (searchFilters.activity === 'nondeposit' && user.depositCount > 0) return false;
+        }
+
+        return true;
       })
     : [];
 
@@ -314,11 +378,12 @@ export default function UserManagement() {
         {showAdvancedFilters && (
           <>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-3">
-              <Select value={searchFilters.lastVisit} onValueChange={(value) => handleInputChange('lastVisit', value)}>
+              <Select value={searchFilters.lastVisit || undefined} onValueChange={(value) => handleInputChange('lastVisit', value)}>
                 <SelectTrigger className="h-9">
                   <SelectValue placeholder="Last Visit" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="">All</SelectItem>
                   <SelectItem value="3days">3 days ago</SelectItem>
                   <SelectItem value="1week">1 week ago</SelectItem>
                   <SelectItem value="1month">1 month ago</SelectItem>
@@ -326,21 +391,23 @@ export default function UserManagement() {
                 </SelectContent>
               </Select>
 
-              <Select value={searchFilters.activity} onValueChange={(value) => handleInputChange('activity', value)}>
+              <Select value={searchFilters.activity || undefined} onValueChange={(value) => handleInputChange('activity', value)}>
                 <SelectTrigger className="h-9">
                   <SelectValue placeholder="Activity" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="">All</SelectItem>
                   <SelectItem value="deposit">Deposit member</SelectItem>
                   <SelectItem value="nondeposit">Non Deposit member</SelectItem>
                 </SelectContent>
               </Select>
 
-              <Select value={searchFilters.level} onValueChange={(value) => handleInputChange('level', value)}>
+              <Select value={searchFilters.level || undefined} onValueChange={(value) => handleInputChange('level', value)}>
                 <SelectTrigger className="h-9">
                   <SelectValue placeholder="Level" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="">All</SelectItem>
                   <SelectItem value="bronze">Bronze</SelectItem>
                   <SelectItem value="silver">Silver</SelectItem>
                   <SelectItem value="gold">Gold</SelectItem>
@@ -351,18 +418,18 @@ export default function UserManagement() {
                 <ReactSelect
                   isMulti
                   className="text-sm"
-                  menuPortalTarget={document.body}
+                  menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
                   styles={{menuPortal: base => ({ ...base, zIndex: 9999 }),}}
                   options={tagOptions.map(tag => ({ value: tag, label: tag }))}
                   value={tagOptions.filter(tag => searchFilters.tags.includes(tag)).map(tag => ({ value: tag, label: tag }))}
-                  onChange={(selected) =>setSearchFilters(prev => ({...prev,tags: selected ? selected.map(s => s.value) : [],}))}
+                  onChange={(selected) => setSearchFilters(prev => ({...prev, tags: selected ? selected.map(s => s.value) : []}))}
                   placeholder="Select Tags"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-3">
-              <Select value={searchFilters.referredBy} onValueChange={(value) => handleInputChange('referredBy', value)}>
+              <Select value={searchFilters.referredBy || undefined} onValueChange={(value) => handleInputChange('referredBy', value)}>
                 <SelectTrigger className="h-9">
                   <SelectValue placeholder="Referred By User" />
                 </SelectTrigger>

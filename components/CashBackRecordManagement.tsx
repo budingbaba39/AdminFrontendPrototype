@@ -131,8 +131,12 @@ export default function CashBackRecordManagement() {
         }
 
         // Search filters
-        if (searchFilters.username && !transaction.username.toLowerCase().includes(searchFilters.username.toLowerCase()) &&
-            !transaction.mobile.includes(searchFilters.username)) return false;
+        if (searchFilters.username) {
+          const user = sampleUsers.find(u => u.id === transaction.username);
+          const userName = user?.name || transaction.username;
+          if (!userName.toLowerCase().includes(searchFilters.username.toLowerCase()) &&
+              !transaction.mobile.includes(searchFilters.username)) return false;
+        }
         if (searchFilters.dateFrom && new Date(transaction.completeTime || transaction.submitTime) < new Date(searchFilters.dateFrom)) return false;
         if (searchFilters.dateTo && new Date(transaction.completeTime || transaction.submitTime) > new Date(searchFilters.dateTo + ' 23:59:59')) return false;
         if (searchFilters.level && searchFilters.level !== 'all') {
@@ -207,6 +211,7 @@ export default function CashBackRecordManagement() {
           id: transaction.username,
           registerDate: transaction.submitTime,
           name: transaction.name || transaction.username,
+          username: transaction.username,
           mobile: transaction.mobile,
           credit: transaction.currentCredit || 0,
           bankAccount: transaction.bankAccountNumber || '',
@@ -618,7 +623,7 @@ export default function CashBackRecordManagement() {
                           className="text-gray-900 font-medium cursor-pointer hover:text-blue-600 hover:underline"
                           onClick={() => handleUserNameClick(transaction)}
                         >
-                          {transaction.username}
+                          {sampleUsers.find(u => u.id === transaction.username)?.name || transaction.username}
                         </span>
                       </td>
                       <td className="px-3 py-2">

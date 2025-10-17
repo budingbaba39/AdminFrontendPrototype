@@ -35,6 +35,7 @@ import CommissionScheduleContent from './CommissionScheduleContent';
 import ReferrerSetupContent from './ReferrerSetupContent';
 import ReferrerBonusListContent from './ReferrerBonusListContent';
 import KYCContent from './KYCContent';
+import StaffManagement from './StaffManagement';
 
 // Define page type to avoid repetition
 type PageType = 'dashboard' | 'deposit' | 'withdrawal' | 'adjustment' | 'transaction-record' | 'user-record' | 'level' | 'tag' | 'promotion' | 'promotion-record' | 'promotion-list' | 'promotion-ongoing' | 'rebate' | 'rebate-record' | 'rebate-setup' | 'rebate-release' | 'rebate-schedule' | 'cashback' | 'cashback-record' | 'cashback-setup' | 'cashback-release' | 'cashback-schedule' | 'commission' | 'commission-record' | 'commission-setup' | 'commission-release' | 'commission-schedule' | 'referrer-setup' | 'referrer-bonus-list' | 'game-kiosk' | 'settings' | 'security' | 'bank-list' | 'bank-setup' | 'bank-report' | 'report' | 'admin-tool' | 'api' | 'change-log' | 'display' | 'domain' | 'page' | 'staff' | 'theme' | 'tools' | 'kyc-management';
@@ -47,17 +48,17 @@ interface ResponsiveAdminDashboardProps {
 
 // Individual menu items
 const singleMenuItems = [
-  { id: 'game-kiosk', label: '9. GAME KIOSK' },
-  { id: 'settings', label: '10. SETTINGS' },
-  { id: 'security', label: '11. SECURITY' },
-  { id: 'report', label: '12. REPORT' },
-  { id: 'admin-tool', label: '13. ADMIN TOOL' },
-  { id: 'api', label: '14. API' },
-  { id: 'change-log', label: '15. CHANGE LOG' },
-  { id: 'display', label: '16. DISPLAY' },
-  { id: 'domain', label: '17. DOMAIN' },
-  { id: 'page', label: '18. PAGE' },
-  { id: 'staff', label: '19. STAFF' },
+  { id: 'staff', label: '9. STAFF' },
+  { id: 'game-kiosk', label: '10. GAME KIOSK' },
+  { id: 'settings', label: '11. SETTINGS' },
+  { id: 'security', label: '12. SECURITY' },
+  { id: 'report', label: '13. REPORT' },
+  { id: 'admin-tool', label: '14. ADMIN TOOL' },
+  { id: 'api', label: '15. API' },
+  { id: 'change-log', label: '16. CHANGE LOG' },
+  { id: 'display', label: '17. DISPLAY' },
+  { id: 'domain', label: '18. DOMAIN' },
+  { id: 'page', label: '19. PAGE' },
   { id: 'theme', label: '20. THEME' },
   { id: 'tools', label: '21. TOOLS' },
 ];
@@ -902,6 +903,8 @@ export default function ResponsiveAdminDashboard({ currentPage, onNavigate, onLo
         return <LevelContent />;
       case 'tag':
         return <TagContent />;
+      case 'staff':
+        return <StaffManagement />;
       case 'game-kiosk':
         return <GameKioskContent />;
       case 'settings':
