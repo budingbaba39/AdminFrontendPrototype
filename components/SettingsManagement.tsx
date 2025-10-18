@@ -263,7 +263,7 @@ export default function SystemSettingsOnly() {
         </div>
 
         <div className="pt-4">
-          <Button onClick={handleSave} className="bg-[#4caf50] hover:bg-[#45a049] text-white">Save System Settings</Button>
+          <Button onClick={handleSave} className="bg-[#4caf50] hover:bg-[#45a049] text-white">Save</Button>
         </div>
       </div>
     </div>
