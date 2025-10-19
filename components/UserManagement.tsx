@@ -88,84 +88,91 @@ export default function UserManagement() {
     };
   };
 
+  // Helper function to check if user matches search filters (without status filter)
+  const matchesSearchFilters = (user: User) => {
+    // Name filter (searches both name and username)
+    if (searchFilters.name) {
+      const searchLower = searchFilters.name.toLowerCase();
+      const matchesName = user.name.toLowerCase().includes(searchLower);
+      const matchesUsername = user.username.toLowerCase().includes(searchLower);
+      if (!matchesName && !matchesUsername) return false;
+    }
+
+    // Mobile filter
+    if (searchFilters.mobileNo && !user.mobile.includes(searchFilters.mobileNo)) return false;
+
+    // Agent filter
+    if (searchFilters.agent && !user.agent.toLowerCase().includes(searchFilters.agent.toLowerCase())) return false;
+
+    // Bank filter
+    if (searchFilters.bank && !user.bank.toLowerCase().includes(searchFilters.bank.toLowerCase())) return false;
+
+    // IP filter
+    if (searchFilters.ip && !user.ip.includes(searchFilters.ip)) return false;
+
+    // Level filter
+    if (searchFilters.level && searchFilters.level !== '-' && searchFilters.level !== '' && searchFilters.level !== 'all' && user.level !== searchFilters.level) return false;
+
+    // Tags filter
+    if (searchFilters.tags.length > 0) {
+      const hasMatchingTag = searchFilters.tags.some(tag => user.tags?.includes(tag));
+      if (!hasMatchingTag) return false;
+    }
+
+    // Referred by filter
+    if (searchFilters.referredBy && searchFilters.referredBy !== '' && searchFilters.referredBy !== 'all') {
+      if (user.referrer_by !== searchFilters.referredBy) return false;
+    }
+
+    // Last visit filter
+    if (searchFilters.lastVisit && searchFilters.lastVisit !== '' && searchFilters.lastVisit !== 'all') {
+      const lastLoginDate = new Date(user.lastLogin);
+      const now = new Date();
+      const diffDays = Math.floor((now.getTime() - lastLoginDate.getTime()) / (1000 * 60 * 60 * 24));
+
+      switch (searchFilters.lastVisit) {
+        case '3days':
+          if (diffDays > 3) return false;
+          break;
+        case '1week':
+          if (diffDays > 7) return false;
+          break;
+        case '1month':
+          if (diffDays > 30) return false;
+          break;
+        case '3months':
+          if (diffDays > 90) return false;
+          break;
+      }
+    }
+
+    // Activity filter
+    if (searchFilters.activity && searchFilters.activity !== '' && searchFilters.activity !== 'all') {
+      if (searchFilters.activity === 'deposit' && user.depositCount === 0) return false;
+      if (searchFilters.activity === 'nondeposit' && user.depositCount > 0) return false;
+    }
+
+    return true;
+  };
+
+  // Filter users based on search filters only (for status counts)
+  const usersMatchingSearch = hasSearched ? users.filter(matchesSearchFilters) : [];
+
+  // Calculate status counts based on filtered users
+  const statusCounts = hasSearched ? {
+    ALL: usersMatchingSearch.length,
+    ACTIVE: usersMatchingSearch.filter(u => u.status === 'ACTIVE').length,
+    INACTIVE: usersMatchingSearch.filter(u => u.status === 'INACTIVE').length,
+  } : { ALL: 0, ACTIVE: 0, INACTIVE: 0 };
+
   // Filter users based on search and status
   const filteredUsers = hasSearched
-    ? users.filter(user => {
+    ? usersMatchingSearch.filter(user => {
         // Status filter
         if (activeStatusFilter !== 'ALL' && user.status !== activeStatusFilter) return false;
-
-        // Name filter (searches both name and username)
-        if (searchFilters.name) {
-          const searchLower = searchFilters.name.toLowerCase();
-          const matchesName = user.name.toLowerCase().includes(searchLower);
-          const matchesUsername = user.username.toLowerCase().includes(searchLower);
-          if (!matchesName && !matchesUsername) return false;
-        }
-
-        // Mobile filter
-        if (searchFilters.mobileNo && !user.mobile.includes(searchFilters.mobileNo)) return false;
-
-        // Agent filter
-        if (searchFilters.agent && !user.agent.toLowerCase().includes(searchFilters.agent.toLowerCase())) return false;
-
-        // Bank filter
-        if (searchFilters.bank && !user.bank.toLowerCase().includes(searchFilters.bank.toLowerCase())) return false;
-
-        // IP filter
-        if (searchFilters.ip && !user.ip.includes(searchFilters.ip)) return false;
-
-        // Level filter
-        if (searchFilters.level && searchFilters.level !== '-' && searchFilters.level !== '' && user.level !== searchFilters.level) return false;
-
-        // Tags filter
-        if (searchFilters.tags.length > 0) {
-          const hasMatchingTag = searchFilters.tags.some(tag => user.tags?.includes(tag));
-          if (!hasMatchingTag) return false;
-        }
-
-        // Referred by filter
-        if (searchFilters.referredBy && searchFilters.referredBy !== '') {
-          if (user.referrer_by !== searchFilters.referredBy) return false;
-        }
-
-        // Last visit filter
-        if (searchFilters.lastVisit && searchFilters.lastVisit !== '') {
-          const lastLoginDate = new Date(user.lastLogin);
-          const now = new Date();
-          const diffDays = Math.floor((now.getTime() - lastLoginDate.getTime()) / (1000 * 60 * 60 * 24));
-
-          switch (searchFilters.lastVisit) {
-            case '3days':
-              if (diffDays > 3) return false;
-              break;
-            case '1week':
-              if (diffDays > 7) return false;
-              break;
-            case '1month':
-              if (diffDays > 30) return false;
-              break;
-            case '3months':
-              if (diffDays > 90) return false;
-              break;
-          }
-        }
-
-        // Activity filter
-        if (searchFilters.activity && searchFilters.activity !== '') {
-          if (searchFilters.activity === 'deposit' && user.depositCount === 0) return false;
-          if (searchFilters.activity === 'nondeposit' && user.depositCount > 0) return false;
-        }
-
         return true;
       })
     : [];
-
-  // Calculate status counts
-  const statusCounts = hasSearched ? {
-    ALL: users.length,
-    ACTIVE: users.filter(u => u.status === 'ACTIVE').length,
-    INACTIVE: users.filter(u => u.status === 'INACTIVE').length,
-  } : { ALL: 0, ACTIVE: 0, INACTIVE: 0 };
 
   const handleSearch = () => {
     setHasSearched(true);
@@ -342,7 +349,7 @@ export default function UserManagement() {
             onChange={(e) => handleInputChange('ip', e.target.value)}
             className="h-9"
           />
-          
+
           <Input
             placeholder="Password"
             type="password"
@@ -356,22 +363,24 @@ export default function UserManagement() {
           >
             SEARCH
           </Button>
-          <Button
-            onClick={handleReset}
-            variant="outline"
-            size="sm"
-            className="text-sm text-gray-600 hover:text-gray-900 border-gray-300 hover:border-gray-400 h-8 px-3"
-          >
-            <RefreshCw className="w-3 h-3 mr-1" />
-            RESET
-          </Button>
-          <button
-            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-            className="text-sm text-[#3949ab] hover:text-[#2c3582] underline font-medium flex items-center gap-1 justify-center"
-          >
-            ADVANCED
-            {showAdvancedFilters ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-          </button>
+          <div className="flex gap-2">
+            <Button
+              onClick={handleReset}
+              variant="outline"
+              size="sm"
+              className="text-sm text-gray-600 hover:text-gray-900 border-gray-300 hover:border-gray-400 h-9 px-3 flex-1"
+            >
+              <RefreshCw className="w-3 h-3 mr-1" />
+              RESET
+            </Button>
+            <button
+              onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+              className="text-sm text-[#3949ab] hover:text-[#2c3582] underline font-medium flex items-center gap-1 px-3"
+            >
+              ADVANCED
+              {showAdvancedFilters ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+            </button>
+          </div>
         </div>
 
         {/* Advanced Filters */}
@@ -383,7 +392,7 @@ export default function UserManagement() {
                   <SelectValue placeholder="Last Visit" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All</SelectItem>
+                  <SelectItem value="all">All</SelectItem>
                   <SelectItem value="3days">3 days ago</SelectItem>
                   <SelectItem value="1week">1 week ago</SelectItem>
                   <SelectItem value="1month">1 month ago</SelectItem>
@@ -396,7 +405,7 @@ export default function UserManagement() {
                   <SelectValue placeholder="Activity" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All</SelectItem>
+                  <SelectItem value="all">All</SelectItem>
                   <SelectItem value="deposit">Deposit member</SelectItem>
                   <SelectItem value="nondeposit">Non Deposit member</SelectItem>
                 </SelectContent>
@@ -407,7 +416,7 @@ export default function UserManagement() {
                   <SelectValue placeholder="Level" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All</SelectItem>
+                  <SelectItem value="all">All</SelectItem>
                   <SelectItem value="bronze">Bronze</SelectItem>
                   <SelectItem value="silver">Silver</SelectItem>
                   <SelectItem value="gold">Gold</SelectItem>
@@ -434,7 +443,7 @@ export default function UserManagement() {
                   <SelectValue placeholder="Referred By User" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Users</SelectItem>
+                  <SelectItem value="all">All Users</SelectItem>
                   {users.filter(u => u.referrer_by !== null).map(u => u.referrer_by).filter((value, index, self) => self.indexOf(value) === index).map(referrerId => {
                     const referrer = users.find(u => u.id === referrerId);
                     return referrer ? (
@@ -445,10 +454,9 @@ export default function UserManagement() {
                   })}
                 </SelectContent>
               </Select>
-            </div>
-
-            <div className="flex justify-end">
-              <Button 
+              <div></div>
+              <div></div>
+              <Button
                 onClick={() => console.log('Export data')}
                 className="bg-[#2196f3] hover:bg-[#1976d2] text-white h-9 text-sm font-semibold px-6 flex items-center gap-2"
               >
