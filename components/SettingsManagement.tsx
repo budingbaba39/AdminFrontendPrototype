@@ -124,9 +124,8 @@ export default function SystemSettingsOnly() {
   );
 
   useEffect(() => {
-    const primaryForCountry = countryTimezones[systemSettings.country] ?? [];
-    if (!primaryForCountry.includes(systemSettings.timezone)) { setSystemSettings(prev => ({ ...prev, timezone: primaryForCountry[0] ?? '' })); }
-  }, [systemSettings.country, systemSettings.timezone]);
+    setSystemSettings((prev) => ({...prev,timezone: countryTimezones[systemSettings.country]?.includes(prev.timezone)? prev.timezone: countryTimezones[systemSettings.country]?.[0] ?? prev.timezone,}));
+  }, [systemSettings.country]);
 
   // Default languages & currency when country changes (but keep editable)
   useEffect(() => {
@@ -138,8 +137,8 @@ export default function SystemSettingsOnly() {
 
   // Auto-sync dial code with country (but keep editable)
   useEffect(() => {
-    if (dialFromCountry !== systemSettings.mobileCountryCode) { setSystemSettings(prev => ({ ...prev, mobileCountryCode: dialFromCountry })); }
-  }, [dialFromCountry, systemSettings.mobileCountryCode]);
+    setSystemSettings((prev) => ({...prev, mobileCountryCode:countryOptions.find((c) => c.value === systemSettings.country)?.dial ?? prev.mobileCountryCode,}));
+  }, [systemSettings.country]);
 
   /* ----- Save ----- */
   const handleSave = () => {
