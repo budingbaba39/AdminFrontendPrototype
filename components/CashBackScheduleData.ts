@@ -1,5 +1,6 @@
 export interface CashBackSchedule {
   id: number;
+  setupName: string;
   type: 'Recurring';
   cashbackType: 'By Net Lose Only' | 'By Net Deposit' | 'By Total WinLose Only';
   status: 'Active' | 'Inactive';
@@ -12,6 +13,7 @@ export interface CashBackSchedule {
 export const sampleCashBackSchedules: CashBackSchedule[] = [
   {
     id: 1,
+    setupName: 'Bronze CashBack',
     type: 'Recurring',
     cashbackType: 'By Net Lose Only',
     status: 'Active',
@@ -21,6 +23,7 @@ export const sampleCashBackSchedules: CashBackSchedule[] = [
   },
   {
     id: 2,
+    setupName: 'Silver CashBack',
     type: 'Recurring',
     cashbackType: 'By Net Deposit',
     status: 'Active',
@@ -31,6 +34,7 @@ export const sampleCashBackSchedules: CashBackSchedule[] = [
   },
   {
     id: 3,
+    setupName: 'Gold CashBack',
     type: 'Recurring',
     cashbackType: 'By Total WinLose Only',
     status: 'Inactive',

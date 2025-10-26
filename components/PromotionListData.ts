@@ -18,8 +18,9 @@ export interface Promotion {
     min: number;
     max: number;
   };
-  maxWithdraw: number;
-  creditLessThan: number;
+  maxWithdrawAmount: number;
+  maxWithdrawPercentage: number;
+  claimableCreditLessThan: number;
 
   // Details Info
   validFrom: string; // date string (YYYY-MM-DD)
@@ -69,8 +70,9 @@ export const initialPromotions: Promotion[] = [
       min: 0,
       max: 0
     },
-    maxWithdraw: 1000,
-    creditLessThan: 5000,
+    maxWithdrawAmount: 1000,
+    maxWithdrawPercentage: 0,
+    claimableCreditLessThan: 5000,
     validFrom: '2024-01-01',
     validTo: '2024-12-31',
     status: 'Active',
@@ -107,8 +109,9 @@ export const initialPromotions: Promotion[] = [
       min: 0,
       max: 0
     },
-    maxWithdraw: 200,
-    creditLessThan: 1000,
+    maxWithdrawAmount: 200,
+    maxWithdrawPercentage: 0,
+    claimableCreditLessThan: 1000,
     validFrom: '2024-06-01',
     validTo: '2024-06-30',
     status: 'Active',
@@ -144,8 +147,9 @@ export const initialPromotions: Promotion[] = [
     bonusRate: 6,
     bonusFixedAmount: 0,
     bonusRandom: { min: 0, max: 0 },
-    maxWithdraw: 10000,
-    creditLessThan: 15000,
+    maxWithdrawAmount: 10000,
+    maxWithdrawPercentage: 0,
+    claimableCreditLessThan: 15000,
     validFrom: '2024-01-01',
     validTo: '2025-12-31',
     status: 'Active',
@@ -184,8 +188,9 @@ export const initialPromotions: Promotion[] = [
       min: 0,
       max: 0
     },
-    maxWithdraw: 5000,
-    creditLessThan: 10000,
+    maxWithdrawAmount: 5000,
+    maxWithdrawPercentage: 0,
+    claimableCreditLessThan: 10000,
     validFrom: '2024-01-01',
     validTo: '2025-12-31',
     status: 'Active',
@@ -222,8 +227,9 @@ export const initialPromotions: Promotion[] = [
       min: 0,
       max: 0
     },
-    maxWithdraw: 8000,
-    creditLessThan: 20000,
+    maxWithdrawAmount: 8000,
+    maxWithdrawPercentage: 0,
+    claimableCreditLessThan: 20000,
     validFrom: '2024-02-01',
     validTo: '2025-12-31',
     status: 'Active',
@@ -257,8 +263,9 @@ export const initialPromotions: Promotion[] = [
     bonusRate: 10,
     bonusFixedAmount: 0,
     bonusRandom: { min: 0, max: 0 },
-    maxWithdraw: 3000,
-    creditLessThan: 8000,
+    maxWithdrawAmount: 3000,
+    maxWithdrawPercentage: 0,
+    claimableCreditLessThan: 8000,
     validFrom: '2024-03-01',
     validTo: '2025-06-30',
     status: 'Active',

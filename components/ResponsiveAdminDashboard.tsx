@@ -32,13 +32,16 @@ import CommissionRecordContent from './CommissionRecordContent';
 import CommissionSetupContent from './CommissionSetupContent';
 import CommissionReleaseContent from './CommissionReleaseContent';
 import CommissionScheduleContent from './CommissionScheduleContent';
+import CommissionOngoingContent from './CommissionOngoingContent';
+import CashBackOngoingContent from './CashBackOngoingContent';
+import RebateOngoingContent from './RebateOngoingContent';
 import ReferrerSetupContent from './ReferrerSetupContent';
-import ReferrerBonusListContent from './ReferrerBonusListContent';
+import ReferrerRecordContent from './ReferrerRecordContent';
 import KYCContent from './KYCContent';
 import StaffManagement from './StaffManagement';
 
 // Define page type to avoid repetition
-type PageType = 'dashboard' | 'deposit' | 'withdrawal' | 'adjustment' | 'transaction-record' | 'user-record' | 'level' | 'tag' | 'promotion' | 'promotion-record' | 'promotion-list' | 'promotion-ongoing' | 'rebate' | 'rebate-record' | 'rebate-setup' | 'rebate-release' | 'rebate-schedule' | 'cashback' | 'cashback-record' | 'cashback-setup' | 'cashback-release' | 'cashback-schedule' | 'commission' | 'commission-record' | 'commission-setup' | 'commission-release' | 'commission-schedule' | 'referrer-setup' | 'referrer-bonus-list' | 'game-kiosk' | 'settings' | 'security' | 'bank-list' | 'bank-setup' | 'bank-report' | 'report' | 'admin-tool' | 'api' | 'change-log' | 'display' | 'domain' | 'page' | 'staff' | 'theme' | 'tools' | 'kyc-management';
+type PageType = 'dashboard' | 'deposit' | 'withdrawal' | 'adjustment' | 'transaction-record' | 'user-record' | 'level' | 'tag' | 'promotion' | 'promotion-record' | 'promotion-list' | 'promotion-ongoing' | 'rebate' | 'rebate-record' | 'rebate-setup' | 'rebate-release' | 'rebate-schedule' | 'rebate-ongoing' | 'cashback' | 'cashback-record' | 'cashback-setup' | 'cashback-release' | 'cashback-schedule' | 'cashback-ongoing' | 'commission' | 'commission-record' | 'commission-setup' | 'commission-release' | 'commission-schedule' | 'commission-ongoing' | 'referrer-setup' | 'referrer-record' | 'game-kiosk' | 'settings' | 'security' | 'bank-list' | 'bank-setup' | 'bank-report' | 'report' | 'admin-tool' | 'api' | 'change-log' | 'display' | 'domain' | 'page' | 'staff' | 'theme' | 'tools' | 'kyc-management';
 
 interface ResponsiveAdminDashboardProps {
   currentPage: PageType;
@@ -293,7 +296,7 @@ function RebateMenuItem({ currentPage, onNavigate }: {
   onNavigate: (page: PageType) => void;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const isRebateActive = ['rebate', 'rebate-record', 'rebate-setup', 'rebate-release', 'rebate-schedule'].includes(currentPage);
+  const isRebateActive = ['rebate', 'rebate-record', 'rebate-setup', 'rebate-release', 'rebate-schedule', 'rebate-ongoing'].includes(currentPage);
 
   useEffect(() => {
     if (isRebateActive) {
@@ -360,6 +363,17 @@ function RebateMenuItem({ currentPage, onNavigate }: {
           >
             <span className="text-left">4.4 REBATE SCHEDULE</span>
           </button>
+
+          <button
+            onClick={() => onNavigate('rebate-ongoing')}
+            className={`w-full flex items-center p-2 rounded-lg text-sm font-medium tracking-[-0.14px] transition-colors ${
+              currentPage === 'rebate-ongoing'
+                ? 'bg-[#e8eaf6] text-[#3949ab]'
+                : 'text-[#3949ab] hover:bg-[#f0f0f0]'
+            }`}
+          >
+            <span className="text-left">4.5 REBATE ONGOING</span>
+          </button>
         </div>
       )}
     </div>
@@ -371,7 +385,7 @@ function CashBackMenuItem({ currentPage, onNavigate }: {
   onNavigate: (page: PageType) => void;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const isCashBackActive = ['cashback', 'cashback-record', 'cashback-setup', 'cashback-release', 'cashback-schedule'].includes(currentPage);
+  const isCashBackActive = ['cashback', 'cashback-record', 'cashback-setup', 'cashback-release', 'cashback-schedule', 'cashback-ongoing'].includes(currentPage);
 
   useEffect(() => {
     if (isCashBackActive) {
@@ -438,6 +452,17 @@ function CashBackMenuItem({ currentPage, onNavigate }: {
           >
             <span className="text-left">5.4 CASHBACK SCHEDULE</span>
           </button>
+
+          <button
+            onClick={() => onNavigate('cashback-ongoing')}
+            className={`w-full flex items-center p-2 rounded-lg text-sm font-medium tracking-[-0.14px] transition-colors ${
+              currentPage === 'cashback-ongoing'
+                ? 'bg-[#e8eaf6] text-[#3949ab]'
+                : 'text-[#3949ab] hover:bg-[#f0f0f0]'
+            }`}
+          >
+            <span className="text-left">5.5 CASHBACK ONGOING</span>
+          </button>
         </div>
       )}
     </div>
@@ -449,7 +474,7 @@ function CommissionMenuItem({ currentPage, onNavigate }: {
   onNavigate: (page: PageType) => void;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const isCommissionActive = ['commission', 'commission-record', 'commission-setup', 'commission-release', 'commission-schedule'].includes(currentPage);
+  const isCommissionActive = ['commission', 'commission-record', 'commission-setup', 'commission-release', 'commission-schedule', 'commission-ongoing'].includes(currentPage);
 
   useEffect(() => {
     if (isCommissionActive) {
@@ -513,6 +538,16 @@ function CommissionMenuItem({ currentPage, onNavigate }: {
           >
             <span className="text-left">6.4 COMMISSION SCHEDULE</span>
           </button>
+          <button
+            onClick={() => onNavigate('commission-ongoing')}
+            className={`w-full flex items-center p-2 rounded-lg text-sm font-medium tracking-[-0.14px] transition-colors ${
+              currentPage === 'commission-ongoing'
+                ? 'bg-[#e8eaf6] text-[#3949ab]'
+                : 'text-[#3949ab] hover:bg-[#f0f0f0]'
+            }`}
+          >
+            <span className="text-left">6.5 COMMISSION ONGOING</span>
+          </button>
         </div>
       )}
     </div>
@@ -524,7 +559,7 @@ function ReferrerMenuItem({ currentPage, onNavigate }: {
   onNavigate: (page: PageType) => void;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const isReferrerActive = ['referrer-setup', 'referrer-bonus-list'].includes(currentPage);
+  const isReferrerActive = ['referrer-setup', 'referrer-record'].includes(currentPage);
 
   useEffect(() => {
     if (isReferrerActive) {
@@ -560,14 +595,14 @@ function ReferrerMenuItem({ currentPage, onNavigate }: {
           </button>
 
           <button
-            onClick={() => onNavigate('referrer-bonus-list')}
+            onClick={() => onNavigate('referrer-record')}
             className={`w-full flex items-center p-2 rounded-lg text-sm font-medium tracking-[-0.14px] transition-colors ${
-              currentPage === 'referrer-bonus-list'
+              currentPage === 'referrer-record'
                 ? 'bg-[#e8eaf6] text-[#3949ab]'
                 : 'text-[#3949ab] hover:bg-[#f0f0f0]'
             }`}
           >
-            <span className="text-left">7.2 REFERRER BONUS LIST</span>
+            <span className="text-left">7.2 REFERRER RECORD</span>
           </button>
         </div>
       )}
@@ -873,6 +908,8 @@ export default function ResponsiveAdminDashboard({ currentPage, onNavigate, onLo
         return <RebateScheduleContent />;
       case 'rebate-release':
         return <RebateReleaseContent />;
+      case 'rebate-ongoing':
+        return <RebateOngoingContent />;
       case 'cashback':
       case 'cashback-record':
         return <CashBackRecordContent />;
@@ -882,6 +919,8 @@ export default function ResponsiveAdminDashboard({ currentPage, onNavigate, onLo
         return <CashBackScheduleContent />;
       case 'cashback-release':
         return <CashBackReleaseContent />;
+      case 'cashback-ongoing':
+        return <CashBackOngoingContent />;
       case 'commission':
       case 'commission-record':
         return <CommissionRecordContent />;
@@ -891,10 +930,12 @@ export default function ResponsiveAdminDashboard({ currentPage, onNavigate, onLo
         return <CommissionReleaseContent />;
       case 'commission-schedule':
         return <CommissionScheduleContent />;
+      case 'commission-ongoing':
+        return <CommissionOngoingContent />;
       case 'referrer-setup':
         return <ReferrerSetupContent />;
-      case 'referrer-bonus-list':
-        return <ReferrerBonusListContent />;
+      case 'referrer-record':
+        return <ReferrerRecordContent />;
       case 'transaction-record':
         return <TransactionRecordManagement />;
       case 'user-record':
@@ -926,7 +967,6 @@ export default function ResponsiveAdminDashboard({ currentPage, onNavigate, onLo
       case 'display':
       case 'domain':
       case 'page':
-      case 'staff':
       case 'theme':
       case 'tools':
         return <div className="p-6"><h1 className="text-2xl font-bold">{currentPage.toUpperCase().replace('-', ' ')}</h1><p>This functionality is coming soon.</p></div>;

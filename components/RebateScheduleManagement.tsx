@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { RebateSchedule, sampleRebateSchedules } from './RebateScheduleData';
+import { rebateSetupsData } from './RebateSetupData';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -10,12 +11,13 @@ const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Satur
 
 export default function RebateScheduleManagement() {
   const [schedules, setSchedules] = useState<RebateSchedule[]>(sampleRebateSchedules);
-  const [filterType, setFilterType] = useState<string>('');
+  const [filterSetupName, setFilterSetupName] = useState<string>('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState<RebateSchedule | null>(null);
   const [formData, setFormData] = useState({
     type: 'Recurring' as 'Recurring',
+    setupName: '',
     rebateType: 'Valid Bet' as 'Valid Bet',
     status: 'Active' as 'Active' | 'Inactive',
     autoApprovedAmount: 0,
@@ -24,9 +26,9 @@ export default function RebateScheduleManagement() {
   });
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
-  // Filter schedules by type
+  // Filter schedules by setup name
   const filteredSchedules = schedules.filter(schedule => {
-    if (filterType && schedule.type !== filterType) return false;
+    if (filterSetupName && filterSetupName !== 'all' && schedule.setupName !== filterSetupName) return false;
     return true;
   });
 
@@ -37,7 +39,7 @@ export default function RebateScheduleManagement() {
 
   // Handle reset filters
   const handleResetFilters = () => {
-    setFilterType('');
+    setFilterSetupName('');
   };
 
   // Validation function
@@ -65,6 +67,7 @@ export default function RebateScheduleManagement() {
   const openCreateModal = () => {
     setFormData({
       type: 'Recurring',
+      setupName: '',
       rebateType: 'Valid Bet',
       status: 'Active',
       autoApprovedAmount: 0,
@@ -80,6 +83,7 @@ export default function RebateScheduleManagement() {
     setSelectedSchedule(schedule);
     setFormData({
       type: schedule.type,
+      setupName: schedule.setupName,
       rebateType: schedule.rebateType,
       status: schedule.status,
       autoApprovedAmount: schedule.autoApprovedAmount,
@@ -97,6 +101,7 @@ export default function RebateScheduleManagement() {
     setSelectedSchedule(null);
     setFormData({
       type: 'Recurring',
+      setupName: '',
       rebateType: 'Valid Bet',
       status: 'Active',
       autoApprovedAmount: 0,
@@ -112,6 +117,7 @@ export default function RebateScheduleManagement() {
 
     const newSchedule: RebateSchedule = {
       id: Math.max(...schedules.map(s => s.id), 0) + 1,
+      setupName: formData.setupName,
       type: formData.type,
       rebateType: formData.rebateType,
       status: formData.status,
@@ -133,6 +139,7 @@ export default function RebateScheduleManagement() {
       s.id === selectedSchedule.id
         ? {
             ...selectedSchedule,
+            setupName: formData.setupName,
             type: formData.type,
             rebateType: formData.rebateType,
             status: formData.status,
@@ -177,13 +184,15 @@ export default function RebateScheduleManagement() {
 
         {/* Filter Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <Select value={filterType} onValueChange={setFilterType}>
+          <Select value={filterSetupName} onValueChange={setFilterSetupName}>
             <SelectTrigger className="h-9">
-              <SelectValue placeholder="Filter by Type" />
+              <SelectValue placeholder="Filter by Setup Name" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="Recurring">Recurring</SelectItem>
+              <SelectItem value="all">All Setups</SelectItem>
+              {rebateSetupsData.map(setup => (
+                <SelectItem key={setup.id} value={setup.name}>{setup.name}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
 
@@ -212,6 +221,7 @@ export default function RebateScheduleManagement() {
             {/* Table columns */}
             <thead className="bg-gray-50 border-b">
               <tr>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Setup Name</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Rebate Type</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Auto Approved Amount {'<='}</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Created Date</th>
@@ -223,7 +233,8 @@ export default function RebateScheduleManagement() {
             <tbody className="divide-y divide-gray-200">
               {filteredSchedules.map((schedule) => (
                 <tr key={schedule.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-sm text-gray-900 font-medium">{schedule.rebateType}</td>
+                  <td className="px-4 py-3 text-sm text-gray-900 font-medium">{schedule.setupName}</td>
+                  <td className="px-4 py-3 text-sm text-gray-900">{schedule.rebateType}</td>
                   <td className="px-4 py-3 text-sm text-gray-900">{formatCurrency(schedule.autoApprovedAmount)}</td>
                   <td className="px-4 py-3 text-sm text-gray-900">{schedule.createdDate}</td>
                   <td className="px-4 py-3 text-sm text-gray-900">
@@ -249,7 +260,7 @@ export default function RebateScheduleManagement() {
               ))}
               {filteredSchedules.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
+                  <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
                     No schedules found
                   </td>
                 </tr>
@@ -279,9 +290,31 @@ export default function RebateScheduleManagement() {
               />
             </div>
 
-            {/* Rebate Type */}
+            {/* Setup Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Rebate Type</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Setup Name *</label>
+              <Select value={formData.setupName} onValueChange={(value) => {
+                const selectedSetup = rebateSetupsData.find(s => s.name === value);
+                setFormData(prev => ({
+                  ...prev,
+                  setupName: value,
+                  rebateType: selectedSetup?.rebateType || 'Valid Bet'
+                }));
+              }}>
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="Select Setup Name" />
+                </SelectTrigger>
+                <SelectContent>
+                  {rebateSetupsData.map(setup => (
+                    <SelectItem key={setup.id} value={setup.name}>{setup.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Rebate Type - Auto-populated from setup */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Rebate Type (Auto-filled)</label>
               <Input
                 value={formData.rebateType}
                 disabled

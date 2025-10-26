@@ -18,13 +18,11 @@ const getPendingCommissionRecords = () => {
   );
 };
 
-const commissionTargetTypeOptions = ['all', 'Deposit - Withdraw', 'Deposit - Withdraw - Rebate - Bonus', 'Valid Bet'];
-
 export default function CommissionReleaseManagement() {
   const [searchFilters, setSearchFilters] = useState({
     dateFrom: '',
     dateTo: '',
-    commissionTargetType: 'all'
+    setupName: 'all'
   });
 
   const [hasGenerated, setHasGenerated] = useState(false);
@@ -52,18 +50,87 @@ export default function CommissionReleaseManagement() {
     return sampleCommissionSchedules.find(s => s.commissionTargetType === commissionTargetType);
   };
 
+  // Helper function to group transactions by date and target type for Period feature
+  const groupTransactionsByPeriod = (transactions: Transaction[]) => {
+    // Only group if BOTH dateFrom AND dateTo are selected
+    if (!searchFilters.dateFrom || !searchFilters.dateTo) {
+      return transactions; // No date range selected, return as-is
+    }
+
+    // Group by userID + date + targetType
+    const grouped = transactions.reduce((acc, transaction) => {
+      const date = transaction.submitTime.split(' ')[0]; // Extract date only (YYYY-MM-DD)
+      const targetType = transaction.commissionTargetType || 'Unknown';
+      const userID = transaction.userID;
+
+      // Create unique key: userID_date_targetType
+      const key = `${userID}_${date}_${targetType}`;
+
+      if (!acc[key]) {
+        acc[key] = [];
+      }
+      acc[key].push(transaction);
+      return acc;
+    }, {} as Record<string, Transaction[]>);
+
+    // Combine transactions in each group
+    const combinedTransactions = Object.values(grouped).map(group => {
+      // Sum all amounts
+      const totalAmount = group.reduce((sum, t) => sum + t.amount, 0);
+
+      // Find earliest and latest submit times
+      const times = group.map(t => new Date(t.submitTime));
+      const earliestTime = new Date(Math.min(...times.map(t => t.getTime())));
+      const latestTime = new Date(Math.max(...times.map(t => t.getTime())));
+
+      // Use earliest transaction as base
+      const earliestTransaction = group.reduce((earliest, current) => {
+        return new Date(current.submitTime) < new Date(earliest.submitTime)
+          ? current
+          : earliest;
+      });
+
+      // Format submit time as date range if multiple transactions
+      const formatDateTime = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${year}-${month}-${day} ${hours}:${minutes}`;
+      };
+
+      const submitTimeDisplay = group.length > 1
+        ? `${formatDateTime(earliestTime)} - ${formatDateTime(latestTime)}`
+        : earliestTransaction.submitTime;
+
+      // Return combined transaction with earliest transaction's details
+      return {
+        ...earliestTransaction,
+        amount: totalAmount,
+        id: `${earliestTransaction.id}_combined`, // Mark as combined
+        submitTime: submitTimeDisplay,
+        remark: '', // Leave remark blank for combined records
+        // Store original transaction IDs for batch operations
+        originalIds: group.map(t => t.id)
+      };
+    });
+
+    return combinedTransactions;
+  };
+
   // Filter transactions based on search filters and auto-approved amount
-  const filteredTransactions = transactions.filter(transaction => {
+  const baseFilteredTransactions = transactions.filter(transaction => {
     // Only show PENDING transactions
     if (transaction.status !== 'PENDING') return false;
 
     // Date filters (by submitTime)
     if (searchFilters.dateFrom && new Date(transaction.submitTime) < new Date(searchFilters.dateFrom)) return false;
     if (searchFilters.dateTo && new Date(transaction.submitTime) > new Date(searchFilters.dateTo + ' 23:59:59')) return false;
-    if (searchFilters.commissionTargetType && searchFilters.commissionTargetType !== 'all' && transaction.commissionTargetType !== searchFilters.commissionTargetType) return false;
+    if (searchFilters.setupName && searchFilters.setupName !== 'all' && transaction.commissionName !== searchFilters.setupName) return false;
 
     // Only show transactions where amount > autoApprovedAmount
-    const schedule = getCommissionSchedule(transaction.commissionTargetType || '');
+    const schedule = sampleCommissionSchedules.find(s => s.setupName === transaction.commissionName);
     if (schedule && transaction.amount <= schedule.autoApprovedAmount) return false;
 
     return true;
@@ -73,6 +140,9 @@ export default function CommissionReleaseManagement() {
     const dateB = b.submitTime;
     return new Date(dateB).getTime() - new Date(dateA).getTime();
   });
+
+  // Apply period grouping AFTER initial filtering
+  const filteredTransactions = groupTransactionsByPeriod(baseFilteredTransactions);
 
   const totalAmount = filteredTransactions.reduce((sum, transaction) => {
     return sum + (transaction.amount || 0);
@@ -87,7 +157,7 @@ export default function CommissionReleaseManagement() {
     setSearchFilters({
       dateFrom: '',
       dateTo: '',
-      commissionTargetType: 'all'
+      setupName: 'all'
     });
     setHasGenerated(false);
     setSelectedRows(new Set());
@@ -182,14 +252,29 @@ export default function CommissionReleaseManagement() {
     const currentTime = new Date().toISOString().replace('T', ' ').substring(0, 19);
     const remark = remarkInputs[transaction.id] || '';
 
+    // Find commission setup to calculate target
+    const setup = sampleCommissionSetups.find(s => s.name === transaction.commissionName);
+    const commissionTarget = setup ? transaction.amount * setup.targetMultiplier * 10 : 0;
+
+    // Check if this is a combined transaction
+    const isCombined = transaction.id.includes('_combined');
+    const idsToUpdate = isCombined && (transaction as any).originalIds
+      ? (transaction as any).originalIds
+      : [transaction.id];
+
     setTransactions(prev => prev.map(t =>
-      t.id === transaction.id
+      idsToUpdate.includes(t.id)
         ? {
             ...t,
-            status: 'COMPLETED' as const,
-            completeTime: currentTime,
+            status: 'APPROVED' as const,
+            startTime: currentTime,
             completeBy: 'ADMIN001',
-            remark: remark
+            remark: remark,
+            commissionCurrent: 0,
+            commissionTarget: commissionTarget,
+            is_auto_approved: autoApprove,
+            approved_by: 'ADMIN001',
+            approved_at: currentTime
           }
         : t
     ));
@@ -208,8 +293,14 @@ export default function CommissionReleaseManagement() {
     const currentTime = new Date().toISOString().replace('T', ' ').substring(0, 19);
     const remark = remarkInputs[transaction.id] || 'Cancelled by admin';
 
+    // Check if this is a combined transaction
+    const isCombined = transaction.id.includes('_combined');
+    const idsToUpdate = isCombined && (transaction as any).originalIds
+      ? (transaction as any).originalIds
+      : [transaction.id];
+
     setTransactions(prev => prev.map(t =>
-      t.id === transaction.id
+      idsToUpdate.includes(t.id)
         ? {
             ...t,
             status: 'REJECTED' as const,
@@ -237,12 +328,21 @@ export default function CommissionReleaseManagement() {
       if (selectedRows.has(t.id)) {
         const remark = remarkInputs[t.id] || '';
 
+        // Find commission setup to calculate target
+        const setup = sampleCommissionSetups.find(s => s.name === t.commissionName);
+        const commissionTarget = setup ? t.amount * setup.targetMultiplier * 10 : 0;
+
         return {
           ...t,
-          status: 'COMPLETED' as const,
-          completeTime: currentTime,
+          status: 'APPROVED' as const,
+          startTime: currentTime,
           completeBy: 'ADMIN001',
-          remark: remark
+          remark: remark,
+          commissionCurrent: 0,
+          commissionTarget: commissionTarget,
+          is_auto_approved: autoApprove,
+          approved_by: 'ADMIN001',
+          approved_at: currentTime
         };
       }
       return t;
@@ -263,41 +363,52 @@ export default function CommissionReleaseManagement() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-3">
-          <Input
-            type="date"
-            placeholder="Date From (Submit Time)"
-            value={searchFilters.dateFrom}
-            onChange={(e) => handleInputChange('dateFrom', e.target.value)}
-            className="h-9"
-          />
+          <div>
+            <label className="block text-xs font-semibold mb-1 text-gray-700">Date From (Submit Time)</label>
+            <Input
+              type="date"
+              value={searchFilters.dateFrom}
+              onChange={(e) => handleInputChange('dateFrom', e.target.value)}
+              className="h-9"
+            />
+          </div>
 
-          <Input
-            type="date"
-            placeholder="Date To (Submit Time)"
-            value={searchFilters.dateTo}
-            onChange={(e) => handleInputChange('dateTo', e.target.value)}
-            className="h-9"
-          />
+          <div>
+            <label className="block text-xs font-semibold mb-1 text-gray-700">Date To (Submit Time)</label>
+            <Input
+              type="date"
+              value={searchFilters.dateTo}
+              onChange={(e) => handleInputChange('dateTo', e.target.value)}
+              className="h-9"
+            />
+          </div>
 
-          <Select value={searchFilters.commissionTargetType} onValueChange={(value) => handleInputChange('commissionTargetType', value)}>
-            <SelectTrigger className="h-9">
-              <SelectValue placeholder="Commission Target Type" />
-            </SelectTrigger>
-            <SelectContent>
-              {commissionTargetTypeOptions.map(type => (
-                <SelectItem key={type} value={type}>
-                  {type === 'all' ? 'All Types' : type}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div>
+            <label className="block text-xs font-semibold mb-1 text-gray-700">Setup Name</label>
+            <Select value={searchFilters.setupName} onValueChange={(value) => handleInputChange('setupName', value)}>
+              <SelectTrigger className="h-9">
+                <SelectValue placeholder="Setup Name" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Setups</SelectItem>
+                {sampleCommissionSetups.map(setup => (
+                  <SelectItem key={setup.id} value={setup.name}>
+                    {setup.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-          <Button
-            onClick={handleGenerate}
-            className="bg-[#4caf50] hover:bg-[#45a049] text-white h-9 text-sm font-semibold px-6"
-          >
-            GENERATE
-          </Button>
+          <div>
+            <label className="block text-xs font-semibold mb-1 text-gray-700 opacity-0">Action</label>
+            <Button
+              onClick={handleGenerate}
+              className="bg-[#4caf50] hover:bg-[#45a049] text-white h-9 text-sm font-semibold px-6 w-full"
+            >
+              GENERATE
+            </Button>
+          </div>
         </div>
 
         <div className="border-t pt-3 mt-4">

@@ -1,14 +1,24 @@
 import { useState } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Badge } from './ui/badge';
 import { RefreshCw } from 'lucide-react';
 import ProfileContent from './ProfileContent';
 import { sampleUsers, User } from './UserData';
-import { ReferrerBonus, referrerBonusList } from './ReferrerBonusListData';
+import { ReferrerBonus, referrerBonusList } from './ReferrerRecordData';
 import { initialReferrerSetups } from './ReferrerSetupData';
 import { getStatusColor } from './transactionData';
+
+// Generate referrer setup options
+const referrerSetupOptions = [
+  { value: 'all', label: 'All Referrer Setups' },
+  ...initialReferrerSetups.map(setup => ({
+    value: setup.name,
+    label: setup.name
+  }))
+];
 
 type BonusStatus = 'ALL' | 'PENDING' | 'COMPLETED' | 'REJECTED';
 
@@ -33,11 +43,12 @@ const getReferrerSetupDetails = (referrerSetupId: string) => {
   };
 };
 
-export default function ReferrerBonusListManagement() {
+export default function ReferrerRecordManagement() {
   const [searchFilters, setSearchFilters] = useState({
     username: '',
     dateFrom: '',
-    dateTo: ''
+    dateTo: '',
+    referrerSetupName: 'all'
   });
 
   const [hasSearched, setHasSearched] = useState(true);
@@ -75,6 +86,10 @@ export default function ReferrerBonusListManagement() {
         }
         if (searchFilters.dateFrom && new Date(bonus.submitTime) < new Date(searchFilters.dateFrom)) return false;
         if (searchFilters.dateTo && new Date(bonus.submitTime) > new Date(searchFilters.dateTo + ' 23:59:59')) return false;
+        if (searchFilters.referrerSetupName && searchFilters.referrerSetupName !== 'all') {
+          const setupDetails = getReferrerSetupDetails(bonus.referrerSetupId);
+          if (setupDetails.name !== searchFilters.referrerSetupName) return false;
+        }
 
         return true;
       })
@@ -103,7 +118,8 @@ export default function ReferrerBonusListManagement() {
     setSearchFilters({
       username: '',
       dateFrom: '',
-      dateTo: ''
+      dateTo: '',
+      referrerSetupName: 'all'
     });
   };
 
@@ -275,7 +291,18 @@ export default function ReferrerBonusListManagement() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-3">
-          <div></div>
+          <Select value={searchFilters.referrerSetupName} onValueChange={(value) => handleInputChange('referrerSetupName', value)}>
+            <SelectTrigger className="h-9">
+              <SelectValue placeholder="Referrer Setup" />
+            </SelectTrigger>
+            <SelectContent>
+              {referrerSetupOptions.map(option => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <div></div>
           <div></div>
           <Button

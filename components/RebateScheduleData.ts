@@ -1,5 +1,6 @@
 export interface RebateSchedule {
   id: number;
+  setupName: string;
   rebateType: 'Valid Bet';
   status: 'Active' | 'Inactive';
   type: 'Recurring';
@@ -12,6 +13,7 @@ export interface RebateSchedule {
 export const sampleRebateSchedules: RebateSchedule[] = [
   {
     id: 1,
+    setupName: '1% Daily TurnOver Rebate',
     rebateType: 'Valid Bet',
     status: 'Active',
     type: 'Recurring',

@@ -3,14 +3,16 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Badge } from './ui/badge';
-import { Trash2, Edit, Eye, List, TrendingUp, RefreshCw, Percent, DollarSign, X, UserPlus } from 'lucide-react';
-import { Level, initialLevels, levelColors, ProviderBetLimit, ProviderRebateAssignment, ProviderCashbackAssignment } from './LevelData';
+import { Trash2, Edit, List, TrendingUp, RefreshCw, Percent, DollarSign, X, UserPlus } from 'lucide-react';
+import { Level, initialLevels, levelColors, ProviderBetLimit } from './LevelData';
 import { Bank, banksData } from './BankData';
 import { Provider, providersData, categoryLabels } from './ProviderData';
 import { rebateSetupsData } from './RebateSetupData';
 import { cashBackSetupsData } from './CashBackSetupData';
 import { sampleCommissionSetups, CommissionSetup } from './CommissionSetupData';
 import { initialReferrerSetups, ReferrerSetup } from './ReferrerSetupData';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 
 export default function LevelManagement() {
   const [levels, setLevels] = useState<Level[]>(initialLevels);
@@ -21,6 +23,7 @@ export default function LevelManagement() {
   const [selectedLevel, setSelectedLevel] = useState<Level | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'info' | 'languages'>('info');
+  const [languageTab, setLanguageTab] = useState<'english' | 'chinese' | 'malay'>('english');
   const [showBankListModal, setShowBankListModal] = useState(false);
   const [selectedLevelForBanks, setSelectedLevelForBanks] = useState<number | null>(null);
   const [selectedBanks, setSelectedBanks] = useState<number[]>([]);
@@ -36,26 +39,23 @@ export default function LevelManagement() {
   const [showCashbackSetupModal, setShowCashbackSetupModal] = useState(false);
   const [selectedLevelForRebate, setSelectedLevelForRebate] = useState<Level | null>(null);
   const [selectedLevelForCashback, setSelectedLevelForCashback] = useState<Level | null>(null);
-  const [rebateAssignments, setRebateAssignments] = useState<ProviderRebateAssignment[]>([]);
-  const [cashbackAssignments, setCashbackAssignments] = useState<ProviderCashbackAssignment[]>([]);
-  const [rebateProviderSearch, setRebateProviderSearch] = useState('');
-  const [rebateCategoryFilter, setRebateCategoryFilter] = useState<number | 'all'>('all');
-  const [rebateCategoryToApply, setRebateCategoryToApply] = useState<number | ''>('');
-  const [cashbackProviderSearch, setCashbackProviderSearch] = useState('');
-  const [cashbackCategoryFilter, setCashbackCategoryFilter] = useState<number | 'all'>('all');
-  const [cashbackCategoryToApply, setCashbackCategoryToApply] = useState<number | ''>('');
+  const [selectedRebateIds, setSelectedRebateIds] = useState<number[]>([]);
+  const [selectedCashbackIds, setSelectedCashbackIds] = useState<number[]>([]);
+  const [rebateNameFilter, setRebateNameFilter] = useState('');
+  const [cashbackNameFilter, setCashbackNameFilter] = useState('');
+  const [notification, setNotification] = useState<{type: 'error' | 'success' | 'warning', message: string} | null>(null);
 
   // Commission Setup Modal
   const [showCommissionSetupModal, setShowCommissionSetupModal] = useState(false);
   const [selectedLevelForCommission, setSelectedLevelForCommission] = useState<Level | null>(null);
-  const [selectedCommissionId, setSelectedCommissionId] = useState<string | null>(null);
+  const [selectedCommissionIds, setSelectedCommissionIds] = useState<string[]>([]);
   const [commissionNameFilter, setCommissionNameFilter] = useState('');
   const [commissionTargetTypeFilter, setCommissionTargetTypeFilter] = useState<string>('all');
 
   // Referrer Setup Modal
   const [showReferrerSetupModal, setShowReferrerSetupModal] = useState(false);
   const [selectedLevelForReferrer, setSelectedLevelForReferrer] = useState<Level | null>(null);
-  const [selectedReferrerId, setSelectedReferrerId] = useState<string | null>(null);
+  const [selectedReferrerIds, setSelectedReferrerIds] = useState<string[]>([]);
   const [referrerNameFilter, setReferrerNameFilter] = useState('');
   const [referrerTargetTypeFilter, setReferrerTargetTypeFilter] = useState<string>('all');
 
@@ -80,6 +80,12 @@ export default function LevelManagement() {
     resetFrequencyValue: '1',
     isDefault: true,
     image: ''
+  });
+
+  const [languageTranslations, setLanguageTranslations] = useState({
+    english: { name: '', description: '', image: '' },
+    chinese: { name: '', description: '', image: '' },
+    malay: { name: '', description: '', image: '' }
   });
 
   // Filter levels based on search and status
@@ -121,8 +127,14 @@ export default function LevelManagement() {
       isDefault: true,
       image: ''
     });
+    setLanguageTranslations({
+      english: { name: '', description: '', image: '' },
+      chinese: { name: '', description: '', image: '' },
+      malay: { name: '', description: '', image: '' }
+    });
     setImagePreview('');
     setActiveTab('info');
+    setLanguageTab('english');
   };
 
   const handleCreateLevel = () => {
@@ -139,7 +151,8 @@ export default function LevelManagement() {
     const newLevel: Level = {
       ...formData,
       id: levels.length > 0 ? Math.max(...levels.map(l => l.id)) + 1 : 1,
-      createdDate: new Date().toISOString().split('T')[0]
+      createdDate: new Date().toISOString().split('T')[0],
+      translations: languageTranslations
     };
 
     setLevels(prev => [...prev, newLevel]);
@@ -172,7 +185,8 @@ export default function LevelManagement() {
             createdDate: level.createdDate,
             providerBetLimits: level.providerBetLimits,
             providerRebateAssignments: level.providerRebateAssignments,
-            providerCashbackAssignments: level.providerCashbackAssignments
+            providerCashbackAssignments: level.providerCashbackAssignments,
+            translations: languageTranslations
           }
         : level
     ));
@@ -214,8 +228,22 @@ export default function LevelManagement() {
       isDefault: level.isDefault,
       image: level.image || ''
     });
+    // Load translations, with English name defaulting to levelName if not set
+    const loadedTranslations = level.translations || {
+      english: { name: '', description: '', image: '' },
+      chinese: { name: '', description: '', image: '' },
+      malay: { name: '', description: '', image: '' }
+    };
+
+    // Ensure English name is synced with levelName
+    if (!loadedTranslations.english.name && level.levelName) {
+      loadedTranslations.english.name = level.levelName;
+    }
+
+    setLanguageTranslations(loadedTranslations);
     setImagePreview(level.image || '');
     setActiveTab('info');
+    setLanguageTab('english');
     setShowEditModal(true);
   };
 
@@ -232,6 +260,40 @@ export default function LevelManagement() {
     }
   };
 
+  const handleLanguageImageUpload = (lang: 'english' | 'chinese' | 'malay', e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64Image = reader.result as string;
+        setLanguageTranslations(prev => ({
+          ...prev,
+          [lang]: { ...prev[lang], image: base64Image }
+        }));
+
+        // Sync English image with the deprecated image field
+        if (lang === 'english') {
+          setFormData(prev => ({ ...prev, image: base64Image }));
+          setImagePreview(base64Image);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeLanguageImage = (lang: 'english' | 'chinese' | 'malay') => {
+    setLanguageTranslations(prev => ({
+      ...prev,
+      [lang]: { ...prev[lang], image: '' }
+    }));
+
+    // Sync English image removal with the deprecated image field
+    if (lang === 'english') {
+      setFormData(prev => ({ ...prev, image: '' }));
+      setImagePreview('');
+    }
+  };
+
   const handleBankList = (levelId: number) => {
     setSelectedLevelForBanks(levelId);
     setSelectedBanks([]); // Reset selection or load saved banks for this level
@@ -240,19 +302,82 @@ export default function LevelManagement() {
 
   const handleRebateSetup = (level: Level) => {
     setSelectedLevelForRebate(level);
+    setSelectedRebateIds(level.rebateSetupIds || []);
+    setNotification(null);
     setShowRebateSetupModal(true);
+  };
+
+  // Handler to toggle rebate selection
+  const handleToggleRebate = (rebateId: number) => {
+    const isCurrentlySelected = selectedRebateIds.includes(rebateId);
+
+    if (isCurrentlySelected) {
+      // Remove from selection
+      setSelectedRebateIds(prev => prev.filter(id => id !== rebateId));
+      setNotification(null);
+    } else {
+      // Get the new rebate being added
+      const newRebate = rebateSetupsData.find(r => r.id === rebateId);
+      if (!newRebate) return;
+
+      // Since rebate only has 1 type, limit to 1 selection total
+      if (selectedRebateIds.length >= 1) {
+        const existingRebate = rebateSetupsData.find(r => r.id === selectedRebateIds[0]);
+        setNotification({
+          type: 'warning',
+          message: `Maximum reached! You can only select 1 rebate setup. Currently selected: "${existingRebate?.name}". Deselect it before selecting another.`
+        });
+        return;
+      }
+
+      // Add to selection
+      setSelectedRebateIds(prev => [...prev, rebateId]);
+      setNotification(null);
+    }
   };
 
   const handleCashbackSetup = (level: Level) => {
     setSelectedLevelForCashback(level);
+    setSelectedCashbackIds(level.cashbackSetupIds || []);
+    setNotification(null);
     setShowCashbackSetupModal(true);
   };
 
   // Handler to open Commission Setup Modal
   const handleCommissionSetup = (level: Level) => {
     setSelectedLevelForCommission(level);
-    setSelectedCommissionId(level.commissionSetupId || null);
+    setSelectedCommissionIds(level.commissionSetupIds || []);
     setShowCommissionSetupModal(true);
+  };
+
+  // Handler to toggle commission selection
+  const handleToggleCommission = (commissionId: string) => {
+    const isCurrentlySelected = selectedCommissionIds.includes(commissionId);
+
+    if (isCurrentlySelected) {
+      // Remove from selection
+      setSelectedCommissionIds(prev => prev.filter(id => id !== commissionId));
+    } else {
+      // Validation: Max 3 commission setups
+      if (selectedCommissionIds.length >= 3) {
+        alert('Cannot select more than 3 commission setups');
+        return;
+      }
+
+      // Validation: No duplicate target types
+      const newCommission = sampleCommissionSetups.find(c => c.id === commissionId);
+      const existingTypes = selectedCommissionIds
+        .map(id => sampleCommissionSetups.find(c => c.id === id)?.targetType)
+        .filter(Boolean);
+
+      if (newCommission && existingTypes.includes(newCommission.targetType)) {
+        alert(`Cannot select duplicate commission target type: ${newCommission.targetType}`);
+        return;
+      }
+
+      // Add to selection
+      setSelectedCommissionIds(prev => [...prev, commissionId]);
+    }
   };
 
   // Handler to save Commission Setup
@@ -261,19 +386,49 @@ export default function LevelManagement() {
 
     setLevels(prev => prev.map(level =>
       level.id === selectedLevelForCommission.id
-        ? { ...level, commissionSetupId: selectedCommissionId || undefined }
+        ? { ...level, commissionSetupIds: selectedCommissionIds }
         : level
     ));
 
-    console.log(`Saved commission setup for ${selectedLevelForCommission.levelName}:`, selectedCommissionId);
+    console.log(`Saved commission setups for ${selectedLevelForCommission.levelName}:`, selectedCommissionIds);
     setShowCommissionSetupModal(false);
   };
 
   // Handler to open Referrer Setup Modal
   const handleReferrerSetup = (level: Level) => {
     setSelectedLevelForReferrer(level);
-    setSelectedReferrerId(level.referrerSetupId || null);
+    setSelectedReferrerIds(level.referrerSetupIds || []);
     setShowReferrerSetupModal(true);
+  };
+
+  // Handler to toggle referrer selection
+  const handleToggleReferrer = (referrerId: string) => {
+    const isCurrentlySelected = selectedReferrerIds.includes(referrerId);
+
+    if (isCurrentlySelected) {
+      // Remove from selection
+      setSelectedReferrerIds(prev => prev.filter(id => id !== referrerId));
+    } else {
+      // Validation: Max 2 referrer setups
+      if (selectedReferrerIds.length >= 2) {
+        alert('Cannot select more than 2 referrer setups');
+        return;
+      }
+
+      // Validation: No duplicate target types
+      const newReferrer = initialReferrerSetups.find(r => r.id === referrerId);
+      const existingTypes = selectedReferrerIds
+        .map(id => initialReferrerSetups.find(r => r.id === id)?.targetType)
+        .filter(Boolean);
+
+      if (newReferrer && existingTypes.includes(newReferrer.targetType)) {
+        alert(`Cannot select duplicate referrer target type: ${newReferrer.targetType}`);
+        return;
+      }
+
+      // Add to selection
+      setSelectedReferrerIds(prev => [...prev, referrerId]);
+    }
   };
 
   // Handler to save Referrer Setup
@@ -282,68 +437,56 @@ export default function LevelManagement() {
 
     setLevels(prev => prev.map(level =>
       level.id === selectedLevelForReferrer.id
-        ? { ...level, referrerSetupId: selectedReferrerId || undefined }
+        ? { ...level, referrerSetupIds: selectedReferrerIds }
         : level
     ));
 
-    console.log(`Saved referrer setup for ${selectedLevelForReferrer.levelName}:`, selectedReferrerId);
+    console.log(`Saved referrer setups for ${selectedLevelForReferrer.levelName}:`, selectedReferrerIds);
     setShowReferrerSetupModal(false);
   };
 
-  // Initialize rebate assignments when modal opens
-  useEffect(() => {
-    if (showRebateSetupModal && selectedLevelForRebate) {
-      setRebateAssignments(selectedLevelForRebate.providerRebateAssignments || []);
-      setRebateProviderSearch('');
-      setRebateCategoryFilter('all');
-      setRebateCategoryToApply('');
-    }
-  }, [showRebateSetupModal, selectedLevelForRebate]);
+  // Handler to toggle cashback selection
+  const handleToggleCashback = (cashbackId: number) => {
+    const isCurrentlySelected = selectedCashbackIds.includes(cashbackId);
 
-  // Initialize cashback assignments when modal opens
-  useEffect(() => {
-    if (showCashbackSetupModal && selectedLevelForCashback) {
-      setCashbackAssignments(selectedLevelForCashback.providerCashbackAssignments || []);
-      setCashbackProviderSearch('');
-      setCashbackCategoryFilter('all');
-      setCashbackCategoryToApply('');
-    }
-  }, [showCashbackSetupModal, selectedLevelForCashback]);
+    if (isCurrentlySelected) {
+      // Remove from selection
+      setSelectedCashbackIds(prev => prev.filter(id => id !== cashbackId));
+      setNotification(null);
+    } else {
+      // Get the new cashback being added
+      const newCashback = cashBackSetupsData.find(c => c.id === cashbackId);
+      if (!newCashback) return;
 
-  // Get assigned rebates for a provider
-  const getProviderRebates = (providerId: number): number[] => {
-    const assignment = rebateAssignments.find(a => a.providerId === providerId);
-    return assignment?.rebateSetupIds || [];
-  };
+      // Get existing selected cashbacks with their types
+      const existingCashbacks = selectedCashbackIds
+        .map(id => cashBackSetupsData.find(c => c.id === id))
+        .filter(Boolean);
 
-  // Add rebate to provider
-  const handleAddRebate = (providerId: number, rebateId: number) => {
-    setRebateAssignments(prev => {
-      const existing = prev.find(a => a.providerId === providerId);
-      if (existing) {
-        if (!existing.rebateSetupIds.includes(rebateId)) {
-          return prev.map(a =>
-            a.providerId === providerId
-              ? { ...a, rebateSetupIds: [...a.rebateSetupIds, rebateId] }
-              : a
-          );
-        }
-        return prev;
-      } else {
-        return [...prev, { providerId, rebateSetupIds: [rebateId] }];
+      // Check if this type is already selected
+      const duplicateType = existingCashbacks.find(c => c.cashbackType === newCashback.cashbackType);
+
+      if (duplicateType) {
+        setNotification({
+          type: 'error',
+          message: `Cannot select duplicate cashback types! You already selected "${duplicateType.name}" with type "${duplicateType.cashbackType}". Only ONE setup per cashback type is allowed.`
+        });
+        return;
       }
-    });
-  };
 
-  // Remove rebate from provider
-  const handleRemoveRebate = (providerId: number, rebateId: number) => {
-    setRebateAssignments(prev =>
-      prev.map(a =>
-        a.providerId === providerId
-          ? { ...a, rebateSetupIds: a.rebateSetupIds.filter(id => id !== rebateId) }
-          : a
-      ).filter(a => a.rebateSetupIds.length > 0)
-    );
+      // Cashback has 3 types, so limit to 3 selections total (one from each type)
+      if (selectedCashbackIds.length >= 3) {
+        setNotification({
+          type: 'warning',
+          message: `Maximum reached! You can only select up to 3 cashback setups (one from each cashback type). Deselect a setup before adding another.`
+        });
+        return;
+      }
+
+      // Add to selection
+      setSelectedCashbackIds(prev => [...prev, cashbackId]);
+      setNotification(null);
+    }
   };
 
   // Save rebate setup
@@ -352,48 +495,12 @@ export default function LevelManagement() {
 
     setLevels(prev => prev.map(level =>
       level.id === selectedLevelForRebate.id
-        ? { ...level, providerRebateAssignments: rebateAssignments }
+        ? { ...level, rebateSetupIds: selectedRebateIds }
         : level
     ));
 
-    console.log(`Saved rebate assignments for ${selectedLevelForRebate.levelName}:`, rebateAssignments);
+    console.log(`Saved rebate setups for ${selectedLevelForRebate.levelName}:`, selectedRebateIds);
     setShowRebateSetupModal(false);
-  };
-
-  // Get assigned cashbacks for a provider
-  const getProviderCashbacks = (providerId: number): number[] => {
-    const assignment = cashbackAssignments.find(a => a.providerId === providerId);
-    return assignment?.cashbackSetupIds || [];
-  };
-
-  // Add cashback to provider
-  const handleAddCashback = (providerId: number, cashbackId: number) => {
-    setCashbackAssignments(prev => {
-      const existing = prev.find(a => a.providerId === providerId);
-      if (existing) {
-        if (!existing.cashbackSetupIds.includes(cashbackId)) {
-          return prev.map(a =>
-            a.providerId === providerId
-              ? { ...a, cashbackSetupIds: [...a.cashbackSetupIds, cashbackId] }
-              : a
-          );
-        }
-        return prev;
-      } else {
-        return [...prev, { providerId, cashbackSetupIds: [cashbackId] }];
-      }
-    });
-  };
-
-  // Remove cashback from provider
-  const handleRemoveCashback = (providerId: number, cashbackId: number) => {
-    setCashbackAssignments(prev =>
-      prev.map(a =>
-        a.providerId === providerId
-          ? { ...a, cashbackSetupIds: a.cashbackSetupIds.filter(id => id !== cashbackId) }
-          : a
-      ).filter(a => a.cashbackSetupIds.length > 0)
-    );
   };
 
   // Save cashback setup
@@ -402,70 +509,12 @@ export default function LevelManagement() {
 
     setLevels(prev => prev.map(level =>
       level.id === selectedLevelForCashback.id
-        ? { ...level, providerCashbackAssignments: cashbackAssignments }
+        ? { ...level, cashbackSetupIds: selectedCashbackIds }
         : level
     ));
 
-    console.log(`Saved cashback assignments for ${selectedLevelForCashback.levelName}:`, cashbackAssignments);
+    console.log(`Saved cashback setups for ${selectedLevelForCashback.levelName}:`, selectedCashbackIds);
     setShowCashbackSetupModal(false);
-  };
-
-  // Apply rebate to all providers
-  const handleApplyRebateToAll = () => {
-    if (!rebateCategoryToApply || !selectedLevelForRebate) return;
-
-    const allProviderIds = selectedLevelForRebate.providerBetLimits?.map(bl => bl.providerId) || [];
-
-    setRebateAssignments(prev => {
-      const newAssignments = [...prev];
-
-      allProviderIds.forEach(providerId => {
-        const existingIndex = newAssignments.findIndex(a => a.providerId === providerId);
-
-        if (existingIndex >= 0) {
-          // Provider exists, add rebate if not already assigned
-          if (!newAssignments[existingIndex].rebateSetupIds.includes(rebateCategoryToApply)) {
-            newAssignments[existingIndex].rebateSetupIds.push(rebateCategoryToApply);
-          }
-        } else {
-          // Provider doesn't exist, create new assignment
-          newAssignments.push({ providerId, rebateSetupIds: [rebateCategoryToApply] });
-        }
-      });
-
-      return newAssignments;
-    });
-
-    setRebateCategoryToApply('');
-  };
-
-  // Apply cashback to all providers
-  const handleApplyCashbackToAll = () => {
-    if (!cashbackCategoryToApply || !selectedLevelForCashback) return;
-
-    const allProviderIds = selectedLevelForCashback.providerBetLimits?.map(bl => bl.providerId) || [];
-
-    setCashbackAssignments(prev => {
-      const newAssignments = [...prev];
-
-      allProviderIds.forEach(providerId => {
-        const existingIndex = newAssignments.findIndex(a => a.providerId === providerId);
-
-        if (existingIndex >= 0) {
-          // Provider exists, add cashback if not already assigned
-          if (!newAssignments[existingIndex].cashbackSetupIds.includes(cashbackCategoryToApply)) {
-            newAssignments[existingIndex].cashbackSetupIds.push(cashbackCategoryToApply);
-          }
-        } else {
-          // Provider doesn't exist, create new assignment
-          newAssignments.push({ providerId, cashbackSetupIds: [cashbackCategoryToApply] });
-        }
-      });
-
-      return newAssignments;
-    });
-
-    setCashbackCategoryToApply('');
   };
 
   const handleToggleBank = (bankId: number) => {
@@ -1017,69 +1066,128 @@ export default function LevelManagement() {
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Image Upload (Optional, recommended 100px × 100px)</label>
-              <Input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="w-full h-9"
-              />
-              {imagePreview && (
-                <div className="mt-2">
-                  <img src={imagePreview} alt="Preview" className="w-[100px] h-[100px] object-cover rounded border" />
-                </div>
-              )}
-            </div>
           </div>
               )}
 
               {activeTab === 'languages' && (
           <div className="space-y-4 min-h-[500px]">
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Level Name (English) *</label>
+            {/* Language Tab Selection */}
+            <div className="flex gap-2 border-b pb-2">
+              <button
+                onClick={() => setLanguageTab('english')}
+                className={`px-6 py-2 rounded-t font-medium transition-colors ${
+                  languageTab === 'english'
+                    ? 'bg-[#3949ab] text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                English
+              </button>
+              <button
+                onClick={() => setLanguageTab('chinese')}
+                className={`px-6 py-2 rounded-t font-medium transition-colors ${
+                  languageTab === 'chinese'
+                    ? 'bg-[#3949ab] text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Chinese
+              </button>
+              <button
+                onClick={() => setLanguageTab('malay')}
+                className={`px-6 py-2 rounded-t font-medium transition-colors ${
+                  languageTab === 'malay'
+                    ? 'bg-[#3949ab] text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Malay
+              </button>
+            </div>
+
+            {/* Language Content */}
+            <div className="space-y-4 pt-2">
+              {/* Name Input */}
+              <div className="w-full">
+                <label className="block text-sm font-semibold mb-2 text-gray-700">
+                  Name ({languageTab.charAt(0).toUpperCase() + languageTab.slice(1)}) *
+                </label>
                 <Input
-                  value={formData.levelName}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    levelName: e.target.value
-                  }))}
-                  className="w-full h-9"
-                  placeholder="e.g., Platinum"
+                  type="text"
+                  value={languageTranslations[languageTab].name}
+                  onChange={(e) => {
+                    const newName = e.target.value;
+                    setLanguageTranslations(prev => ({
+                      ...prev,
+                      [languageTab]: { ...prev[languageTab], name: newName }
+                    }));
+
+                    // Sync English name with the main levelName field
+                    if (languageTab === 'english') {
+                      setFormData(prev => ({ ...prev, levelName: newName }));
+                    }
+                  }}
+                  placeholder="Enter level name"
+                  className="w-full h-10"
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Level Name (Chinese) *</label>
-                <Input
-                  value={formData.levelNameTranslations?.chinese || ''}
-                  onChange={(e) => setFormData(prev => ({
+              {/* Description Rich Text */}
+              <div className="w-full">
+                <label className="block text-sm font-semibold mb-2 text-gray-700">
+                  Description ({languageTab.charAt(0).toUpperCase() + languageTab.slice(1)})
+                </label>
+                <ReactQuill
+                  key={`description-${languageTab}`}
+                  value={languageTranslations[languageTab].description}
+                  onChange={(value) => setLanguageTranslations(prev => ({
                     ...prev,
-                    levelNameTranslations: {
-                      chinese: e.target.value,
-                      malay: prev.levelNameTranslations?.malay || ''
-                    }
+                    [languageTab]: { ...prev[languageTab], description: value }
                   }))}
-                  className="w-full h-9"
-                  placeholder="e.g., 白金"
+                  className="bg-white"
+                  theme="snow"
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Level Name (Malay) *</label>
-                <Input
-                  value={formData.levelNameTranslations?.malay || ''}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    levelNameTranslations: {
-                      chinese: prev.levelNameTranslations?.chinese || '',
-                      malay: e.target.value
-                    }
-                  }))}
-                  className="w-full h-9"
-                  placeholder="e.g., Platinum"
-                />
+              {/* Level Image Upload */}
+              <div className="w-full">
+                <label className="block text-sm font-semibold mb-2 text-gray-700">
+                  Level Image ({languageTab.charAt(0).toUpperCase() + languageTab.slice(1)})
+                </label>
+                <div className="mb-3">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleLanguageImageUpload(languageTab, e)}
+                    className="block w-full text-sm text-gray-500
+                      file:mr-4 file:py-2 file:px-4
+                      file:rounded file:border-0
+                      file:text-sm file:font-semibold
+                      file:bg-[#3949ab] file:text-white
+                      hover:file:bg-[#2c3785] cursor-pointer"
+                  />
+                </div>
+
+                {/* Image Preview */}
+                {languageTranslations[languageTab].image ? (
+                  <div className="relative group inline-block">
+                    <img
+                      src={languageTranslations[languageTab].image}
+                      alt={`Level ${languageTab}`}
+                      className="w-32 h-32 object-cover rounded-lg border-2 border-gray-200"
+                    />
+                    <button
+                      onClick={() => removeLanguageImage(languageTab)}
+                      className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center text-gray-500">
+                    No image uploaded
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -1331,69 +1439,128 @@ export default function LevelManagement() {
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Image Upload (Optional, recommended 100px × 100px)</label>
-              <Input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="w-full h-9"
-              />
-              {imagePreview && (
-                <div className="mt-2">
-                  <img src={imagePreview} alt="Preview" className="w-[100px] h-[100px] object-cover rounded border" />
-                </div>
-              )}
-            </div>
           </div>
               )}
 
               {activeTab === 'languages' && (
           <div className="space-y-4 min-h-[500px]">
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Level Name (English) *</label>
+            {/* Language Tab Selection */}
+            <div className="flex gap-2 border-b pb-2">
+              <button
+                onClick={() => setLanguageTab('english')}
+                className={`px-6 py-2 rounded-t font-medium transition-colors ${
+                  languageTab === 'english'
+                    ? 'bg-[#3949ab] text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                English
+              </button>
+              <button
+                onClick={() => setLanguageTab('chinese')}
+                className={`px-6 py-2 rounded-t font-medium transition-colors ${
+                  languageTab === 'chinese'
+                    ? 'bg-[#3949ab] text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Chinese
+              </button>
+              <button
+                onClick={() => setLanguageTab('malay')}
+                className={`px-6 py-2 rounded-t font-medium transition-colors ${
+                  languageTab === 'malay'
+                    ? 'bg-[#3949ab] text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Malay
+              </button>
+            </div>
+
+            {/* Language Content */}
+            <div className="space-y-4 pt-2">
+              {/* Name Input */}
+              <div className="w-full">
+                <label className="block text-sm font-semibold mb-2 text-gray-700">
+                  Name ({languageTab.charAt(0).toUpperCase() + languageTab.slice(1)}) *
+                </label>
                 <Input
-                  value={formData.levelName}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    levelName: e.target.value
-                  }))}
-                  className="w-full h-9"
-                  placeholder="e.g., Platinum"
+                  type="text"
+                  value={languageTranslations[languageTab].name}
+                  onChange={(e) => {
+                    const newName = e.target.value;
+                    setLanguageTranslations(prev => ({
+                      ...prev,
+                      [languageTab]: { ...prev[languageTab], name: newName }
+                    }));
+
+                    // Sync English name with the main levelName field
+                    if (languageTab === 'english') {
+                      setFormData(prev => ({ ...prev, levelName: newName }));
+                    }
+                  }}
+                  placeholder="Enter level name"
+                  className="w-full h-10"
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Level Name (Chinese) *</label>
-                <Input
-                  value={formData.levelNameTranslations?.chinese || ''}
-                  onChange={(e) => setFormData(prev => ({
+              {/* Description Rich Text */}
+              <div className="w-full">
+                <label className="block text-sm font-semibold mb-2 text-gray-700">
+                  Description ({languageTab.charAt(0).toUpperCase() + languageTab.slice(1)})
+                </label>
+                <ReactQuill
+                  key={`description-${languageTab}`}
+                  value={languageTranslations[languageTab].description}
+                  onChange={(value) => setLanguageTranslations(prev => ({
                     ...prev,
-                    levelNameTranslations: {
-                      chinese: e.target.value,
-                      malay: prev.levelNameTranslations?.malay || ''
-                    }
+                    [languageTab]: { ...prev[languageTab], description: value }
                   }))}
-                  className="w-full h-9"
-                  placeholder="e.g., 白金"
+                  className="bg-white"
+                  theme="snow"
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Level Name (Malay) *</label>
-                <Input
-                  value={formData.levelNameTranslations?.malay || ''}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    levelNameTranslations: {
-                      chinese: prev.levelNameTranslations?.chinese || '',
-                      malay: e.target.value
-                    }
-                  }))}
-                  className="w-full h-9"
-                  placeholder="e.g., Platinum"
-                />
+              {/* Level Image Upload */}
+              <div className="w-full">
+                <label className="block text-sm font-semibold mb-2 text-gray-700">
+                  Level Image ({languageTab.charAt(0).toUpperCase() + languageTab.slice(1)})
+                </label>
+                <div className="mb-3">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleLanguageImageUpload(languageTab, e)}
+                    className="block w-full text-sm text-gray-500
+                      file:mr-4 file:py-2 file:px-4
+                      file:rounded file:border-0
+                      file:text-sm file:font-semibold
+                      file:bg-[#3949ab] file:text-white
+                      hover:file:bg-[#2c3785] cursor-pointer"
+                  />
+                </div>
+
+                {/* Image Preview */}
+                {languageTranslations[languageTab].image ? (
+                  <div className="relative group inline-block">
+                    <img
+                      src={languageTranslations[languageTab].image}
+                      alt={`Level ${languageTab}`}
+                      className="w-32 h-32 object-cover rounded-lg border-2 border-gray-200"
+                    />
+                    <button
+                      onClick={() => removeLanguageImage(languageTab)}
+                      className="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center text-gray-500">
+                    No image uploaded
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -1750,7 +1917,7 @@ export default function LevelManagement() {
 
       {/* Rebate Setup Modal */}
       <Dialog open={showRebateSetupModal} onOpenChange={setShowRebateSetupModal}>
-        <DialogContent className="max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl w-full max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-[#3949ab] font-semibold text-lg">
               Rebate Setup - {selectedLevelForRebate?.levelName}
@@ -1759,164 +1926,131 @@ export default function LevelManagement() {
 
           <div className="space-y-4 pt-4">
             <p className="text-sm text-gray-700">
-              Assign rebate setups to providers with configured bet limits for <strong>{selectedLevelForRebate?.levelName}</strong> level.
+              Select rebate setup for <strong>{selectedLevelForRebate?.levelName}</strong> level.
+              Only 1 rebate type available - cannot select duplicate types.
             </p>
 
-            {/* Search and Filter */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Search Provider</label>
-                <Input
-                  placeholder="Search provider name..."
-                  value={rebateProviderSearch}
-                  onChange={(e) => setRebateProviderSearch(e.target.value)}
-                  className="w-full h-10"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Rebate Category</label>
-                <select
-                  value={rebateCategoryFilter}
-                  onChange={(e) => setRebateCategoryFilter(e.target.value === 'all' ? 'all' : parseInt(e.target.value))}
-                  className="w-full h-10 px-3 rounded-md border border-gray-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="all">All Rebates</option>
-                  {rebateSetupsData.map(rebate => (
-                    <option key={rebate.id} value={rebate.id}>{rebate.name}</option>
-                  ))}
-                </select>
-              </div>
+            {/* Counter */}
+            <div className="bg-cyan-50 border border-cyan-200 rounded p-3">
+              <p className="text-sm font-semibold text-gray-900">
+                {selectedRebateIds.length}/1 setup selected
+              </p>
             </div>
 
-            {/* Apply to All Providers */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <label className="block text-sm font-semibold text-gray-900 mb-2">Apply Rebate to All Providers</label>
-              <div className="flex gap-3">
-                <select
-                  value={rebateCategoryToApply}
-                  onChange={(e) => setRebateCategoryToApply(e.target.value === '' ? '' : parseInt(e.target.value))}
-                  className="flex-1 h-10 px-3 rounded-md border border-gray-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Select Rebate Category</option>
-                  {rebateSetupsData.map(rebate => (
-                    <option key={rebate.id} value={rebate.id}>{rebate.name}</option>
-                  ))}
-                </select>
-                <Button
-                  onClick={handleApplyRebateToAll}
-                  disabled={!rebateCategoryToApply}
-                  className="bg-[#2196f3] text-white hover:bg-[#1976d2] h-10 px-4 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  APPLY TO ALL
-                </Button>
+            {/* Notification */}
+            {notification && (
+              <div className={`p-4 rounded-lg border-l-4 ${
+                notification.type === 'error'
+                  ? 'bg-red-50 border-red-500'
+                  : notification.type === 'warning'
+                  ? 'bg-yellow-50 border-yellow-500'
+                  : 'bg-green-50 border-green-500'
+              }`}>
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    {notification.type === 'error' && (
+                      <X className="h-5 w-5 text-red-500" />
+                    )}
+                    {notification.type === 'warning' && (
+                      <span className="text-yellow-500 text-xl font-bold">⚠</span>
+                    )}
+                  </div>
+                  <div className="ml-3 flex-1">
+                    <p className={`text-sm font-medium ${
+                      notification.type === 'error'
+                        ? 'text-red-800'
+                        : notification.type === 'warning'
+                        ? 'text-yellow-800'
+                        : 'text-green-800'
+                    }`}>
+                      {notification.message}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setNotification(null)}
+                    className="ml-3 flex-shrink-0 hover:opacity-70"
+                  >
+                    <X className={`h-4 w-4 ${
+                      notification.type === 'error'
+                        ? 'text-red-500'
+                        : notification.type === 'warning'
+                        ? 'text-yellow-500'
+                        : 'text-green-500'
+                    }`} />
+                  </button>
+                </div>
               </div>
+            )}
+
+            {/* Filter Section */}
+            <div className="bg-gray-50 p-3 rounded-lg border">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Search Name</label>
+              <Input
+                placeholder="Search rebate name..."
+                value={rebateNameFilter}
+                onChange={(e) => setRebateNameFilter(e.target.value || '')}
+                className="w-full h-9"
+              />
             </div>
 
-            {selectedLevelForRebate?.providerBetLimits && selectedLevelForRebate.providerBetLimits.length > 0 ? (
-              <div className="border rounded-lg overflow-hidden">
-                <table className="w-full">
-                  <thead className="bg-gray-50 border-b">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase w-12">No.</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase w-1/4">Provider</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase w-24">Min Bet</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase w-24">Max Bet</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Rebate Category</th>
+            <div className="border rounded-lg overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b">
+                  <tr>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-900 uppercase w-16">SELECT</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Rebate Name</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Rebate Type</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Min/Max Limit</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {rebateSetupsData.filter((rebate) => {
+                    if (rebateNameFilter && !rebate.name.toLowerCase().includes(rebateNameFilter.toLowerCase())) {
+                      return false;
+                    }
+                    return true;
+                  }).map((rebate) => (
+                    <tr
+                      key={rebate.id}
+                      className={`hover:bg-gray-50 cursor-pointer ${
+                        selectedRebateIds.includes(rebate.id) ? 'bg-cyan-50' : ''
+                      }`}
+                      onClick={() => handleToggleRebate(rebate.id)}
+                    >
+                      <td className="px-4 py-3 text-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedRebateIds.includes(rebate.id)}
+                          onChange={() => handleToggleRebate(rebate.id)}
+                          className="w-4 h-4 text-[#00bcd4] border-gray-300 focus:ring-[#00bcd4] rounded"
+                        />
+                      </td>
+                      <td className="px-4 py-3 font-medium text-gray-900 text-sm">{rebate.name}</td>
+                      <td className="px-4 py-3 text-sm">
+                        <Badge className="bg-cyan-100 text-cyan-800 font-semibold text-xs">
+                          {rebate.rebateType}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-900">${rebate.minLimit} - ${rebate.maxLimit}</td>
                     </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {selectedLevelForRebate.providerBetLimits
-                      .filter((betLimit) => {
-                        const provider = providersData.find(p => p.id === betLimit.providerId);
-                        if (!provider) return false;
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-                        // Filter by provider name
-                        if (rebateProviderSearch && !provider.name.toLowerCase().includes(rebateProviderSearch.toLowerCase())) {
-                          return false;
-                        }
-
-                        // Filter by rebate category
-                        if (rebateCategoryFilter !== 'all') {
-                          const assignedRebateIds = getProviderRebates(provider.id);
-                          if (!assignedRebateIds.includes(rebateCategoryFilter)) {
-                            return false;
-                          }
-                        }
-
-                        return true;
-                      })
-                      .map((betLimit, index) => {
-                      const provider = providersData.find(p => p.id === betLimit.providerId);
-                      if (!provider) return null;
-
-                      const assignedRebateIds = getProviderRebates(provider.id);
-
-                      return (
-                        <tr key={provider.id} className="hover:bg-gray-50">
-                          <td className="px-4 py-3 text-center text-sm text-gray-900">{index + 1}.</td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-2">
-                              <Badge className="bg-[#3949ab] text-white font-semibold text-xs">
-                                {categoryLabels[provider.category]}
-                              </Badge>
-                              <span className="font-medium text-gray-900 text-sm">{provider.name}</span>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3 text-sm text-gray-900">${betLimit.minBet.toFixed(2)}</td>
-                          <td className="px-4 py-3 text-sm text-gray-900">${betLimit.maxBet.toFixed(2)}</td>
-                          <td className="px-4 py-3">
-                            <div className="space-y-2">
-                              {/* Render assigned rebates as badges with X button */}
-                              {assignedRebateIds.map(rebateId => {
-                                const rebate = rebateSetupsData.find(r => r.id === rebateId);
-                                if (!rebate) return null;
-                                return (
-                                  <div key={rebateId} className="flex items-center gap-2">
-                                    <Badge className="bg-blue-100 text-blue-800 font-medium text-xs">
-                                      {rebate.name}
-                                    </Badge>
-                                    <button
-                                      onClick={() => handleRemoveRebate(provider.id, rebateId)}
-                                      className="text-red-600 hover:text-red-800"
-                                    >
-                                      <X className="w-4 h-4" />
-                                    </button>
-                                  </div>
-                                );
-                              })}
-
-                              {/* Dropdown for new selection */}
-                              <select
-                                className="w-full px-3 py-1 border rounded text-sm bg-white"
-                                value=""
-                                onChange={(e) => {
-                                  if (e.target.value) {
-                                    handleAddRebate(provider.id, parseInt(e.target.value));
-                                    e.target.value = '';
-                                  }
-                                }}
-                              >
-                                <option value="">Please Select</option>
-                                {rebateSetupsData
-                                  .filter(r => !assignedRebateIds.includes(r.id))
-                                  .map(rebate => (
-                                    <option key={rebate.id} value={rebate.id}>
-                                      {rebate.name}
-                                    </option>
-                                  ))
-                                }
-                              </select>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                No providers with bet limits configured for this level.
+            {selectedRebateIds.length > 0 && (
+              <div className="mt-4 p-3 bg-cyan-50 border border-cyan-200 rounded">
+                <p className="text-sm font-semibold text-gray-900 mb-2">Selected Setups ({selectedRebateIds.length}):</p>
+                <div className="flex flex-wrap gap-2">
+                  {selectedRebateIds.map(id => {
+                    const rebate = rebateSetupsData.find(r => r.id === id);
+                    return rebate ? (
+                      <Badge key={id} className="bg-cyan-600 text-white font-medium text-xs">
+                        {rebate.name}
+                      </Badge>
+                    ) : null;
+                  })}
+                </div>
               </div>
             )}
 
@@ -1941,7 +2075,7 @@ export default function LevelManagement() {
 
       {/* CashBack Setup Modal */}
       <Dialog open={showCashbackSetupModal} onOpenChange={setShowCashbackSetupModal}>
-        <DialogContent className="max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl w-full max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-[#3949ab] font-semibold text-lg">
               CashBack Setup - {selectedLevelForCashback?.levelName}
@@ -1950,164 +2084,133 @@ export default function LevelManagement() {
 
           <div className="space-y-4 pt-4">
             <p className="text-sm text-gray-700">
-              Assign cashback setups to providers with configured bet limits for <strong>{selectedLevelForCashback?.levelName}</strong> level.
+              Select up to 3 cashback setups for <strong>{selectedLevelForCashback?.levelName}</strong> level.
+              Cannot select duplicate cashback types.
             </p>
 
-            {/* Search and Filter */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Search Provider</label>
-                <Input
-                  placeholder="Search provider name..."
-                  value={cashbackProviderSearch}
-                  onChange={(e) => setCashbackProviderSearch(e.target.value)}
-                  className="w-full h-10"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Filter by CashBack Category</label>
-                <select
-                  value={cashbackCategoryFilter}
-                  onChange={(e) => setCashbackCategoryFilter(e.target.value === 'all' ? 'all' : parseInt(e.target.value))}
-                  className="w-full h-10 px-3 rounded-md border border-gray-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="all">All CashBacks</option>
-                  {cashBackSetupsData.map(cashback => (
-                    <option key={cashback.id} value={cashback.id}>{cashback.name}</option>
-                  ))}
-                </select>
-              </div>
+            {/* Counter */}
+            <div className="bg-green-50 border border-green-200 rounded p-3">
+              <p className="text-sm font-semibold text-gray-900">
+                {selectedCashbackIds.length}/3 setups selected
+              </p>
             </div>
 
-            {/* Apply to All Providers */}
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <label className="block text-sm font-semibold text-gray-900 mb-2">Apply CashBack to All Providers</label>
-              <div className="flex gap-3">
-                <select
-                  value={cashbackCategoryToApply}
-                  onChange={(e) => setCashbackCategoryToApply(e.target.value === '' ? '' : parseInt(e.target.value))}
-                  className="flex-1 h-10 px-3 rounded-md border border-gray-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Select CashBack Category</option>
-                  {cashBackSetupsData.map(cashback => (
-                    <option key={cashback.id} value={cashback.id}>{cashback.name}</option>
-                  ))}
-                </select>
-                <Button
-                  onClick={handleApplyCashbackToAll}
-                  disabled={!cashbackCategoryToApply}
-                  className="bg-[#4caf50] text-white hover:bg-[#45a049] h-10 px-4 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  APPLY TO ALL
-                </Button>
+            {/* Notification */}
+            {notification && (
+              <div className={`p-4 rounded-lg border-l-4 ${
+                notification.type === 'error'
+                  ? 'bg-red-50 border-red-500'
+                  : notification.type === 'warning'
+                  ? 'bg-yellow-50 border-yellow-500'
+                  : 'bg-green-50 border-green-500'
+              }`}>
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    {notification.type === 'error' && (
+                      <X className="h-5 w-5 text-red-500" />
+                    )}
+                    {notification.type === 'warning' && (
+                      <span className="text-yellow-500 text-xl font-bold">⚠</span>
+                    )}
+                  </div>
+                  <div className="ml-3 flex-1">
+                    <p className={`text-sm font-medium ${
+                      notification.type === 'error'
+                        ? 'text-red-800'
+                        : notification.type === 'warning'
+                        ? 'text-yellow-800'
+                        : 'text-green-800'
+                    }`}>
+                      {notification.message}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setNotification(null)}
+                    className="ml-3 flex-shrink-0 hover:opacity-70"
+                  >
+                    <X className={`h-4 w-4 ${
+                      notification.type === 'error'
+                        ? 'text-red-500'
+                        : notification.type === 'warning'
+                        ? 'text-yellow-500'
+                        : 'text-green-500'
+                    }`} />
+                  </button>
+                </div>
               </div>
+            )}
+
+            {/* Filter Section */}
+            <div className="bg-gray-50 p-3 rounded-lg border">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Search Name</label>
+              <Input
+                placeholder="Search cashback name..."
+                value={cashbackNameFilter}
+                onChange={(e) => setCashbackNameFilter(e.target.value || '')}
+                className="w-full h-9"
+              />
             </div>
 
-            {selectedLevelForCashback?.providerBetLimits && selectedLevelForCashback.providerBetLimits.length > 0 ? (
-              <div className="border rounded-lg overflow-hidden">
-                <table className="w-full">
-                  <thead className="bg-gray-50 border-b">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase w-12">No.</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase w-1/4">Provider</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase w-24">Min Bet</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase w-24">Max Bet</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">CashBack Category</th>
+            <div className="border rounded-lg overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b">
+                  <tr>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-900 uppercase w-16">SELECT</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">CashBack Name</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">CashBack Type</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Max Limit</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {cashBackSetupsData.filter((cashback) => {
+                    if (cashbackNameFilter && !cashback.name.toLowerCase().includes(cashbackNameFilter.toLowerCase())) {
+                      return false;
+                    }
+                    return true;
+                  }).map((cashback) => (
+                    <tr
+                      key={cashback.id}
+                      className={`hover:bg-gray-50 cursor-pointer ${
+                        selectedCashbackIds.includes(cashback.id) ? 'bg-green-50' : ''
+                      }`}
+                      onClick={() => handleToggleCashback(cashback.id)}
+                    >
+                      <td className="px-4 py-3 text-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedCashbackIds.includes(cashback.id)}
+                          onChange={() => handleToggleCashback(cashback.id)}
+                          className="w-4 h-4 text-[#4caf50] border-gray-300 focus:ring-[#4caf50] rounded"
+                        />
+                      </td>
+                      <td className="px-4 py-3 font-medium text-gray-900 text-sm">{cashback.name}</td>
+                      <td className="px-4 py-3 text-sm">
+                        <Badge className="bg-green-100 text-green-800 font-semibold text-xs">
+                          {cashback.cashbackType}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-900 font-medium">
+                        {cashback.maxLimit ? `$${cashback.maxLimit.toLocaleString()}` : 'Unlimited'}
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {selectedLevelForCashback.providerBetLimits
-                      .filter((betLimit) => {
-                        const provider = providersData.find(p => p.id === betLimit.providerId);
-                        if (!provider) return false;
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-                        // Filter by provider name
-                        if (cashbackProviderSearch && !provider.name.toLowerCase().includes(cashbackProviderSearch.toLowerCase())) {
-                          return false;
-                        }
-
-                        // Filter by cashback category
-                        if (cashbackCategoryFilter !== 'all') {
-                          const assignedCashbackIds = getProviderCashbacks(provider.id);
-                          if (!assignedCashbackIds.includes(cashbackCategoryFilter)) {
-                            return false;
-                          }
-                        }
-
-                        return true;
-                      })
-                      .map((betLimit, index) => {
-                      const provider = providersData.find(p => p.id === betLimit.providerId);
-                      if (!provider) return null;
-
-                      const assignedCashbackIds = getProviderCashbacks(provider.id);
-
-                      return (
-                        <tr key={provider.id} className="hover:bg-gray-50">
-                          <td className="px-4 py-3 text-center text-sm text-gray-900">{index + 1}.</td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-2">
-                              <Badge className="bg-[#3949ab] text-white font-semibold text-xs">
-                                {categoryLabels[provider.category]}
-                              </Badge>
-                              <span className="font-medium text-gray-900 text-sm">{provider.name}</span>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3 text-sm text-gray-900">${betLimit.minBet.toFixed(2)}</td>
-                          <td className="px-4 py-3 text-sm text-gray-900">${betLimit.maxBet.toFixed(2)}</td>
-                          <td className="px-4 py-3">
-                            <div className="space-y-2">
-                              {/* Render assigned cashbacks as badges with X button */}
-                              {assignedCashbackIds.map(cashbackId => {
-                                const cashback = cashBackSetupsData.find(c => c.id === cashbackId);
-                                if (!cashback) return null;
-                                return (
-                                  <div key={cashbackId} className="flex items-center gap-2">
-                                    <Badge className="bg-green-100 text-green-800 font-medium text-xs">
-                                      {cashback.name}
-                                    </Badge>
-                                    <button
-                                      onClick={() => handleRemoveCashback(provider.id, cashbackId)}
-                                      className="text-red-600 hover:text-red-800"
-                                    >
-                                      <X className="w-4 h-4" />
-                                    </button>
-                                  </div>
-                                );
-                              })}
-
-                              {/* Dropdown for new selection */}
-                              <select
-                                className="w-full px-3 py-1 border rounded text-sm bg-white"
-                                value=""
-                                onChange={(e) => {
-                                  if (e.target.value) {
-                                    handleAddCashback(provider.id, parseInt(e.target.value));
-                                    e.target.value = '';
-                                  }
-                                }}
-                              >
-                                <option value="">Please Select</option>
-                                {cashBackSetupsData
-                                  .filter(c => !assignedCashbackIds.includes(c.id))
-                                  .map(cashback => (
-                                    <option key={cashback.id} value={cashback.id}>
-                                      {cashback.name}
-                                    </option>
-                                  ))
-                                }
-                              </select>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                No providers with bet limits configured for this level.
+            {selectedCashbackIds.length > 0 && (
+              <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded">
+                <p className="text-sm font-semibold text-gray-900 mb-2">Selected Setups ({selectedCashbackIds.length}):</p>
+                <div className="flex flex-wrap gap-2">
+                  {selectedCashbackIds.map(id => {
+                    const cashback = cashBackSetupsData.find(c => c.id === id);
+                    return cashback ? (
+                      <Badge key={id} className="bg-green-600 text-white font-medium text-xs">
+                        {cashback.name}
+                      </Badge>
+                    ) : null;
+                  })}
+                </div>
               </div>
             )}
 
@@ -2141,9 +2244,16 @@ export default function LevelManagement() {
 
           <div className="space-y-4 pt-4">
             <p className="text-sm text-gray-700">
-              Select a commission setup for <strong>{selectedLevelForCommission?.levelName}</strong> level.
-              Only one commission setup can be assigned per level.
+              Select up to 3 commission setups for <strong>{selectedLevelForCommission?.levelName}</strong> level.
+              Cannot select duplicate commission target types.
             </p>
+
+            {/* Counter */}
+            <div className="bg-blue-50 border border-blue-200 rounded p-3">
+              <p className="text-sm font-semibold text-gray-900">
+                {selectedCommissionIds.length}/3 setups selected
+              </p>
+            </div>
 
             {/* Filter Section */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-gray-50 p-3 rounded-lg border">
@@ -2152,7 +2262,7 @@ export default function LevelManagement() {
                 <Input
                   placeholder="Search commission name..."
                   value={commissionNameFilter}
-                  onChange={(e) => setCommissionNameFilter(e.target.value)}
+                  onChange={(e) => setCommissionNameFilter(e.target.value || '')}
                   className="w-full h-9"
                 />
               </div>
@@ -2195,17 +2305,16 @@ export default function LevelManagement() {
                     <tr
                       key={commission.id}
                       className={`hover:bg-gray-50 cursor-pointer ${
-                        selectedCommissionId === commission.id ? 'bg-blue-50' : ''
+                        selectedCommissionIds.includes(commission.id) ? 'bg-blue-50' : ''
                       }`}
-                      onClick={() => setSelectedCommissionId(commission.id)}
+                      onClick={() => handleToggleCommission(commission.id)}
                     >
                       <td className="px-4 py-3 text-center">
                         <input
-                          type="radio"
-                          name="commissionSetup"
-                          checked={selectedCommissionId === commission.id}
-                          onChange={() => setSelectedCommissionId(commission.id)}
-                          className="w-4 h-4 text-[#3949ab] border-gray-300 focus:ring-[#3949ab]"
+                          type="checkbox"
+                          checked={selectedCommissionIds.includes(commission.id)}
+                          onChange={() => handleToggleCommission(commission.id)}
+                          className="w-4 h-4 text-[#3949ab] border-gray-300 focus:ring-[#3949ab] rounded"
                         />
                       </td>
                       <td className="px-4 py-3 font-medium text-gray-900 text-sm">{commission.name}</td>
@@ -2230,13 +2339,19 @@ export default function LevelManagement() {
               </table>
             </div>
 
-            {selectedCommissionId && (
+            {selectedCommissionIds.length > 0 && (
               <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded">
-                <p className="text-sm text-gray-700">
-                  Selected: <span className="font-semibold">
-                    {sampleCommissionSetups.find(c => c.id === selectedCommissionId)?.name}
-                  </span>
-                </p>
+                <p className="text-sm font-semibold text-gray-900 mb-2">Selected Setups:</p>
+                <div className="flex flex-wrap gap-2">
+                  {selectedCommissionIds.map(id => {
+                    const commission = sampleCommissionSetups.find(c => c.id === id);
+                    return commission ? (
+                      <Badge key={id} className="bg-blue-600 text-white font-medium text-xs">
+                        {commission.name}
+                      </Badge>
+                    ) : null;
+                  })}
+                </div>
               </div>
             )}
 
@@ -2270,9 +2385,16 @@ export default function LevelManagement() {
 
           <div className="space-y-4 pt-4">
             <p className="text-sm text-gray-700">
-              Select a referrer setup for <strong>{selectedLevelForReferrer?.levelName}</strong> level.
-              Only one referrer setup can be assigned per level.
+              Select up to 2 referrer setups for <strong>{selectedLevelForReferrer?.levelName}</strong> level.
+              Cannot select duplicate referrer target types.
             </p>
+
+            {/* Counter */}
+            <div className="bg-purple-50 border border-purple-200 rounded p-3">
+              <p className="text-sm font-semibold text-gray-900">
+                {selectedReferrerIds.length}/2 setups selected
+              </p>
+            </div>
 
             {/* Filter Section */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-gray-50 p-3 rounded-lg border">
@@ -2281,7 +2403,7 @@ export default function LevelManagement() {
                 <Input
                   placeholder="Search referrer name..."
                   value={referrerNameFilter}
-                  onChange={(e) => setReferrerNameFilter(e.target.value)}
+                  onChange={(e) => setReferrerNameFilter(e.target.value || '')}
                   className="w-full h-9"
                 />
               </div>
@@ -2323,17 +2445,16 @@ export default function LevelManagement() {
                     <tr
                       key={referrer.id}
                       className={`hover:bg-gray-50 cursor-pointer ${
-                        selectedReferrerId === referrer.id ? 'bg-blue-50' : ''
+                        selectedReferrerIds.includes(referrer.id) ? 'bg-purple-50' : ''
                       }`}
-                      onClick={() => setSelectedReferrerId(referrer.id)}
+                      onClick={() => handleToggleReferrer(referrer.id)}
                     >
                       <td className="px-4 py-3 text-center">
                         <input
-                          type="radio"
-                          name="referrerSetup"
-                          checked={selectedReferrerId === referrer.id}
-                          onChange={() => setSelectedReferrerId(referrer.id)}
-                          className="w-4 h-4 text-[#3949ab] border-gray-300 focus:ring-[#3949ab]"
+                          type="checkbox"
+                          checked={selectedReferrerIds.includes(referrer.id)}
+                          onChange={() => handleToggleReferrer(referrer.id)}
+                          className="w-4 h-4 text-[#9c27b0] border-gray-300 focus:ring-[#9c27b0] rounded"
                         />
                       </td>
                       <td className="px-4 py-3 font-medium text-gray-900 text-sm">{referrer.name}</td>
@@ -2360,13 +2481,19 @@ export default function LevelManagement() {
               </table>
             </div>
 
-            {selectedReferrerId && (
-              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded">
-                <p className="text-sm text-gray-700">
-                  Selected: <span className="font-semibold">
-                    {initialReferrerSetups.find(r => r.id === selectedReferrerId)?.name}
-                  </span>
-                </p>
+            {selectedReferrerIds.length > 0 && (
+              <div className="mt-4 p-3 bg-purple-50 border border-purple-200 rounded">
+                <p className="text-sm font-semibold text-gray-900 mb-2">Selected Setups:</p>
+                <div className="flex flex-wrap gap-2">
+                  {selectedReferrerIds.map(id => {
+                    const referrer = initialReferrerSetups.find(r => r.id === id);
+                    return referrer ? (
+                      <Badge key={id} className="bg-purple-600 text-white font-medium text-xs">
+                        {referrer.name}
+                      </Badge>
+                    ) : null;
+                  })}
+                </div>
               </div>
             )}
 

@@ -35,13 +35,22 @@ export interface Level {
   resetFrequencyType: 'Every Month' | 'Every Week';
   resetFrequencyValue: string; // If Month: "1"-"29", If Week: "Monday"-"Sunday"
   isDefault: boolean;
-  image?: string; // File path, optional (100px x 100px)
+  image?: string; // File path, optional (100px x 100px) - deprecated, use translations
+  translations?: {
+    english: { name: string; description: string; image: string };
+    chinese: { name: string; description: string; image: string };
+    malay: { name: string; description: string; image: string };
+  };
   createdDate: string;
   providerBetLimits?: ProviderBetLimit[]; // Bet limits for providers
   providerRebateAssignments?: ProviderRebateAssignment[]; // Rebate assignments
   providerCashbackAssignments?: ProviderCashbackAssignment[]; // Cashback assignments
   commissionSetupId?: string; // Links to CommissionSetup.id
   referrerSetupId?: string;   // Links to ReferrerSetup.id
+  rebateSetupIds?: number[]; // Multiple rebate setup IDs
+  cashbackSetupIds?: number[]; // Multiple cashback setup IDs
+  commissionSetupIds?: string[]; // Multiple commission setup IDs
+  referrerSetupIds?: string[]; // Multiple referrer setup IDs
 }
 
 export const initialLevels: Level[] = [
@@ -66,6 +75,23 @@ export const initialLevels: Level[] = [
     resetFrequencyType: 'Every Week',
     resetFrequencyValue: 'Monday',
     isDefault: true,
+    translations: {
+      english: {
+        name: 'Bronze Level',
+        description: 'Entry level for new players with basic benefits and deposit requirements.',
+        image: ''
+      },
+      chinese: {
+        name: '青铜等级',
+        description: '新玩家的入门级别，具有基本的福利和存款要求。',
+        image: ''
+      },
+      malay: {
+        name: 'Tahap Gangsa',
+        description: 'Tahap kemasukan untuk pemain baru dengan faedah asas dan keperluan deposit.',
+        image: ''
+      }
+    },
     createdDate: '2023-08-15',
     providerBetLimits: [
       { providerId: 6, minBet: 1, maxBet: 500 }, // Pragmatic Play
@@ -104,6 +130,23 @@ export const initialLevels: Level[] = [
     resetFrequencyType: 'Every Month',
     resetFrequencyValue: '1',
     isDefault: true,
+    translations: {
+      english: {
+        name: 'Silver Level',
+        description: 'Intermediate level with higher limits and enhanced benefits for regular players.',
+        image: ''
+      },
+      chinese: {
+        name: '白银等级',
+        description: '中级级别，为常规玩家提供更高的限额和增强的福利。',
+        image: ''
+      },
+      malay: {
+        name: 'Tahap Perak',
+        description: 'Tahap pertengahan dengan had yang lebih tinggi dan faedah yang dipertingkatkan untuk pemain tetap.',
+        image: ''
+      }
+    },
     createdDate: '2023-08-15',
     providerBetLimits: [
       { providerId: 7, minBet: 2, maxBet: 1500 }, // Play'n GO
@@ -143,6 +186,23 @@ export const initialLevels: Level[] = [
     resetFrequencyType: 'Every Week',
     resetFrequencyValue: 'Friday',
     isDefault: true,
+    translations: {
+      english: {
+        name: 'Gold Level',
+        description: 'Premium level with maximum privileges, highest limits, and exclusive VIP benefits.',
+        image: ''
+      },
+      chinese: {
+        name: '黄金等级',
+        description: '高级级别，具有最高特权、最高限额和专属VIP福利。',
+        image: ''
+      },
+      malay: {
+        name: 'Tahap Emas',
+        description: 'Tahap premium dengan keistimewaan maksimum, had tertinggi, dan faedah VIP eksklusif.',
+        image: ''
+      }
+    },
     createdDate: '2023-08-15',
     providerBetLimits: [
       { providerId: 8, minBet: 5, maxBet: 5000 }, // NetEnt

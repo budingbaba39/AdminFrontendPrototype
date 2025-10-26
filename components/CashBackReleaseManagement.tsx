@@ -17,13 +17,11 @@ const getPendingCashbackRecords = () => {
   );
 };
 
-const cashbackTypeOptions = ['all', 'By Net Lose Only', 'By Net Deposit', 'By Total WinLose Only'];
-
 export default function CashBackReleaseManagement() {
   const [searchFilters, setSearchFilters] = useState({
     dateFrom: '',
     dateTo: '',
-    cashbackType: 'all'
+    setupName: 'all'
   });
 
   const [hasGenerated, setHasGenerated] = useState(false);
@@ -82,15 +80,90 @@ export default function CashBackReleaseManagement() {
     return cashbackSetup.maxLimit ? `$${cashbackSetup.maxLimit.toFixed(2)}` : 'Unlimited';
   };
 
+  // Helper function to group transactions by date and target type for Period feature
+  const groupTransactionsByPeriod = (transactions: Transaction[]) => {
+    // Only group if BOTH dateFrom AND dateTo are selected
+    if (!searchFilters.dateFrom || !searchFilters.dateTo) {
+      return transactions; // No date range selected, return as-is
+    }
+
+    // Group by userID + date + cashbackType
+    const grouped = transactions.reduce((acc, transaction) => {
+      const date = transaction.submitTime.split(' ')[0]; // Extract date only (YYYY-MM-DD)
+      const targetType = transaction.cashbackType || 'Unknown';
+      const userID = transaction.userID;
+
+      // Create unique key: userID_date_cashbackType
+      const key = `${userID}_${date}_${targetType}`;
+
+      if (!acc[key]) {
+        acc[key] = [];
+      }
+      acc[key].push(transaction);
+      return acc;
+    }, {} as Record<string, Transaction[]>);
+
+    // Combine transactions in each group
+    const combinedTransactions = Object.values(grouped).map(group => {
+      // Sum all amounts including loss amount and cashback-related amounts
+      const totalAmount = group.reduce((sum, t) => sum + (t.amount || 0), 0);
+      const totalLossAmount = group.reduce((sum, t) => sum + (t.lossAmount || 0), 0);
+      const totalCashbackAmount = group.reduce((sum, t) => sum + (t.cashbackAmount || 0), 0);
+      const totalRebateAmount = group.reduce((sum, t) => sum + (t.rebateAmount || 0), 0);
+
+      // Find earliest and latest submit times
+      const times = group.map(t => new Date(t.submitTime));
+      const earliestTime = new Date(Math.min(...times.map(t => t.getTime())));
+      const latestTime = new Date(Math.max(...times.map(t => t.getTime())));
+
+      // Use earliest transaction as base
+      const earliestTransaction = group.reduce((earliest, current) => {
+        return new Date(current.submitTime) < new Date(earliest.submitTime)
+          ? current
+          : earliest;
+      });
+
+      // Format submit time as date range if multiple transactions
+      const formatDateTime = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${year}-${month}-${day} ${hours}:${minutes}`;
+      };
+
+      const submitTimeDisplay = group.length > 1
+        ? `${formatDateTime(earliestTime)} - ${formatDateTime(latestTime)}`
+        : earliestTransaction.submitTime;
+
+      // Return combined transaction with SUMMED amounts
+      return {
+        ...earliestTransaction,
+        amount: totalAmount,
+        lossAmount: totalLossAmount,
+        cashbackAmount: totalCashbackAmount,
+        rebateAmount: totalRebateAmount,
+        id: `${earliestTransaction.id}_combined`, // Mark as combined
+        submitTime: submitTimeDisplay,
+        remark: '', // Leave remark blank for combined records
+        // Store original transaction IDs for batch operations
+        originalIds: group.map(t => t.id)
+      };
+    });
+
+    return combinedTransactions;
+  };
+
   // Filter transactions based on search filters
-  const filteredTransactions = transactions.filter(transaction => {
+  const baseFilteredTransactions = transactions.filter(transaction => {
     // Only show PENDING transactions
     if (transaction.status !== 'PENDING') return false;
 
     // Date filters (by submitTime)
     if (searchFilters.dateFrom && new Date(transaction.submitTime) < new Date(searchFilters.dateFrom)) return false;
     if (searchFilters.dateTo && new Date(transaction.submitTime) > new Date(searchFilters.dateTo + ' 23:59:59')) return false;
-    if (searchFilters.cashbackType && searchFilters.cashbackType !== 'all' && transaction.cashbackType !== searchFilters.cashbackType) return false;
+    if (searchFilters.setupName && searchFilters.setupName !== 'all' && transaction.cashbackName !== searchFilters.setupName) return false;
 
     return true;
   })
@@ -99,6 +172,9 @@ export default function CashBackReleaseManagement() {
     const dateB = b.submitTime;
     return new Date(dateB).getTime() - new Date(dateA).getTime();
   });
+
+  // Apply period grouping AFTER initial filtering
+  const filteredTransactions = groupTransactionsByPeriod(baseFilteredTransactions);
 
   const totalAmount = filteredTransactions.reduce((sum, transaction) => {
     const cashbackSetup = getCashbackSetup(transaction.cashbackName || '');
@@ -116,7 +192,7 @@ export default function CashBackReleaseManagement() {
     setSearchFilters({
       dateFrom: '',
       dateTo: '',
-      cashbackType: 'all'
+      setupName: 'all'
     });
     setHasGenerated(false);
     setSelectedRows(new Set());
@@ -225,8 +301,14 @@ export default function CashBackReleaseManagement() {
 
     const remark = remarkInputs[transaction.id] || '';
 
+    // Check if this is a combined transaction
+    const isCombined = transaction.id.includes('_combined');
+    const idsToUpdate = isCombined && (transaction as any).originalIds
+      ? (transaction as any).originalIds
+      : [transaction.id];
+
     setTransactions(prev => prev.map(t =>
-      t.id === transaction.id
+      idsToUpdate.includes(t.id)
         ? {
             ...t,
             status: 'COMPLETED' as const,
@@ -255,8 +337,14 @@ export default function CashBackReleaseManagement() {
     const currentTime = new Date().toISOString().replace('T', ' ').substring(0, 19);
     const remark = remarkInputs[transaction.id] || 'Cancelled by admin';
 
+    // Check if this is a combined transaction
+    const isCombined = transaction.id.includes('_combined');
+    const idsToUpdate = isCombined && (transaction as any).originalIds
+      ? (transaction as any).originalIds
+      : [transaction.id];
+
     setTransactions(prev => prev.map(t =>
-      t.id === transaction.id
+      idsToUpdate.includes(t.id)
         ? {
             ...t,
             status: 'REJECTED' as const,
@@ -338,14 +426,15 @@ export default function CashBackReleaseManagement() {
             className="h-9"
           />
 
-          <Select value={searchFilters.cashbackType} onValueChange={(value) => handleInputChange('cashbackType', value)}>
+          <Select value={searchFilters.setupName} onValueChange={(value) => handleInputChange('setupName', value)}>
             <SelectTrigger className="h-9">
-              <SelectValue placeholder="CashBack Type" />
+              <SelectValue placeholder="Setup Name" />
             </SelectTrigger>
             <SelectContent>
-              {cashbackTypeOptions.map(type => (
-                <SelectItem key={type} value={type}>
-                  {type === 'all' ? 'All Types' : type}
+              <SelectItem value="all">All Setups</SelectItem>
+              {cashBackSetupsData.map(setup => (
+                <SelectItem key={setup.id} value={setup.name}>
+                  {setup.name}
                 </SelectItem>
               ))}
             </SelectContent>
