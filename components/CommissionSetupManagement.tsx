@@ -615,19 +615,6 @@ export default function CommissionSetupManagement() {
                       </div>
 
                       <div className="w-full">
-                        <label className="block text-sm font-semibold mb-2 text-gray-700">Max Payout Per Downline</label>
-                        <Input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={formData.maxPayoutPerDownline}
-                          onChange={(e) => handleInputChange('maxPayoutPerDownline', parseFloat(e.target.value) || 0)}
-                          placeholder="Enter amount"
-                          className="w-full h-10"
-                        />
-                      </div>
-
-                      <div className="w-full">
                         <label className="block text-sm font-semibold mb-2 text-gray-700">Max Payout Amount</label>
                         <Input
                           type="number"
@@ -711,6 +698,7 @@ export default function CommissionSetupManagement() {
                             <th className="px-4 py-2 text-left text-xs font-semibold text-gray-900 border-b">
                               {formData.commissionType === 'Percentage' ? 'Commission Percentage (%)' : 'Commission Amount'}
                             </th>
+                            <th className="px-4 py-2 text-left text-xs font-semibold text-gray-900 border-b">Max Payout Per Downline</th>
                             <th className="px-4 py-2 text-center text-xs font-semibold text-gray-900 border-b">Action</th>
                           </tr>
                         </thead>
@@ -749,6 +737,16 @@ export default function CommissionSetupManagement() {
                                     className="h-8"
                                   />
                                 )}
+                              </td>
+                              <td className="px-4 py-2">
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  value={formData.maxPayoutPerDownline || ''}
+                                  onChange={(e) => handleInputChange('maxPayoutPerDownline', parseFloat(e.target.value) || 0)}
+                                  placeholder="0.00"
+                                  className="h-8"
+                                />
                               </td>
                               <td className="px-4 py-2 text-center">
                                 <Button

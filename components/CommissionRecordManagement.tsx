@@ -30,7 +30,7 @@ const commissionOptions = [
 
 const commissionTargetTypeOptions = ['all', 'Deposit - Withdraw', 'Deposit - Withdraw - Rebate - Bonus', 'Valid Bet'];
 
-type CommissionStatus = 'ALL' | 'PENDING' | 'APPROVED' | 'COMPLETED' | 'REJECTED';
+type CommissionStatus = 'ALL' | 'PENDING' | 'COMPLETED' | 'REJECTED';
 
 export default function CommissionRecordManagement() {
   const [searchFilters, setSearchFilters] = useState({
@@ -85,78 +85,12 @@ export default function CommissionRecordManagement() {
     }
   };
 
-  // Helper function to group transactions by date and target type for Period feature
-  const groupTransactionsByPeriod = (transactions: Transaction[]) => {
-    // Only group if BOTH dateFrom AND dateTo are selected
-    if (!searchFilters.dateFrom || !searchFilters.dateTo) {
-      return transactions; // No date range selected, return as-is
-    }
-
-    // Group by userID + date + targetType
-    const grouped = transactions.reduce((acc, transaction) => {
-      const date = transaction.submitTime.split(' ')[0]; // Extract date only (YYYY-MM-DD)
-      const targetType = transaction.commissionTargetType || 'Unknown';
-      const userID = transaction.userID;
-
-      // Create unique key: userID_date_targetType
-      const key = `${userID}_${date}_${targetType}`;
-
-      if (!acc[key]) {
-        acc[key] = [];
-      }
-      acc[key].push(transaction);
-      return acc;
-    }, {} as Record<string, Transaction[]>);
-
-    // Combine transactions in each group
-    const combinedTransactions = Object.values(grouped).map(group => {
-      // Sum all amounts
-      const totalAmount = group.reduce((sum, t) => sum + t.amount, 0);
-
-      // Find earliest and latest submit times
-      const times = group.map(t => new Date(t.submitTime));
-      const earliestTime = new Date(Math.min(...times.map(t => t.getTime())));
-      const latestTime = new Date(Math.max(...times.map(t => t.getTime())));
-
-      // Use earliest transaction as base
-      const earliestTransaction = group.reduce((earliest, current) => {
-        return new Date(current.submitTime) < new Date(earliest.submitTime)
-          ? current
-          : earliest;
-      });
-
-      // Format submit time as date range if multiple transactions
-      const formatDateTime = (date: Date) => {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        const hours = String(date.getHours()).padStart(2, '0');
-        const minutes = String(date.getMinutes()).padStart(2, '0');
-        return `${year}-${month}-${day} ${hours}:${minutes}`;
-      };
-
-      const submitTimeDisplay = group.length > 1
-        ? `${formatDateTime(earliestTime)} - ${formatDateTime(latestTime)}`
-        : earliestTransaction.submitTime;
-
-      // Return combined transaction with earliest transaction's details
-      return {
-        ...earliestTransaction,
-        amount: totalAmount,
-        id: `${earliestTransaction.id}_combined`, // Mark as combined
-        submitTime: submitTimeDisplay,
-        remark: '', // Leave remark blank for combined records
-        // Store original transaction IDs for batch operations
-        originalIds: group.map(t => t.id)
-      };
-    });
-
-    return combinedTransactions;
-  };
-
   // Filter transactions based on search and status
-  const baseFilteredTransactions = hasSearched
+  const filteredTransactions = hasSearched
     ? transactions.filter(transaction => {
+        // Exclude APPROVED transactions (they are shown in ON GOING page)
+        if (transaction.status === 'APPROVED') return false;
+
         // Status filter
         if (activeStatus !== 'ALL' && transaction.status !== activeStatus) return false;
 
@@ -193,13 +127,13 @@ export default function CommissionRecordManagement() {
       })
     : [];
 
-  // Apply period grouping AFTER initial filtering
-  const filteredTransactions = groupTransactionsByPeriod(baseFilteredTransactions);
-
   // Calculate status counts from FILTERED transactions (synchronized with displayed records)
   // Need to recalculate from raw transactions with same filters but different status
   const calculateFilteredCountByStatus = (status: CommissionStatus) => {
     const filtered = transactions.filter(transaction => {
+      // Exclude APPROVED transactions (they are shown in ON GOING page)
+      if (transaction.status === 'APPROVED') return false;
+
       // Status filter
       if (status !== 'ALL' && transaction.status !== status) return false;
 
@@ -230,15 +164,12 @@ export default function CommissionRecordManagement() {
       return true;
     });
 
-    // Apply period grouping if dates are selected
-    const grouped = groupTransactionsByPeriod(filtered);
-    return grouped.length;
+    return filtered.length;
   };
 
   const statusCounts = {
     ALL: calculateFilteredCountByStatus('ALL'),
     PENDING: calculateFilteredCountByStatus('PENDING'),
-    APPROVED: calculateFilteredCountByStatus('APPROVED'),
     COMPLETED: calculateFilteredCountByStatus('COMPLETED'),
     REJECTED: calculateFilteredCountByStatus('REJECTED'),
   };
@@ -606,11 +537,11 @@ export default function CommissionRecordManagement() {
               <div
                 className="absolute top-1 bottom-1 bg-[#3949ab] rounded-md transition-all duration-300 ease-in-out shadow-sm"
                 style={{
-                  width: `calc(${100 / 5}% - 0.25rem)`,
-                  left: `calc(${(['ALL', 'PENDING', 'APPROVED', 'COMPLETED', 'REJECTED'].indexOf(activeStatus) * 100) / 5}% + 0.125rem)`,
+                  width: `calc(${100 / 4}% - 0.25rem)`,
+                  left: `calc(${(['ALL', 'PENDING', 'COMPLETED', 'REJECTED'].indexOf(activeStatus) * 100) / 4}% + 0.125rem)`,
                 }}
               />
-              {(['ALL', 'PENDING', 'APPROVED', 'COMPLETED', 'REJECTED'] as CommissionStatus[]).map((status) => (
+              {(['ALL', 'PENDING', 'COMPLETED', 'REJECTED'] as CommissionStatus[]).map((status) => (
                 <button
                   key={status}
                   onClick={() => setActiveStatus(status)}

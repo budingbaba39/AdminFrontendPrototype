@@ -6,12 +6,12 @@ export interface ProviderBetLimit {
 
 export interface ProviderRebateAssignment {
   providerId: number;
-  rebateSetupIds: number[]; // Multiple rebates can be assigned
+  rebateSetupIds: string[]; // Multiple rebates can be assigned (REB001, REB002, etc.)
 }
 
 export interface ProviderCashbackAssignment {
   providerId: number;
-  cashbackSetupIds: number[]; // Multiple cashbacks can be assigned
+  cashbackSetupIds: string[]; // Multiple cashbacks can be assigned (CASH001, CASH002, etc.)
 }
 
 export interface Level {
@@ -47,10 +47,10 @@ export interface Level {
   providerCashbackAssignments?: ProviderCashbackAssignment[]; // Cashback assignments
   commissionSetupId?: string; // Links to CommissionSetup.id
   referrerSetupId?: string;   // Links to ReferrerSetup.id
-  rebateSetupIds?: number[]; // Multiple rebate setup IDs
-  cashbackSetupIds?: number[]; // Multiple cashback setup IDs
-  commissionSetupIds?: string[]; // Multiple commission setup IDs
-  referrerSetupIds?: string[]; // Multiple referrer setup IDs
+  rebateSetupIds?: string[]; // Multiple rebate setup IDs (REB001, REB002, etc.)
+  cashbackSetupIds?: string[]; // Multiple cashback setup IDs (CASH001, CASH002, etc.)
+  commissionSetupIds?: string[]; // Multiple commission setup IDs (COMM001, COMM002, etc.)
+  referrerSetupIds?: string[]; // Multiple referrer setup IDs (REF001, REF002, etc.)
 }
 
 export const initialLevels: Level[] = [
@@ -99,12 +99,12 @@ export const initialLevels: Level[] = [
       { providerId: 31, minBet: 2, maxBet: 300 } // Betradar
     ],
     providerRebateAssignments: [
-      { providerId: 6, rebateSetupIds: [1] }, 
-      { providerId: 16, rebateSetupIds: [1] } 
+      { providerId: 6, rebateSetupIds: ['REB001'] },
+      { providerId: 16, rebateSetupIds: ['REB001'] }
     ],
     providerCashbackAssignments: [
-      { providerId: 6, cashbackSetupIds: [1] },
-      { providerId: 31, cashbackSetupIds: [1] }
+      { providerId: 6, cashbackSetupIds: ['CASH001'] },
+      { providerId: 31, cashbackSetupIds: ['CASH001'] }
     ],
     commissionSetupId: 'COMM001', // Deposit-Withdraw Commission
     referrerSetupId: 'REF001' // Bronze Referral Program
@@ -154,13 +154,13 @@ export const initialLevels: Level[] = [
       { providerId: 32, minBet: 5, maxBet: 800 } // SBTech
     ],
     providerRebateAssignments: [
-      { providerId: 7, rebateSetupIds: [2] }, 
-      { providerId: 17, rebateSetupIds: [1] }, 
-      { providerId: 32, rebateSetupIds: [3] } 
+      { providerId: 7, rebateSetupIds: ['REB002'] },
+      { providerId: 17, rebateSetupIds: ['REB001'] },
+      { providerId: 32, rebateSetupIds: ['REB003'] }
     ],
     providerCashbackAssignments: [
-      { providerId: 7, cashbackSetupIds: [2] },
-      { providerId: 17, cashbackSetupIds: [2] }
+      { providerId: 7, cashbackSetupIds: ['CASH002'] },
+      { providerId: 17, cashbackSetupIds: ['CASH002'] }
     ],
     commissionSetupId: 'COMM002', // Full Activity Commission (Silver eligible for both COMM001 and COMM002)
     referrerSetupId: 'REF002' // Silver Registration Bonus
@@ -210,14 +210,14 @@ export const initialLevels: Level[] = [
       { providerId: 33, minBet: 10, maxBet: 3000 } // BetConstruct
     ],
     providerRebateAssignments: [
-      { providerId: 8, rebateSetupIds: [3] }, 
-      { providerId: 18, rebateSetupIds: [ 3] }, 
-      { providerId: 33, rebateSetupIds: [3] } 
+      { providerId: 8, rebateSetupIds: ['REB003'] },
+      { providerId: 18, rebateSetupIds: ['REB003'] },
+      { providerId: 33, rebateSetupIds: ['REB003'] }
     ],
     providerCashbackAssignments: [
-      { providerId: 8, cashbackSetupIds: [3] },
-      { providerId: 18, cashbackSetupIds: [3] },
-      { providerId: 33, cashbackSetupIds: [3] }
+      { providerId: 8, cashbackSetupIds: ['CASH003'] },
+      { providerId: 18, cashbackSetupIds: ['CASH003'] },
+      { providerId: 33, cashbackSetupIds: ['CASH003'] }
     ],
     commissionSetupId: 'COMM002', // Full Activity Commission (Gold eligible for COMM002)
     referrerSetupId: 'REF003' // Gold VIP Referral

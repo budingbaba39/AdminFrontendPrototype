@@ -80,21 +80,20 @@ export default function RebateReleaseManagement() {
     return rebateSetup.maxLimit ? `$${rebateSetup.maxLimit.toFixed(2)}` : 'Unlimited';
   };
 
-  // Helper function to group transactions by date and target type for Period feature
+  // Helper function to group transactions by user and target type for Period feature
   const groupTransactionsByPeriod = (transactions: Transaction[]) => {
     // Only group if BOTH dateFrom AND dateTo are selected
     if (!searchFilters.dateFrom || !searchFilters.dateTo) {
       return transactions; // No date range selected, return as-is
     }
 
-    // Group by userID + date + targetType
+    // Group by userID + targetType ONLY (remove date from grouping to allow multi-day combination)
     const grouped = transactions.reduce((acc, transaction) => {
-      const date = transaction.submitTime.split(' ')[0]; // Extract date only (YYYY-MM-DD)
       const targetType = transaction.rebateTargetType || 'Unknown';
       const userID = transaction.userID;
 
-      // Create unique key: userID_date_targetType
-      const key = `${userID}_${date}_${targetType}`;
+      // Create unique key: userID_targetType (NO DATE)
+      const key = `${userID}_${targetType}`;
 
       if (!acc[key]) {
         acc[key] = [];
@@ -103,15 +102,20 @@ export default function RebateReleaseManagement() {
       return acc;
     }, {} as Record<string, Transaction[]>);
 
-    // Combine transactions in each group
+    // Combine transactions in each group (across multiple days)
     const combinedTransactions = Object.values(grouped).map(group => {
-      // Sum all amounts
+      // Sum all amounts across all days
       const totalAmount = group.reduce((sum, t) => sum + (t.amount || 0), 0);
       const totalLossAmount = group.reduce((sum, t) => sum + (t.lossAmount || 0), 0);
-      const totalCashbackAmount = group.reduce((sum, t) => sum + (t.cashbackAmount || 0), 0);
       const totalRebateAmount = group.reduce((sum, t) => sum + (t.rebateAmount || 0), 0);
 
-      // Find earliest and latest submit times
+      // Find earliest and latest dates
+      const dates = group.map(t => t.submitTime.split(' ')[0]); // Extract dates only
+      const uniqueDates = [...new Set(dates)].sort(); // Get unique sorted dates
+      const earliestDate = uniqueDates[0];
+      const latestDate = uniqueDates[uniqueDates.length - 1];
+
+      // Find earliest and latest submit times for time display
       const times = group.map(t => new Date(t.submitTime));
       const earliestTime = new Date(Math.min(...times.map(t => t.getTime())));
       const latestTime = new Date(Math.max(...times.map(t => t.getTime())));
@@ -123,32 +127,44 @@ export default function RebateReleaseManagement() {
           : earliest;
       });
 
-      // Format submit time as date range if multiple transactions
+      // Format submit time display
       const formatDateTime = (date: Date) => {
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
         const hours = String(date.getHours()).padStart(2, '0');
         const minutes = String(date.getMinutes()).padStart(2, '0');
-        return `${year}-${month}-${day} ${hours}:${minutes}`;
+        const seconds = String(date.getSeconds()).padStart(2, '0');
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
       };
 
-      const submitTimeDisplay = group.length > 1
-        ? `${formatDateTime(earliestTime)} - ${formatDateTime(latestTime)}`
-        : earliestTransaction.submitTime;
+      // Display format based on whether it spans multiple days
+      let submitTimeDisplay;
+      if (group.length > 1 && earliestDate !== latestDate) {
+        // Multiple days: show date range with times
+        submitTimeDisplay = `${formatDateTime(earliestTime)} - ${formatDateTime(latestTime)}`;
+      } else if (group.length > 1 && earliestDate === latestDate) {
+        // Same day, multiple records: show time range
+        submitTimeDisplay = `${formatDateTime(earliestTime)} - ${formatDateTime(latestTime)}`;
+      } else {
+        // Single record: show as-is
+        submitTimeDisplay = earliestTransaction.submitTime;
+      }
 
       // Return combined transaction with earliest transaction's details
       return {
         ...earliestTransaction,
         amount: totalAmount,
         lossAmount: totalLossAmount,
-        cashbackAmount: totalCashbackAmount,
         rebateAmount: totalRebateAmount,
-        id: `${earliestTransaction.id}_combined`, // Mark as combined
+        id: `${earliestTransaction.id}_combined_${group.length}`, // Mark as combined with count
         submitTime: submitTimeDisplay,
         remark: '', // Leave remark blank for combined records
         // Store original transaction IDs for batch operations
-        originalIds: group.map(t => t.id)
+        originalIds: group.map(t => t.id),
+        // Store metadata for display
+        combinedCount: group.length,
+        dateRange: earliestDate !== latestDate ? `${earliestDate} to ${latestDate}` : earliestDate
       };
     });
 

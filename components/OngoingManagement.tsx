@@ -6,13 +6,16 @@ import { Badge } from './ui/badge';
 import { RefreshCw } from 'lucide-react';
 import { Transaction, allTransactions } from './transactionData';
 import { User, sampleUsers } from './UserData';
+import { initialPromotions } from './PromotionListData';
+import { providersData } from './ProviderData';
 import ProfileContent from './ProfileContent';
 
-export default function RebateOngoingManagement() {
+export default function OngoingManagement() {
   const [transactions, setTransactions] = useState<Transaction[]>(allTransactions);
   const [searchFilters, setSearchFilters] = useState({
     username: '',
-    rebateName: '',
+    type: 'ALL',
+    setupName: '',
     startTime: ''
   });
   const [hasSearched, setHasSearched] = useState(true);
@@ -27,37 +30,107 @@ export default function RebateOngoingManagement() {
     return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
-  // Get user credit
-  const getUserCredit = (username: string): number => {
-    const user = sampleUsers.find(u => u.id === username || u.name === username);
-    return user?.credit || 0;
+  // Get user by ID
+  const getUserById = (userId: string): User | undefined => {
+    return sampleUsers.find(u => u.id === userId);
   };
 
-  // Get target type badge color - Only Valid Bet for Rebate
-  const getTargetTypeBadgeColor = (targetType: string): string => {
-    return 'bg-green-100 text-green-800'; // Always Valid Bet
+  // Get setup name based on transaction type
+  const getSetupName = (tx: Transaction): string => {
+    if (tx.type === 'BONUS' && tx.promotionName) return tx.promotionName;
+    if (tx.type === 'COMMISSION' && tx.commissionName) return tx.commissionName;
+    if (tx.type === 'REBATE' && tx.rebateName) return tx.rebateName;
+    if (tx.type === 'CASHBACK' && tx.cashbackName) return tx.cashbackName;
+    return '-';
   };
 
-  // Filter transactions
+  // Get target type based on transaction type
+  const getTargetType = (tx: Transaction): string => {
+    if (tx.type === 'BONUS' && tx.promotionType) return tx.promotionType;
+    if (tx.type === 'COMMISSION' && tx.commissionTargetType) return tx.commissionTargetType;
+    if (tx.type === 'REBATE' && tx.rebateTargetType) return tx.rebateTargetType;
+    if (tx.type === 'CASHBACK' && tx.cashbackTargetType) return tx.cashbackTargetType;
+    return '-';
+  };
+
+  // Get transfer amount
+  const getTransferAmount = (tx: Transaction): string => {
+    if (tx.type === 'BONUS' && tx.transferAmount) return formatCurrency(tx.transferAmount);
+    if (tx.type === 'COMMISSION' && tx.depositAmount) return formatCurrency(tx.depositAmount);
+    return '-';
+  };
+
+  // Get reward amount
+  const getRewardAmount = (tx: Transaction): number => {
+    if (tx.type === 'BONUS') return tx.bonusAmount || tx.amount || 0;
+    if (tx.type === 'COMMISSION') return tx.commissionAmount || tx.amount || 0;
+    if (tx.type === 'REBATE') return tx.rebateAmount || tx.amount || 0;
+    if (tx.type === 'CASHBACK') return tx.cashbackAmount || tx.amount || 0;
+    return 0;
+  };
+
+  // Get target progress
+  const getTargetProgress = (tx: Transaction): { current: number; target: number; percentage: number } => {
+    let current = 0;
+    let target = 0;
+
+    if (tx.type === 'BONUS') {
+      current = tx.turnoverCurrent || 0;
+      target = tx.turnoverTarget || 0;
+    } else if (tx.type === 'COMMISSION') {
+      current = tx.commissionCurrent || 0;
+      target = tx.commissionTarget || 0;
+    } else if (tx.type === 'REBATE') {
+      current = tx.rebateCurrent || 0;
+      target = tx.rebateTarget || 0;
+    } else if (tx.type === 'CASHBACK') {
+      current = tx.cashbackCurrent || 0;
+      target = tx.cashbackTarget || 0;
+    }
+
+    const percentage = target > 0 ? (current / target * 100) : 0;
+    return { current, target, percentage };
+  };
+
+  // Get provider display
+  const getProviderDisplay = (tx: Transaction): string => {
+    if (tx.type === 'BONUS' && tx.promotionID) {
+      const promotion = initialPromotions.find(p => p.id === tx.promotionID);
+      if (promotion && promotion.providerIds && promotion.providerIds.length > 0) {
+        const provider = providersData.find(p => p.id === promotion.providerIds[0]);
+        return provider ? provider.name : '-';
+      }
+    }
+    return '-';
+  };
+
+  // Filter transactions - only show APPROVED transactions from BONUS, COMMISSION, REBATE, CASHBACK
   const filteredTransactions = hasSearched
     ? transactions.filter(tx => {
-        // Only show APPROVED REBATE transactions
-        if (tx.type !== 'REBATE' || tx.status !== 'APPROVED') return false;
+        // Only show APPROVED transactions of types: BONUS, COMMISSION, REBATE, CASHBACK
+        if (tx.status !== 'APPROVED') return false;
+        if (!['BONUS', 'COMMISSION', 'REBATE', 'CASHBACK'].includes(tx.type)) return false;
 
         // Username filter
         if (searchFilters.username) {
-          const user = sampleUsers.find(u => u.id === tx.userID);
-          const userName = user?.name || tx.userID;
-          const username = user?.username || tx.userID;
-          if (!userName.toLowerCase().includes(searchFilters.username.toLowerCase()) &&
-              !username.toLowerCase().includes(searchFilters.username.toLowerCase())) {
+          const user = getUserById(tx.userID);
+          const username = user?.username?.toLowerCase() || '';
+          const name = user?.name?.toLowerCase() || '';
+          const searchTerm = searchFilters.username.toLowerCase();
+          if (!username.includes(searchTerm) && !name.includes(searchTerm)) {
             return false;
           }
         }
 
-        // Rebate Name filter
-        if (searchFilters.rebateName && tx.rebateName) {
-          if (!tx.rebateName.toLowerCase().includes(searchFilters.rebateName.toLowerCase())) {
+        // Type filter
+        if (searchFilters.type !== 'ALL' && tx.type !== searchFilters.type) {
+          return false;
+        }
+
+        // Setup name filter
+        if (searchFilters.setupName) {
+          const setupName = getSetupName(tx).toLowerCase();
+          if (!setupName.includes(searchFilters.setupName.toLowerCase())) {
             return false;
           }
         }
@@ -79,14 +152,15 @@ export default function RebateOngoingManagement() {
   const handleReset = () => {
     setSearchFilters({
       username: '',
-      rebateName: '',
+      type: 'ALL',
+      setupName: '',
       startTime: ''
     });
     setHasSearched(true);
   };
 
   const handleUserNameClick = (tx: Transaction) => {
-    const user = sampleUsers.find(u => u.id === tx.userID || u.name === tx.name);
+    const user = getUserById(tx.userID);
     if (user) {
       setSelectedUser(user);
       setShowProfileModal(true);
@@ -100,13 +174,25 @@ export default function RebateOngoingManagement() {
   const handleUnlock = (tx: Transaction) => {
     const updatedTransactions = transactions.map(t => {
       if (t.id === tx.id) {
-        return {
+        const updated: Transaction = {
           ...t,
-          status: 'COMPLETED' as const,
+          status: 'COMPLETED',
           completeTime: new Date().toISOString().replace('T', ' ').substring(0, 19),
-          completeBy: 'CS001',
-          rebateCurrent: t.rebateTarget
+          completeBy: 'CS001'
         };
+
+        // Set current to target based on type
+        if (t.type === 'BONUS') {
+          updated.turnoverCurrent = t.turnoverTarget;
+        } else if (t.type === 'COMMISSION') {
+          updated.commissionCurrent = t.commissionTarget;
+        } else if (t.type === 'REBATE') {
+          updated.rebateCurrent = t.rebateTarget;
+        } else if (t.type === 'CASHBACK') {
+          updated.cashbackCurrent = t.cashbackTarget;
+        }
+
+        return updated;
       }
       return t;
     });
@@ -129,7 +215,7 @@ export default function RebateOngoingManagement() {
           status: 'REJECTED' as const,
           rejectTime: new Date().toISOString().replace('T', ' ').substring(0, 19),
           rejectBy: 'CS001',
-          remark: cancelRemark || 'Rebate cancelled'
+          remark: cancelRemark || 'Transaction cancelled'
         };
       }
       return t;
@@ -145,10 +231,10 @@ export default function RebateOngoingManagement() {
       {/* Filter Section */}
       <div className="bg-white rounded-lg shadow-sm border p-4">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">Rebate Ongoing</h2>
+          <h2 className="text-xl font-semibold text-gray-900">On Going Transactions</h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-3">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mb-3">
           <Input
             placeholder="Username"
             value={searchFilters.username}
@@ -156,10 +242,22 @@ export default function RebateOngoingManagement() {
             className="h-9"
           />
 
+          <select
+            value={searchFilters.type}
+            onChange={(e) => setSearchFilters(prev => ({ ...prev, type: e.target.value }))}
+            className="h-9 px-3 text-sm border border-gray-300 rounded-md"
+          >
+            <option value="ALL">All Types</option>
+            <option value="BONUS">BONUS</option>
+            <option value="COMMISSION">COMMISSION</option>
+            <option value="REBATE">REBATE</option>
+            <option value="CASHBACK">CASHBACK</option>
+          </select>
+
           <Input
-            placeholder="Rebate Name"
-            value={searchFilters.rebateName}
-            onChange={(e) => setSearchFilters(prev => ({ ...prev, rebateName: e.target.value }))}
+            placeholder="Setup Name"
+            value={searchFilters.setupName}
+            onChange={(e) => setSearchFilters(prev => ({ ...prev, setupName: e.target.value }))}
             className="h-9"
           />
 
@@ -191,73 +289,99 @@ export default function RebateOngoingManagement() {
         </div>
       </div>
 
-      {/* Rebate Ongoing List */}
+      {/* On Going Transactions List */}
       {hasSearched && (
         <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50 border-b">
                 <tr>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">No.</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Name</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Username</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Rebate Name</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Setup Name</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">User Credit</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Target Type</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Type</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Provider</th>
                   <th className="px-4 py-3 text-center text-xs font-semibold text-gray-900 uppercase">Status</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Start Time</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-900 uppercase">Rebate Amount</th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-900 uppercase">Transfer Amount</th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-900 uppercase">Reward Amount</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Target</th>
                   <th className="px-4 py-3 text-center text-xs font-semibold text-gray-900 uppercase">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 text-sm">
-                {filteredTransactions.map((tx) => {
-                  const progressPercentage = tx.rebateTarget ? (tx.rebateCurrent! / tx.rebateTarget * 100) : 0;
+                {filteredTransactions.map((tx, index) => {
+                  const user = getUserById(tx.userID);
+                  const progress = getTargetProgress(tx);
+                  const providerDisplay = getProviderDisplay(tx);
 
                   return (
                     <tr key={tx.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 text-gray-900">{index + 1}</td>
                       <td className="px-4 py-3">
                         <span
                           className="text-gray-900 font-medium cursor-pointer hover:text-blue-600 hover:underline"
                           onClick={() => handleUserNameClick(tx)}
                         >
-                          {sampleUsers.find(u => u.id === tx.userID)?.name || tx.userID}
+                          {user?.name || tx.userID}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-gray-900">
-                        {sampleUsers.find(u => u.id === tx.userID)?.username || tx.userID}
+                        {user?.username || tx.userID}
                       </td>
                       <td className="px-4 py-3 text-gray-900">
-                        {tx.rebateName || '-'}
+                        {getSetupName(tx)}
                       </td>
                       <td className="px-4 py-3 text-gray-900 font-medium">
-                        {formatCurrency(getUserCredit(tx.userID))}
+                        {formatCurrency(user?.credit || 0)}
+                      </td>
+                      <td className="px-4 py-3 text-gray-900">
+                        {getTargetType(tx)}
                       </td>
                       <td className="px-4 py-3">
-                        <Badge className={`text-xs font-semibold px-2 py-0.5 ${getTargetTypeBadgeColor(tx.rebateTargetType || '')}`}>
-                          {tx.rebateTargetType || '-'}
+                        <Badge
+                          className={`font-semibold ${
+                            tx.type === 'BONUS'
+                              ? 'bg-purple-100 text-purple-700'
+                              : tx.type === 'COMMISSION'
+                              ? 'bg-indigo-100 text-indigo-700'
+                              : tx.type === 'REBATE'
+                              ? 'bg-blue-100 text-blue-700'
+                              : 'bg-pink-100 text-pink-700'
+                          }`}
+                        >
+                          {tx.type}
                         </Badge>
+                      </td>
+                      <td className="px-4 py-3 text-gray-900">
+                        {providerDisplay}
                       </td>
                       <td className="px-4 py-3 text-center">
                         <Badge className="bg-cyan-100 text-cyan-700 font-semibold">
-                          APPROVED
+                          On Going
                         </Badge>
                       </td>
                       <td className="px-4 py-3 text-gray-900">
                         {tx.startTime || '-'}
                       </td>
+                      <td className="px-4 py-3 text-right text-gray-900 font-medium">
+                        {getTransferAmount(tx)}
+                      </td>
                       <td className="px-4 py-3 text-right text-green-600 font-semibold">
-                        {formatCurrency(tx.amount)}
+                        {formatCurrency(getRewardAmount(tx))}
                       </td>
                       <td className="px-4 py-3">
                         <div className="space-y-1">
                           <div className="text-gray-900 font-medium">
-                            {tx.rebateCurrent?.toFixed(0) || 0} / {tx.rebateTarget?.toFixed(0) || 0}
+                            {progress.current.toFixed(0)} / {progress.target.toFixed(0)}
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-2">
                             <div
                               className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                              style={{ width: `${Math.min(progressPercentage, 100)}%` }}
+                              style={{ width: `${Math.min(progress.percentage, 100)}%` }}
                             />
                           </div>
                         </div>
@@ -275,6 +399,13 @@ export default function RebateOngoingManagement() {
                           <Button
                             variant="outline"
                             size="sm"
+                            className="bg-gray-400 text-white hover:bg-gray-500 border-gray-400 h-7 px-3 text-xs"
+                          >
+                            VIEW
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
                             onClick={() => handleCancelClick(tx)}
                             className="bg-[#f44336] text-white hover:bg-[#d32f2f] border-[#f44336] h-7 px-3 text-xs"
                           >
@@ -287,8 +418,8 @@ export default function RebateOngoingManagement() {
                 })}
                 {filteredTransactions.length === 0 && (
                   <tr>
-                    <td colSpan={10} className="px-4 py-8 text-center text-gray-500">
-                      No approved rebates found
+                    <td colSpan={14} className="px-4 py-8 text-center text-gray-500">
+                      No ongoing transactions found
                     </td>
                   </tr>
                 )}
@@ -316,11 +447,11 @@ export default function RebateOngoingManagement() {
       <Dialog open={showCancelModal} onOpenChange={setShowCancelModal}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-[#f44336] font-semibold">CANCEL REBATE</DialogTitle>
+            <DialogTitle className="text-[#f44336] font-semibold">CANCEL TRANSACTION</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-3">
             <p className="text-sm text-gray-700">
-              Are you sure you want to cancel this rebate?
+              Are you sure you want to cancel this transaction?
             </p>
 
             <div>

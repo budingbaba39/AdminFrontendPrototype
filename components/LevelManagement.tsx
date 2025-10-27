@@ -39,8 +39,8 @@ export default function LevelManagement() {
   const [showCashbackSetupModal, setShowCashbackSetupModal] = useState(false);
   const [selectedLevelForRebate, setSelectedLevelForRebate] = useState<Level | null>(null);
   const [selectedLevelForCashback, setSelectedLevelForCashback] = useState<Level | null>(null);
-  const [selectedRebateIds, setSelectedRebateIds] = useState<number[]>([]);
-  const [selectedCashbackIds, setSelectedCashbackIds] = useState<number[]>([]);
+  const [selectedRebateIds, setSelectedRebateIds] = useState<string[]>([]);
+  const [selectedCashbackIds, setSelectedCashbackIds] = useState<string[]>([]);
   const [rebateNameFilter, setRebateNameFilter] = useState('');
   const [cashbackNameFilter, setCashbackNameFilter] = useState('');
   const [notification, setNotification] = useState<{type: 'error' | 'success' | 'warning', message: string} | null>(null);
@@ -308,7 +308,7 @@ export default function LevelManagement() {
   };
 
   // Handler to toggle rebate selection
-  const handleToggleRebate = (rebateId: number) => {
+  const handleToggleRebate = (rebateId: string) => {
     const isCurrentlySelected = selectedRebateIds.includes(rebateId);
 
     if (isCurrentlySelected) {
@@ -347,6 +347,7 @@ export default function LevelManagement() {
   const handleCommissionSetup = (level: Level) => {
     setSelectedLevelForCommission(level);
     setSelectedCommissionIds(level.commissionSetupIds || []);
+    setNotification(null);
     setShowCommissionSetupModal(true);
   };
 
@@ -357,26 +358,44 @@ export default function LevelManagement() {
     if (isCurrentlySelected) {
       // Remove from selection
       setSelectedCommissionIds(prev => prev.filter(id => id !== commissionId));
+      setNotification(null);
     } else {
-      // Validation: Max 3 commission setups
-      if (selectedCommissionIds.length >= 3) {
-        alert('Cannot select more than 3 commission setups');
-        return;
-      }
+      // Get the new commission being added
+      const newCommission = sampleCommissionSetups.find(c => c.id === commissionId);
+      if (!newCommission) return;
 
       // Validation: No duplicate target types
-      const newCommission = sampleCommissionSetups.find(c => c.id === commissionId);
       const existingTypes = selectedCommissionIds
         .map(id => sampleCommissionSetups.find(c => c.id === id)?.targetType)
         .filter(Boolean);
 
       if (newCommission && existingTypes.includes(newCommission.targetType)) {
-        alert(`Cannot select duplicate commission target type: ${newCommission.targetType}`);
+        const duplicateCommission = selectedCommissionIds
+          .map(id => sampleCommissionSetups.find(c => c.id === id))
+          .find(c => c?.targetType === newCommission.targetType);
+        setNotification({
+          type: 'error',
+          message: `Cannot select duplicate commission target types! A setup with target type "${newCommission.targetType}" is already selected: "${duplicateCommission?.name}". Only ONE setup per target type is allowed.`
+        });
+        return;
+      }
+
+      // Validation: Max 3 commission setups (one from each target type)
+      if (selectedCommissionIds.length >= 3) {
+        const selectedSetupNames = selectedCommissionIds
+          .map(id => sampleCommissionSetups.find(c => c.id === id)?.name)
+          .filter(Boolean)
+          .join('", "');
+        setNotification({
+          type: 'warning',
+          message: `Maximum reached! You can only select up to 3 commission setups (one from each target type). Currently selected: "${selectedSetupNames}". Deselect a setup before selecting another.`
+        });
         return;
       }
 
       // Add to selection
       setSelectedCommissionIds(prev => [...prev, commissionId]);
+      setNotification(null);
     }
   };
 
@@ -398,6 +417,7 @@ export default function LevelManagement() {
   const handleReferrerSetup = (level: Level) => {
     setSelectedLevelForReferrer(level);
     setSelectedReferrerIds(level.referrerSetupIds || []);
+    setNotification(null);
     setShowReferrerSetupModal(true);
   };
 
@@ -408,26 +428,44 @@ export default function LevelManagement() {
     if (isCurrentlySelected) {
       // Remove from selection
       setSelectedReferrerIds(prev => prev.filter(id => id !== referrerId));
+      setNotification(null);
     } else {
-      // Validation: Max 2 referrer setups
-      if (selectedReferrerIds.length >= 2) {
-        alert('Cannot select more than 2 referrer setups');
-        return;
-      }
+      // Get the new referrer being added
+      const newReferrer = initialReferrerSetups.find(r => r.id === referrerId);
+      if (!newReferrer) return;
 
       // Validation: No duplicate target types
-      const newReferrer = initialReferrerSetups.find(r => r.id === referrerId);
       const existingTypes = selectedReferrerIds
         .map(id => initialReferrerSetups.find(r => r.id === id)?.targetType)
         .filter(Boolean);
 
       if (newReferrer && existingTypes.includes(newReferrer.targetType)) {
-        alert(`Cannot select duplicate referrer target type: ${newReferrer.targetType}`);
+        const duplicateReferrer = selectedReferrerIds
+          .map(id => initialReferrerSetups.find(r => r.id === id))
+          .find(r => r?.targetType === newReferrer.targetType);
+        setNotification({
+          type: 'error',
+          message: `Cannot select duplicate referrer target types! A setup with target type "${newReferrer.targetType}" is already selected: "${duplicateReferrer?.name}". Only ONE setup per target type is allowed.`
+        });
+        return;
+      }
+
+      // Validation: Max 2 referrer setups (one from each target type)
+      if (selectedReferrerIds.length >= 2) {
+        const selectedSetupNames = selectedReferrerIds
+          .map(id => initialReferrerSetups.find(r => r.id === id)?.name)
+          .filter(Boolean)
+          .join('", "');
+        setNotification({
+          type: 'warning',
+          message: `Maximum reached! You can only select up to 2 referrer setups (one from each target type). Currently selected: "${selectedSetupNames}". Deselect a setup before selecting another.`
+        });
         return;
       }
 
       // Add to selection
       setSelectedReferrerIds(prev => [...prev, referrerId]);
+      setNotification(null);
     }
   };
 
@@ -446,7 +484,7 @@ export default function LevelManagement() {
   };
 
   // Handler to toggle cashback selection
-  const handleToggleCashback = (cashbackId: number) => {
+  const handleToggleCashback = (cashbackId: string) => {
     const isCurrentlySelected = selectedCashbackIds.includes(cashbackId);
 
     if (isCurrentlySelected) {
@@ -461,7 +499,7 @@ export default function LevelManagement() {
       // Get existing selected cashbacks with their types
       const existingCashbacks = selectedCashbackIds
         .map(id => cashBackSetupsData.find(c => c.id === id))
-        .filter(Boolean);
+        .filter((c): c is NonNullable<typeof c> => c !== undefined);
 
       // Check if this type is already selected
       const duplicateType = existingCashbacks.find(c => c.cashbackType === newCashback.cashbackType);
@@ -476,9 +514,13 @@ export default function LevelManagement() {
 
       // Cashback has 3 types, so limit to 3 selections total (one from each type)
       if (selectedCashbackIds.length >= 3) {
+        const selectedSetupNames = selectedCashbackIds
+          .map(id => cashBackSetupsData.find(c => c.id === id)?.name)
+          .filter(Boolean)
+          .join('", "');
         setNotification({
           type: 'warning',
-          message: `Maximum reached! You can only select up to 3 cashback setups (one from each cashback type). Deselect a setup before adding another.`
+          message: `Maximum reached! You can only select up to 3 cashback setups (one from each cashback type). Currently selected: "${selectedSetupNames}". Deselect a setup before selecting another.`
         });
         return;
       }
@@ -2255,6 +2297,51 @@ export default function LevelManagement() {
               </p>
             </div>
 
+            {/* Notification */}
+            {notification && (
+              <div className={`p-4 rounded-lg border-l-4 ${
+                notification.type === 'error'
+                  ? 'bg-red-50 border-red-500'
+                  : notification.type === 'warning'
+                  ? 'bg-yellow-50 border-yellow-500'
+                  : 'bg-green-50 border-green-500'
+              }`}>
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    {notification.type === 'error' && (
+                      <X className="h-5 w-5 text-red-500" />
+                    )}
+                    {notification.type === 'warning' && (
+                      <span className="text-yellow-500 text-xl font-bold">⚠</span>
+                    )}
+                  </div>
+                  <div className="ml-3 flex-1">
+                    <p className={`text-sm font-medium ${
+                      notification.type === 'error'
+                        ? 'text-red-800'
+                        : notification.type === 'warning'
+                        ? 'text-yellow-800'
+                        : 'text-green-800'
+                    }`}>
+                      {notification.message}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setNotification(null)}
+                    className="ml-3 flex-shrink-0 hover:opacity-70"
+                  >
+                    <X className={`h-4 w-4 ${
+                      notification.type === 'error'
+                        ? 'text-red-500'
+                        : notification.type === 'warning'
+                        ? 'text-yellow-500'
+                        : 'text-green-500'
+                    }`} />
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Filter Section */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-gray-50 p-3 rounded-lg border">
               <div>
@@ -2323,7 +2410,9 @@ export default function LevelManagement() {
                           {commission.targetType}
                         </Badge>
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-900 font-medium">{commission.commissionPercentage}%</td>
+                      <td className="px-4 py-3 text-sm text-gray-900 font-medium">
+                        {commission.amountTiers[0]?.percentage ? `${commission.amountTiers[0].percentage}%` : '-'}
+                      </td>
                       <td className="px-4 py-3 text-center">
                         <Badge className={`font-semibold text-xs ${
                           commission.status === 'Active'
@@ -2395,6 +2484,51 @@ export default function LevelManagement() {
                 {selectedReferrerIds.length}/2 setups selected
               </p>
             </div>
+
+            {/* Notification */}
+            {notification && (
+              <div className={`p-4 rounded-lg border-l-4 ${
+                notification.type === 'error'
+                  ? 'bg-red-50 border-red-500'
+                  : notification.type === 'warning'
+                  ? 'bg-yellow-50 border-yellow-500'
+                  : 'bg-green-50 border-green-500'
+              }`}>
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    {notification.type === 'error' && (
+                      <X className="h-5 w-5 text-red-500" />
+                    )}
+                    {notification.type === 'warning' && (
+                      <span className="text-yellow-500 text-xl font-bold">⚠</span>
+                    )}
+                  </div>
+                  <div className="ml-3 flex-1">
+                    <p className={`text-sm font-medium ${
+                      notification.type === 'error'
+                        ? 'text-red-800'
+                        : notification.type === 'warning'
+                        ? 'text-yellow-800'
+                        : 'text-green-800'
+                    }`}>
+                      {notification.message}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setNotification(null)}
+                    className="ml-3 flex-shrink-0 hover:opacity-70"
+                  >
+                    <X className={`h-4 w-4 ${
+                      notification.type === 'error'
+                        ? 'text-red-500'
+                        : notification.type === 'warning'
+                        ? 'text-yellow-500'
+                        : 'text-green-500'
+                    }`} />
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Filter Section */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-gray-50 p-3 rounded-lg border">

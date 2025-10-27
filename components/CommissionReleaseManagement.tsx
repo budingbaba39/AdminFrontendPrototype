@@ -50,21 +50,20 @@ export default function CommissionReleaseManagement() {
     return sampleCommissionSchedules.find(s => s.commissionTargetType === commissionTargetType);
   };
 
-  // Helper function to group transactions by date and target type for Period feature
+  // Helper function to group transactions by user and target type for Period feature
   const groupTransactionsByPeriod = (transactions: Transaction[]) => {
     // Only group if BOTH dateFrom AND dateTo are selected
     if (!searchFilters.dateFrom || !searchFilters.dateTo) {
       return transactions; // No date range selected, return as-is
     }
 
-    // Group by userID + date + targetType
+    // Group by userID + targetType ONLY (remove date from grouping to allow multi-day combination)
     const grouped = transactions.reduce((acc, transaction) => {
-      const date = transaction.submitTime.split(' ')[0]; // Extract date only (YYYY-MM-DD)
       const targetType = transaction.commissionTargetType || 'Unknown';
       const userID = transaction.userID;
 
-      // Create unique key: userID_date_targetType
-      const key = `${userID}_${date}_${targetType}`;
+      // Create unique key: userID_targetType (NO DATE)
+      const key = `${userID}_${targetType}`;
 
       if (!acc[key]) {
         acc[key] = [];
@@ -73,10 +72,20 @@ export default function CommissionReleaseManagement() {
       return acc;
     }, {} as Record<string, Transaction[]>);
 
-    // Combine transactions in each group
+    // Combine transactions in each group (across multiple days)
     const combinedTransactions = Object.values(grouped).map(group => {
-      // Sum all amounts
-      const totalAmount = group.reduce((sum, t) => sum + t.amount, 0);
+      // Sum all amounts across all days
+      const totalAmount = group.reduce((sum, t) => sum + (t.amount || 0), 0);
+      const totalCommissionAmount = group.reduce((sum, t) => sum + (t.commissionAmount || 0), 0);
+      const totalDepositAmount = group.reduce((sum, t) => sum + (t.depositAmount || 0), 0);
+      const totalWithdrawAmount = group.reduce((sum, t) => sum + (t.withdrawAmount || 0), 0);
+      const totalValidBetAmount = group.reduce((sum, t) => sum + (t.validBetAmount || 0), 0);
+
+      // Find earliest and latest dates
+      const dates = group.map(t => t.submitTime.split(' ')[0]);
+      const uniqueDates = [...new Set(dates)].sort();
+      const earliestDate = uniqueDates[0];
+      const latestDate = uniqueDates[uniqueDates.length - 1];
 
       // Find earliest and latest submit times
       const times = group.map(t => new Date(t.submitTime));
@@ -90,29 +99,41 @@ export default function CommissionReleaseManagement() {
           : earliest;
       });
 
-      // Format submit time as date range if multiple transactions
+      // Format submit time display
       const formatDateTime = (date: Date) => {
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
         const hours = String(date.getHours()).padStart(2, '0');
         const minutes = String(date.getMinutes()).padStart(2, '0');
-        return `${year}-${month}-${day} ${hours}:${minutes}`;
+        const seconds = String(date.getSeconds()).padStart(2, '0');
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
       };
 
-      const submitTimeDisplay = group.length > 1
-        ? `${formatDateTime(earliestTime)} - ${formatDateTime(latestTime)}`
-        : earliestTransaction.submitTime;
+      // Display format based on whether it spans multiple days
+      let submitTimeDisplay;
+      if (group.length > 1 && earliestDate !== latestDate) {
+        submitTimeDisplay = `${formatDateTime(earliestTime)} - ${formatDateTime(latestTime)}`;
+      } else if (group.length > 1 && earliestDate === latestDate) {
+        submitTimeDisplay = `${formatDateTime(earliestTime)} - ${formatDateTime(latestTime)}`;
+      } else {
+        submitTimeDisplay = earliestTransaction.submitTime;
+      }
 
-      // Return combined transaction with earliest transaction's details
+      // Return combined transaction
       return {
         ...earliestTransaction,
         amount: totalAmount,
-        id: `${earliestTransaction.id}_combined`, // Mark as combined
+        commissionAmount: totalCommissionAmount,
+        depositAmount: totalDepositAmount,
+        withdrawAmount: totalWithdrawAmount,
+        validBetAmount: totalValidBetAmount,
+        id: `${earliestTransaction.id}_combined_${group.length}`,
         submitTime: submitTimeDisplay,
-        remark: '', // Leave remark blank for combined records
-        // Store original transaction IDs for batch operations
-        originalIds: group.map(t => t.id)
+        remark: '',
+        originalIds: group.map(t => t.id),
+        combinedCount: group.length,
+        dateRange: earliestDate !== latestDate ? `${earliestDate} to ${latestDate}` : earliestDate
       };
     });
 

@@ -115,6 +115,18 @@ export default function RebateScheduleManagement() {
   const handleCreateSchedule = () => {
     if (!validateForm()) return;
 
+    // Check if trying to activate a schedule with a target type that's already active
+    if (formData.status === 'Active') {
+      const existingActiveSchedule = schedules.find(
+        s => s.rebateType === formData.rebateType && s.status === 'Active'
+      );
+
+      if (existingActiveSchedule) {
+        alert(`Cannot activate schedule! A schedule with target type "${formData.rebateType}" is already active: "${existingActiveSchedule.setupName}". Please deactivate it first or set this schedule to Inactive.`);
+        return;
+      }
+    }
+
     const newSchedule: RebateSchedule = {
       id: Math.max(...schedules.map(s => s.id), 0) + 1,
       setupName: formData.setupName,
@@ -134,6 +146,20 @@ export default function RebateScheduleManagement() {
   // Edit schedule
   const handleEditSchedule = () => {
     if (!validateForm() || !selectedSchedule) return;
+
+    // Check if trying to activate a schedule with a target type that's already active (excluding current schedule)
+    if (formData.status === 'Active') {
+      const existingActiveSchedule = schedules.find(
+        s => s.id !== selectedSchedule.id &&
+             s.rebateType === formData.rebateType &&
+             s.status === 'Active'
+      );
+
+      if (existingActiveSchedule) {
+        alert(`Cannot activate schedule! A schedule with target type "${formData.rebateType}" is already active: "${existingActiveSchedule.setupName}". Please deactivate it first or set this schedule to Inactive.`);
+        return;
+      }
+    }
 
     setSchedules(schedules.map(s =>
       s.id === selectedSchedule.id

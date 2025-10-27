@@ -17,7 +17,7 @@ const getBonusTransactions = () => {
 };
 
 const levelOptions = ['all', 'bronze', 'silver', 'gold'];
-const statusOptions = ['all', 'pending', 'processing', 'approved', 'completed', 'rejected'];
+const statusOptions = ['all', 'pending', 'completed', 'rejected'];
 
 // Generate promotion options dynamically from initialPromotions
 const promotionOptions = [
@@ -71,6 +71,9 @@ export default function PromotionManagement() {
   // Filter transactions based on search criteria
   const filteredTransactions = hasSearched
     ? viewFilteredTransactions.filter(transaction => {
+        // Exclude APPROVED transactions (they are shown in ON GOING page)
+        if (transaction.status === 'APPROVED') return false;
+
         // Search filters
         if (searchFilters.transactionId && !transaction.id.toLowerCase().includes(searchFilters.transactionId.toLowerCase())) return false;
         if (searchFilters.username) {
@@ -122,9 +125,9 @@ export default function PromotionManagement() {
       })
     : [];
 
-  // Calculate status counts
+  // Calculate status counts (exclude APPROVED as they are in ON GOING page)
   const statusCounts = {
-    'ALL': viewFilteredTransactions.length,
+    'ALL': viewFilteredTransactions.filter(t => t.status !== 'APPROVED').length,
     'PENDING': viewFilteredTransactions.filter(t => t.status === 'PENDING').length,
     'PROCESSING': viewFilteredTransactions.filter(t => t.status === 'PROCESSING').length,
     'COMPLETED': viewFilteredTransactions.filter(t => t.status === 'COMPLETED').length,
