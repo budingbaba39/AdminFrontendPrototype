@@ -46,7 +46,7 @@ export default function CashBackScheduleManagement() {
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
 
-    if (formData.autoApprovedAmount <= 0) errors.autoApprovedAmount = 'Auto approved amount must be greater than 0';
+    if (formData.autoApprovedAmount < 0) errors.autoApprovedAmount = 'Auto approved amount must be greater than or equal to 0';
 
     if (formData.type === 'Recurring') {
       if (!formData.resetFrequency) errors.resetFrequency = 'Reset frequency is required';
