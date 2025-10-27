@@ -88,6 +88,9 @@ export default function CommissionRecordManagement() {
   // Filter transactions based on search and status
   const filteredTransactions = hasSearched
     ? transactions.filter(transaction => {
+        // Exclude APPROVED transactions (they are shown in ON GOING page)
+        if (transaction.status === 'APPROVED') return false;
+
         // Status filter
         if (activeStatus !== 'ALL' && transaction.status !== activeStatus) return false;
 
@@ -105,8 +108,8 @@ export default function CommissionRecordManagement() {
           if (!userName.toLowerCase().includes(searchFilters.username.toLowerCase()) &&
               !transaction.mobile.includes(searchFilters.username)) return false;
         }
-        if (searchFilters.dateFrom && new Date(transaction.completeTime || transaction.submitTime) < new Date(searchFilters.dateFrom)) return false;
-        if (searchFilters.dateTo && new Date(transaction.completeTime || transaction.submitTime) > new Date(searchFilters.dateTo + ' 23:59:59')) return false;
+        if (searchFilters.dateFrom && new Date(transaction.submitTime) < new Date(searchFilters.dateFrom)) return false;
+        if (searchFilters.dateTo && new Date(transaction.submitTime) > new Date(searchFilters.dateTo + ' 23:59:59')) return false;
         if (searchFilters.level && searchFilters.level !== 'all') {
           const user = sampleUsers.find(u => u.mobile === transaction.mobile || u.id === transaction.userID);
           if (!user || user.level !== searchFilters.level) return false;
@@ -124,16 +127,51 @@ export default function CommissionRecordManagement() {
       })
     : [];
 
-  // Calculate status counts (PENDING count only includes those > autoApprovedAmount)
+  // Calculate status counts from FILTERED transactions (synchronized with displayed records)
+  // Need to recalculate from raw transactions with same filters but different status
+  const calculateFilteredCountByStatus = (status: CommissionStatus) => {
+    const filtered = transactions.filter(transaction => {
+      // Exclude APPROVED transactions (they are shown in ON GOING page)
+      if (transaction.status === 'APPROVED') return false;
+
+      // Status filter
+      if (status !== 'ALL' && transaction.status !== status) return false;
+
+      // CRITICAL: For PENDING status, only show transactions where commission amount > autoApprovedAmount
+      if (status === 'PENDING' && transaction.status === 'PENDING') {
+        const autoApprovedAmount = getAutoApprovedAmount(transaction.commissionTargetType || '');
+        // Only show if commission amount exceeds auto-approved threshold
+        if (transaction.amount <= autoApprovedAmount) return false;
+      }
+
+      // Search filters
+      if (searchFilters.username) {
+        const user = sampleUsers.find(u => u.id === transaction.userID);
+        const userName = user?.name || transaction.userID;
+        if (!userName.toLowerCase().includes(searchFilters.username.toLowerCase()) &&
+            !transaction.mobile.includes(searchFilters.username)) return false;
+      }
+      if (searchFilters.dateFrom && new Date(transaction.submitTime) < new Date(searchFilters.dateFrom)) return false;
+      if (searchFilters.dateTo && new Date(transaction.submitTime) > new Date(searchFilters.dateTo + ' 23:59:59')) return false;
+      if (searchFilters.level && searchFilters.level !== 'all') {
+        const user = sampleUsers.find(u => u.mobile === transaction.mobile || u.id === transaction.userID);
+        if (!user || user.level !== searchFilters.level) return false;
+      }
+      if (searchFilters.handler && !transaction.completeBy?.toLowerCase().includes(searchFilters.handler.toLowerCase())) return false;
+      if (searchFilters.commissionName && searchFilters.commissionName !== 'all' && transaction.commissionName !== searchFilters.commissionName) return false;
+      if (searchFilters.commissionTargetType && searchFilters.commissionTargetType !== 'all' && transaction.commissionTargetType !== searchFilters.commissionTargetType) return false;
+
+      return true;
+    });
+
+    return filtered.length;
+  };
+
   const statusCounts = {
-    ALL: transactions.length,
-    PENDING: transactions.filter(t => {
-      if (t.status !== 'PENDING') return false;
-      const autoApprovedAmount = getAutoApprovedAmount(t.commissionTargetType || '');
-      return t.amount > autoApprovedAmount;
-    }).length,
-    COMPLETED: transactions.filter(t => t.status === 'COMPLETED').length,
-    REJECTED: transactions.filter(t => t.status === 'REJECTED').length,
+    ALL: calculateFilteredCountByStatus('ALL'),
+    PENDING: calculateFilteredCountByStatus('PENDING'),
+    COMPLETED: calculateFilteredCountByStatus('COMPLETED'),
+    REJECTED: calculateFilteredCountByStatus('REJECTED'),
   };
 
   const totalAmount = filteredTransactions.reduce((sum, transaction) => sum + transaction.amount, 0);
@@ -246,11 +284,16 @@ export default function CommissionRecordManagement() {
 
   const handleSubmitSingle = (transaction: Transaction) => {
     const currentTime = new Date().toISOString().replace('T', ' ').substring(0, 19);
-
     const remark = remarkInputs[transaction.id] || '';
 
+    // Check if this is a combined transaction
+    const isCombined = transaction.id.includes('_combined');
+    const idsToUpdate = isCombined && (transaction as any).originalIds
+      ? (transaction as any).originalIds
+      : [transaction.id];
+
     setTransactions(prev => prev.map(t =>
-      t.id === transaction.id
+      idsToUpdate.includes(t.id)
         ? {
             ...t,
             status: 'COMPLETED' as const,
@@ -270,8 +313,14 @@ export default function CommissionRecordManagement() {
     const currentTime = new Date().toISOString().replace('T', ' ').substring(0, 19);
     const remark = remarkInputs[transaction.id] || 'Cancelled by admin';
 
+    // Check if this is a combined transaction
+    const isCombined = transaction.id.includes('_combined');
+    const idsToUpdate = isCombined && (transaction as any).originalIds
+      ? (transaction as any).originalIds
+      : [transaction.id];
+
     setTransactions(prev => prev.map(t =>
-      t.id === transaction.id
+      idsToUpdate.includes(t.id)
         ? {
             ...t,
             status: 'REJECTED' as const,
@@ -285,6 +334,51 @@ export default function CommissionRecordManagement() {
     const newRemarkInputs = { ...remarkInputs };
     delete newRemarkInputs[transaction.id];
     setRemarkInputs(newRemarkInputs);
+  };
+
+  const handleUnlock = (transaction: Transaction) => {
+    const currentTime = new Date().toISOString().replace('T', ' ').substring(0, 19);
+
+    // Check if this is a combined transaction
+    const isCombined = transaction.id.includes('_combined');
+    const idsToUpdate = isCombined && (transaction as any).originalIds
+      ? (transaction as any).originalIds
+      : [transaction.id];
+
+    setTransactions(prev => prev.map(t =>
+      idsToUpdate.includes(t.id)
+        ? {
+            ...t,
+            status: 'COMPLETED' as const,
+            completeTime: currentTime,
+            completeBy: 'CS001',
+            commissionCurrent: t.commissionTarget,
+            remark: 'Commission target achieved - Unlocked'
+          }
+        : t
+    ));
+  };
+
+  const handleCancelApproved = (transaction: Transaction) => {
+    const currentTime = new Date().toISOString().replace('T', ' ').substring(0, 19);
+
+    // Check if this is a combined transaction
+    const isCombined = transaction.id.includes('_combined');
+    const idsToUpdate = isCombined && (transaction as any).originalIds
+      ? (transaction as any).originalIds
+      : [transaction.id];
+
+    setTransactions(prev => prev.map(t =>
+      idsToUpdate.includes(t.id)
+        ? {
+            ...t,
+            status: 'REJECTED' as const,
+            rejectTime: currentTime,
+            rejectBy: 'CS001',
+            remark: 'Commission cancelled'
+          }
+        : t
+    ));
   };
 
   const handleSubmitAll = () => {
@@ -523,6 +617,7 @@ export default function CommissionRecordManagement() {
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Submit Time</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Completed Time</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Amount</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Target</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Remark</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Status</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Action</th>
@@ -586,6 +681,25 @@ export default function CommissionRecordManagement() {
                         </span>
                       </td>
                       <td className="px-3 py-2">
+                        {transaction.status === 'APPROVED' && transaction.commissionTarget ? (
+                          <div className="space-y-1 min-w-[100px]">
+                            <div className="text-gray-900 font-medium text-xs">
+                              {transaction.commissionCurrent?.toFixed(0) || 0} / {transaction.commissionTarget?.toFixed(0) || 0}
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div
+                                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                style={{
+                                  width: `${Math.min((transaction.commissionCurrent! / transaction.commissionTarget) * 100, 100)}%`
+                                }}
+                              />
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-gray-900 text-xs">-</span>
+                        )}
+                      </td>
+                      <td className="px-3 py-2">
                         {transaction.status === 'PENDING' ? (
                           <Input
                             type="text"
@@ -620,6 +734,25 @@ export default function CommissionRecordManagement() {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => handleCancelSingle(transaction)}
+                                className="bg-[#f44336] text-white hover:bg-[#d32f2f] border-[#f44336] text-xs h-6 px-2"
+                              >
+                                CANCEL
+                              </Button>
+                            </>
+                          ) : transaction.status === 'APPROVED' ? (
+                            <>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleUnlock(transaction)}
+                                className="bg-[#4caf50] text-white hover:bg-[#45a049] border-[#4caf50] text-xs h-6 px-2"
+                              >
+                                UNLOCK
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleCancelApproved(transaction)}
                                 className="bg-[#f44336] text-white hover:bg-[#d32f2f] border-[#f44336] text-xs h-6 px-2"
                               >
                                 CANCEL

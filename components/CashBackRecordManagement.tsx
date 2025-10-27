@@ -114,6 +114,9 @@ export default function CashBackRecordManagement() {
   // Filter transactions based on search and status
   const filteredTransactions = hasSearched
     ? transactions.filter(transaction => {
+        // Exclude APPROVED transactions (they are shown in ON GOING page)
+        if (transaction.status === 'APPROVED') return false;
+
         // Status filter
         if (activeStatus !== 'ALL' && transaction.status !== activeStatus) return false;
 
@@ -137,8 +140,8 @@ export default function CashBackRecordManagement() {
           if (!userName.toLowerCase().includes(searchFilters.username.toLowerCase()) &&
               !transaction.mobile.includes(searchFilters.username)) return false;
         }
-        if (searchFilters.dateFrom && new Date(transaction.completeTime || transaction.submitTime) < new Date(searchFilters.dateFrom)) return false;
-        if (searchFilters.dateTo && new Date(transaction.completeTime || transaction.submitTime) > new Date(searchFilters.dateTo + ' 23:59:59')) return false;
+        if (searchFilters.dateFrom && new Date(transaction.submitTime) < new Date(searchFilters.dateFrom)) return false;
+        if (searchFilters.dateTo && new Date(transaction.submitTime) > new Date(searchFilters.dateTo + ' 23:59:59')) return false;
         if (searchFilters.level && searchFilters.level !== 'all') {
           const user = sampleUsers.find(u => u.mobile === transaction.mobile || u.id === transaction.userID);
           if (!user || user.level !== searchFilters.level) return false;
@@ -156,22 +159,56 @@ export default function CashBackRecordManagement() {
       })
     : [];
 
-  // Calculate status counts (PENDING count only includes those > autoApprovedAmount)
-  const statusCounts = {
-    ALL: transactions.length,
-    PENDING: transactions.filter(t => {
-      if (t.status !== 'PENDING') return false;
-      const cashbackSetup = getCashbackSetup(t.cashbackName || '');
-      if (cashbackSetup) {
-        const cashbackRate = getCashbackRate(t.lossAmount || 0, cashbackSetup);
-        const cashbackAmount = calculateCashbackAmount(t.lossAmount || 0, cashbackRate);
-        const autoApprovedAmount = getAutoApprovedAmount(t.cashbackType || '');
-        return cashbackAmount > autoApprovedAmount;
+  // Calculate status counts from FILTERED transactions (synchronized with displayed records)
+  // Need to recalculate from raw transactions with same filters but different status
+  const calculateFilteredCountByStatus = (status: CashbackStatus) => {
+    const filtered = transactions.filter(transaction => {
+      // Exclude APPROVED transactions (they are shown in ON GOING page)
+      if (transaction.status === 'APPROVED') return false;
+
+      // Status filter
+      if (status !== 'ALL' && transaction.status !== status) return false;
+
+      // CRITICAL: For PENDING status, only show transactions where cashback amount > autoApprovedAmount
+      if (status === 'PENDING' && transaction.status === 'PENDING') {
+        const cashbackSetup = getCashbackSetup(transaction.cashbackName || '');
+        if (cashbackSetup) {
+          const cashbackRate = getCashbackRate(transaction.lossAmount || 0, cashbackSetup);
+          const cashbackAmount = calculateCashbackAmount(transaction.lossAmount || 0, cashbackRate);
+          const autoApprovedAmount = getAutoApprovedAmount(transaction.cashbackTargetType || '');
+          // Only show if calculated cashback exceeds auto-approved threshold
+          if (cashbackAmount <= autoApprovedAmount) return false;
+        }
       }
+
+      // Search filters
+      if (searchFilters.username) {
+        const user = sampleUsers.find(u => u.id === transaction.userID);
+        const userName = user?.name || transaction.userID;
+        if (!userName.toLowerCase().includes(searchFilters.username.toLowerCase()) &&
+            !transaction.mobile.includes(searchFilters.username)) return false;
+      }
+      if (searchFilters.dateFrom && new Date(transaction.submitTime) < new Date(searchFilters.dateFrom)) return false;
+      if (searchFilters.dateTo && new Date(transaction.submitTime) > new Date(searchFilters.dateTo + ' 23:59:59')) return false;
+      if (searchFilters.level && searchFilters.level !== 'all') {
+        const user = sampleUsers.find(u => u.mobile === transaction.mobile || u.id === transaction.userID);
+        if (!user || user.level !== searchFilters.level) return false;
+      }
+      if (searchFilters.handler && !transaction.completeBy?.toLowerCase().includes(searchFilters.handler.toLowerCase())) return false;
+      if (searchFilters.cashbackName && searchFilters.cashbackName !== 'all' && transaction.cashbackName !== searchFilters.cashbackName) return false;
+      if (searchFilters.cashbackType && searchFilters.cashbackType !== 'all' && transaction.cashbackType !== searchFilters.cashbackType) return false;
+
       return true;
-    }).length,
-    COMPLETED: transactions.filter(t => t.status === 'COMPLETED').length,
-    REJECTED: transactions.filter(t => t.status === 'REJECTED').length,
+    });
+
+    return filtered.length;
+  };
+
+  const statusCounts = {
+    ALL: calculateFilteredCountByStatus('ALL'),
+    PENDING: calculateFilteredCountByStatus('PENDING'),
+    COMPLETED: calculateFilteredCountByStatus('COMPLETED'),
+    REJECTED: calculateFilteredCountByStatus('REJECTED'),
   };
 
   const totalAmount = filteredTransactions.reduce((sum, transaction) => sum + transaction.amount, 0);
@@ -289,22 +326,19 @@ export default function CashBackRecordManagement() {
 
   const handleSubmitSingle = (transaction: Transaction) => {
     const currentTime = new Date().toISOString().replace('T', ' ').substring(0, 19);
-
-    const releaseAmount = givenCashbackInputs[transaction.id] !== undefined
-      ? givenCashbackInputs[transaction.id]
-      : calculateCashbackAmount(
-          transaction.lossAmount || 0,
-          getCashbackRate(transaction.lossAmount || 0, getCashbackSetup(transaction.cashbackName || ''))
-        );
-
     const remark = remarkInputs[transaction.id] || '';
 
+    // Check if this is a combined transaction
+    const isCombined = transaction.id.includes('_combined');
+    const idsToUpdate = isCombined && (transaction as any).originalIds
+      ? (transaction as any).originalIds
+      : [transaction.id];
+
     setTransactions(prev => prev.map(t =>
-      t.id === transaction.id
+      idsToUpdate.includes(t.id)
         ? {
             ...t,
             status: 'COMPLETED' as const,
-            amount: releaseAmount,
             completeTime: currentTime,
             completeBy: 'ADMIN001',
             remark: remark
@@ -312,11 +346,8 @@ export default function CashBackRecordManagement() {
         : t
     ));
 
-    const newGivenInputs = { ...givenCashbackInputs };
     const newRemarkInputs = { ...remarkInputs };
-    delete newGivenInputs[transaction.id];
     delete newRemarkInputs[transaction.id];
-    setGivenCashbackInputs(newGivenInputs);
     setRemarkInputs(newRemarkInputs);
   };
 
@@ -324,8 +355,14 @@ export default function CashBackRecordManagement() {
     const currentTime = new Date().toISOString().replace('T', ' ').substring(0, 19);
     const remark = remarkInputs[transaction.id] || 'Cancelled by admin';
 
+    // Check if this is a combined transaction
+    const isCombined = transaction.id.includes('_combined');
+    const idsToUpdate = isCombined && (transaction as any).originalIds
+      ? (transaction as any).originalIds
+      : [transaction.id];
+
     setTransactions(prev => prev.map(t =>
-      t.id === transaction.id
+      idsToUpdate.includes(t.id)
         ? {
             ...t,
             status: 'REJECTED' as const,
@@ -336,12 +373,82 @@ export default function CashBackRecordManagement() {
         : t
     ));
 
-    const newGivenInputs = { ...givenCashbackInputs };
     const newRemarkInputs = { ...remarkInputs };
-    delete newGivenInputs[transaction.id];
     delete newRemarkInputs[transaction.id];
-    setGivenCashbackInputs(newGivenInputs);
     setRemarkInputs(newRemarkInputs);
+  };
+
+  const handleCompleteSingle = (transaction: Transaction) => {
+    const currentTime = new Date().toISOString().replace('T', ' ').substring(0, 19);
+
+    const releaseAmount = givenCashbackInputs[transaction.id] !== undefined
+      ? givenCashbackInputs[transaction.id]
+      : calculateCashbackAmount(
+          transaction.lossAmount || 0,
+          getCashbackRate(transaction.lossAmount || 0, getCashbackSetup(transaction.cashbackName || ''))
+        );
+
+    setTransactions(prev => prev.map(t =>
+      t.id === transaction.id
+        ? {
+            ...t,
+            status: 'COMPLETED' as const,
+            amount: releaseAmount,
+            completeTime: currentTime,
+            completeBy: 'ADMIN001',
+            remark: 'Cashback released'
+          }
+        : t
+    ));
+
+    const newGivenInputs = { ...givenCashbackInputs };
+    delete newGivenInputs[transaction.id];
+    setGivenCashbackInputs(newGivenInputs);
+  };
+
+  const handleUnlock = (transaction: Transaction) => {
+    const currentTime = new Date().toISOString().replace('T', ' ').substring(0, 19);
+
+    // Check if this is a combined transaction
+    const isCombined = transaction.id.includes('_combined');
+    const idsToUpdate = isCombined && (transaction as any).originalIds
+      ? (transaction as any).originalIds
+      : [transaction.id];
+
+    setTransactions(prev => prev.map(t =>
+      idsToUpdate.includes(t.id)
+        ? {
+            ...t,
+            status: 'COMPLETED' as const,
+            completeTime: currentTime,
+            completeBy: 'CS001',
+            cashbackCurrent: t.cashbackTarget,
+            remark: 'Cashback target achieved - Unlocked'
+          }
+        : t
+    ));
+  };
+
+  const handleCancelApproved = (transaction: Transaction) => {
+    const currentTime = new Date().toISOString().replace('T', ' ').substring(0, 19);
+
+    // Check if this is a combined transaction
+    const isCombined = transaction.id.includes('_combined');
+    const idsToUpdate = isCombined && (transaction as any).originalIds
+      ? (transaction as any).originalIds
+      : [transaction.id];
+
+    setTransactions(prev => prev.map(t =>
+      idsToUpdate.includes(t.id)
+        ? {
+            ...t,
+            status: 'REJECTED' as const,
+            rejectTime: currentTime,
+            rejectBy: 'CS001',
+            remark: 'Cashback cancelled'
+          }
+        : t
+    ));
   };
 
   const handleSubmitAll = () => {
@@ -349,19 +456,11 @@ export default function CashBackRecordManagement() {
 
     setTransactions(prev => prev.map(t => {
       if (selectedRows.has(t.id)) {
-        const releaseAmount = givenCashbackInputs[t.id] !== undefined
-          ? givenCashbackInputs[t.id]
-          : calculateCashbackAmount(
-              t.lossAmount || 0,
-              getCashbackRate(t.lossAmount || 0, getCashbackSetup(t.cashbackName || ''))
-            );
-
         const remark = remarkInputs[t.id] || '';
 
         return {
           ...t,
           status: 'COMPLETED' as const,
-          amount: releaseAmount,
           completeTime: currentTime,
           completeBy: 'ADMIN001',
           remark: remark
@@ -371,9 +470,7 @@ export default function CashBackRecordManagement() {
     }));
 
     setSelectedRows(new Set());
-    setGivenCashbackInputs({});
     setRemarkInputs({});
-    setActiveStatus('COMPLETED');
   };
 
   const pendingCount = statusCounts.PENDING;
@@ -701,6 +798,25 @@ export default function CashBackRecordManagement() {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => handleCancelSingle(transaction)}
+                                className="bg-[#f44336] text-white hover:bg-[#d32f2f] border-[#f44336] text-xs h-6 px-2"
+                              >
+                                CANCEL
+                              </Button>
+                            </>
+                          ) : transaction.status === 'APPROVED' ? (
+                            <>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleUnlock(transaction)}
+                                className="bg-[#4caf50] text-white hover:bg-[#45a049] border-[#4caf50] text-xs h-6 px-2"
+                              >
+                                UNLOCK
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleCancelApproved(transaction)}
                                 className="bg-[#f44336] text-white hover:bg-[#d32f2f] border-[#f44336] text-xs h-6 px-2"
                               >
                                 CANCEL

@@ -150,7 +150,7 @@ export default function ReferrerSetupManagement() {
               <SelectValue placeholder="Target Type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="all">All Target Types</SelectItem>
               <SelectItem value="By Deposit">By Deposit</SelectItem>
               <SelectItem value="By Register">By Register</SelectItem>
             </SelectContent>
@@ -161,7 +161,7 @@ export default function ReferrerSetupManagement() {
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="all">All Statuses</SelectItem>
               <SelectItem value="Active">Active</SelectItem>
               <SelectItem value="Inactive">Inactive</SelectItem>
             </SelectContent>

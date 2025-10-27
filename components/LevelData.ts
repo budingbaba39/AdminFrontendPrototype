@@ -6,12 +6,12 @@ export interface ProviderBetLimit {
 
 export interface ProviderRebateAssignment {
   providerId: number;
-  rebateSetupIds: number[]; // Multiple rebates can be assigned
+  rebateSetupIds: string[]; // Multiple rebates can be assigned (REB001, REB002, etc.)
 }
 
 export interface ProviderCashbackAssignment {
   providerId: number;
-  cashbackSetupIds: number[]; // Multiple cashbacks can be assigned
+  cashbackSetupIds: string[]; // Multiple cashbacks can be assigned (CASH001, CASH002, etc.)
 }
 
 export interface Level {
@@ -35,13 +35,22 @@ export interface Level {
   resetFrequencyType: 'Every Month' | 'Every Week';
   resetFrequencyValue: string; // If Month: "1"-"29", If Week: "Monday"-"Sunday"
   isDefault: boolean;
-  image?: string; // File path, optional (100px x 100px)
+  image?: string; // File path, optional (100px x 100px) - deprecated, use translations
+  translations?: {
+    english: { name: string; description: string; image: string };
+    chinese: { name: string; description: string; image: string };
+    malay: { name: string; description: string; image: string };
+  };
   createdDate: string;
   providerBetLimits?: ProviderBetLimit[]; // Bet limits for providers
   providerRebateAssignments?: ProviderRebateAssignment[]; // Rebate assignments
   providerCashbackAssignments?: ProviderCashbackAssignment[]; // Cashback assignments
   commissionSetupId?: string; // Links to CommissionSetup.id
   referrerSetupId?: string;   // Links to ReferrerSetup.id
+  rebateSetupIds?: string[]; // Multiple rebate setup IDs (REB001, REB002, etc.)
+  cashbackSetupIds?: string[]; // Multiple cashback setup IDs (CASH001, CASH002, etc.)
+  commissionSetupIds?: string[]; // Multiple commission setup IDs (COMM001, COMM002, etc.)
+  referrerSetupIds?: string[]; // Multiple referrer setup IDs (REF001, REF002, etc.)
 }
 
 export const initialLevels: Level[] = [
@@ -66,6 +75,23 @@ export const initialLevels: Level[] = [
     resetFrequencyType: 'Every Week',
     resetFrequencyValue: 'Monday',
     isDefault: true,
+    translations: {
+      english: {
+        name: 'Bronze Level',
+        description: 'Entry level for new players with basic benefits and deposit requirements.',
+        image: ''
+      },
+      chinese: {
+        name: '青铜等级',
+        description: '新玩家的入门级别，具有基本的福利和存款要求。',
+        image: ''
+      },
+      malay: {
+        name: 'Tahap Gangsa',
+        description: 'Tahap kemasukan untuk pemain baru dengan faedah asas dan keperluan deposit.',
+        image: ''
+      }
+    },
     createdDate: '2023-08-15',
     providerBetLimits: [
       { providerId: 6, minBet: 1, maxBet: 500 }, // Pragmatic Play
@@ -73,12 +99,12 @@ export const initialLevels: Level[] = [
       { providerId: 31, minBet: 2, maxBet: 300 } // Betradar
     ],
     providerRebateAssignments: [
-      { providerId: 6, rebateSetupIds: [1] }, 
-      { providerId: 16, rebateSetupIds: [1] } 
+      { providerId: 6, rebateSetupIds: ['REB001'] },
+      { providerId: 16, rebateSetupIds: ['REB001'] }
     ],
     providerCashbackAssignments: [
-      { providerId: 6, cashbackSetupIds: [1] },
-      { providerId: 31, cashbackSetupIds: [1] }
+      { providerId: 6, cashbackSetupIds: ['CASH001'] },
+      { providerId: 31, cashbackSetupIds: ['CASH001'] }
     ],
     commissionSetupId: 'COMM001', // Deposit-Withdraw Commission
     referrerSetupId: 'REF001' // Bronze Referral Program
@@ -104,6 +130,23 @@ export const initialLevels: Level[] = [
     resetFrequencyType: 'Every Month',
     resetFrequencyValue: '1',
     isDefault: true,
+    translations: {
+      english: {
+        name: 'Silver Level',
+        description: 'Intermediate level with higher limits and enhanced benefits for regular players.',
+        image: ''
+      },
+      chinese: {
+        name: '白银等级',
+        description: '中级级别，为常规玩家提供更高的限额和增强的福利。',
+        image: ''
+      },
+      malay: {
+        name: 'Tahap Perak',
+        description: 'Tahap pertengahan dengan had yang lebih tinggi dan faedah yang dipertingkatkan untuk pemain tetap.',
+        image: ''
+      }
+    },
     createdDate: '2023-08-15',
     providerBetLimits: [
       { providerId: 7, minBet: 2, maxBet: 1500 }, // Play'n GO
@@ -111,13 +154,13 @@ export const initialLevels: Level[] = [
       { providerId: 32, minBet: 5, maxBet: 800 } // SBTech
     ],
     providerRebateAssignments: [
-      { providerId: 7, rebateSetupIds: [2] }, 
-      { providerId: 17, rebateSetupIds: [1] }, 
-      { providerId: 32, rebateSetupIds: [3] } 
+      { providerId: 7, rebateSetupIds: ['REB002'] },
+      { providerId: 17, rebateSetupIds: ['REB001'] },
+      { providerId: 32, rebateSetupIds: ['REB003'] }
     ],
     providerCashbackAssignments: [
-      { providerId: 7, cashbackSetupIds: [2] },
-      { providerId: 17, cashbackSetupIds: [2] }
+      { providerId: 7, cashbackSetupIds: ['CASH002'] },
+      { providerId: 17, cashbackSetupIds: ['CASH002'] }
     ],
     commissionSetupId: 'COMM002', // Full Activity Commission (Silver eligible for both COMM001 and COMM002)
     referrerSetupId: 'REF002' // Silver Registration Bonus
@@ -143,6 +186,23 @@ export const initialLevels: Level[] = [
     resetFrequencyType: 'Every Week',
     resetFrequencyValue: 'Friday',
     isDefault: true,
+    translations: {
+      english: {
+        name: 'Gold Level',
+        description: 'Premium level with maximum privileges, highest limits, and exclusive VIP benefits.',
+        image: ''
+      },
+      chinese: {
+        name: '黄金等级',
+        description: '高级级别，具有最高特权、最高限额和专属VIP福利。',
+        image: ''
+      },
+      malay: {
+        name: 'Tahap Emas',
+        description: 'Tahap premium dengan keistimewaan maksimum, had tertinggi, dan faedah VIP eksklusif.',
+        image: ''
+      }
+    },
     createdDate: '2023-08-15',
     providerBetLimits: [
       { providerId: 8, minBet: 5, maxBet: 5000 }, // NetEnt
@@ -150,14 +210,14 @@ export const initialLevels: Level[] = [
       { providerId: 33, minBet: 10, maxBet: 3000 } // BetConstruct
     ],
     providerRebateAssignments: [
-      { providerId: 8, rebateSetupIds: [3] }, 
-      { providerId: 18, rebateSetupIds: [ 3] }, 
-      { providerId: 33, rebateSetupIds: [3] } 
+      { providerId: 8, rebateSetupIds: ['REB003'] },
+      { providerId: 18, rebateSetupIds: ['REB003'] },
+      { providerId: 33, rebateSetupIds: ['REB003'] }
     ],
     providerCashbackAssignments: [
-      { providerId: 8, cashbackSetupIds: [3] },
-      { providerId: 18, cashbackSetupIds: [3] },
-      { providerId: 33, cashbackSetupIds: [3] }
+      { providerId: 8, cashbackSetupIds: ['CASH003'] },
+      { providerId: 18, cashbackSetupIds: ['CASH003'] },
+      { providerId: 33, cashbackSetupIds: ['CASH003'] }
     ],
     commissionSetupId: 'COMM002', // Full Activity Commission (Gold eligible for COMM002)
     referrerSetupId: 'REF003' // Gold VIP Referral

@@ -17,13 +17,11 @@ const getPendingRebateRecords = () => {
   );
 };
 
-const rebateTypeOptions = ['all', 'Valid Bet'];
-
 export default function RebateReleaseManagement() {
   const [searchFilters, setSearchFilters] = useState({
     dateFrom: '',
     dateTo: '',
-    rebateType: 'all'
+    setupName: 'all'
   });
 
   const [hasGenerated, setHasGenerated] = useState(false);
@@ -82,15 +80,106 @@ export default function RebateReleaseManagement() {
     return rebateSetup.maxLimit ? `$${rebateSetup.maxLimit.toFixed(2)}` : 'Unlimited';
   };
 
+  // Helper function to group transactions by user and target type for Period feature
+  const groupTransactionsByPeriod = (transactions: Transaction[]) => {
+    // Only group if BOTH dateFrom AND dateTo are selected
+    if (!searchFilters.dateFrom || !searchFilters.dateTo) {
+      return transactions; // No date range selected, return as-is
+    }
+
+    // Group by userID + targetType ONLY (remove date from grouping to allow multi-day combination)
+    const grouped = transactions.reduce((acc, transaction) => {
+      const targetType = transaction.rebateTargetType || 'Unknown';
+      const userID = transaction.userID;
+
+      // Create unique key: userID_targetType (NO DATE)
+      const key = `${userID}_${targetType}`;
+
+      if (!acc[key]) {
+        acc[key] = [];
+      }
+      acc[key].push(transaction);
+      return acc;
+    }, {} as Record<string, Transaction[]>);
+
+    // Combine transactions in each group (across multiple days)
+    const combinedTransactions = Object.values(grouped).map(group => {
+      // Sum all amounts across all days
+      const totalAmount = group.reduce((sum, t) => sum + (t.amount || 0), 0);
+      const totalLossAmount = group.reduce((sum, t) => sum + (t.lossAmount || 0), 0);
+      const totalRebateAmount = group.reduce((sum, t) => sum + (t.rebateAmount || 0), 0);
+
+      // Find earliest and latest dates
+      const dates = group.map(t => t.submitTime.split(' ')[0]); // Extract dates only
+      const uniqueDates = [...new Set(dates)].sort(); // Get unique sorted dates
+      const earliestDate = uniqueDates[0];
+      const latestDate = uniqueDates[uniqueDates.length - 1];
+
+      // Find earliest and latest submit times for time display
+      const times = group.map(t => new Date(t.submitTime));
+      const earliestTime = new Date(Math.min(...times.map(t => t.getTime())));
+      const latestTime = new Date(Math.max(...times.map(t => t.getTime())));
+
+      // Use earliest transaction as base
+      const earliestTransaction = group.reduce((earliest, current) => {
+        return new Date(current.submitTime) < new Date(earliest.submitTime)
+          ? current
+          : earliest;
+      });
+
+      // Format submit time display
+      const formatDateTime = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+      };
+
+      // Display format based on whether it spans multiple days
+      let submitTimeDisplay;
+      if (group.length > 1 && earliestDate !== latestDate) {
+        // Multiple days: show date range with times
+        submitTimeDisplay = `${formatDateTime(earliestTime)} - ${formatDateTime(latestTime)}`;
+      } else if (group.length > 1 && earliestDate === latestDate) {
+        // Same day, multiple records: show time range
+        submitTimeDisplay = `${formatDateTime(earliestTime)} - ${formatDateTime(latestTime)}`;
+      } else {
+        // Single record: show as-is
+        submitTimeDisplay = earliestTransaction.submitTime;
+      }
+
+      // Return combined transaction with earliest transaction's details
+      return {
+        ...earliestTransaction,
+        amount: totalAmount,
+        lossAmount: totalLossAmount,
+        rebateAmount: totalRebateAmount,
+        id: `${earliestTransaction.id}_combined_${group.length}`, // Mark as combined with count
+        submitTime: submitTimeDisplay,
+        remark: '', // Leave remark blank for combined records
+        // Store original transaction IDs for batch operations
+        originalIds: group.map(t => t.id),
+        // Store metadata for display
+        combinedCount: group.length,
+        dateRange: earliestDate !== latestDate ? `${earliestDate} to ${latestDate}` : earliestDate
+      };
+    });
+
+    return combinedTransactions;
+  };
+
   // Filter transactions based on search filters
-  const filteredTransactions = transactions.filter(transaction => {
+  const baseFilteredTransactions = transactions.filter(transaction => {
     // Only show PENDING transactions
     if (transaction.status !== 'PENDING') return false;
 
     // Date filters (by submitTime)
     if (searchFilters.dateFrom && new Date(transaction.submitTime) < new Date(searchFilters.dateFrom)) return false;
     if (searchFilters.dateTo && new Date(transaction.submitTime) > new Date(searchFilters.dateTo + ' 23:59:59')) return false;
-    if (searchFilters.rebateType && searchFilters.rebateType !== 'all' && transaction.rebateType !== searchFilters.rebateType) return false;
+    if (searchFilters.setupName && searchFilters.setupName !== 'all' && transaction.rebateName !== searchFilters.setupName) return false;
 
     return true;
   })
@@ -99,6 +188,9 @@ export default function RebateReleaseManagement() {
     const dateB = b.submitTime;
     return new Date(dateB).getTime() - new Date(dateA).getTime();
   });
+
+  // Apply period grouping AFTER initial filtering
+  const filteredTransactions = groupTransactionsByPeriod(baseFilteredTransactions);
 
   const totalAmount = filteredTransactions.reduce((sum, transaction) => {
     const rebateSetup = getRebateSetup(transaction.rebateName || '');
@@ -116,7 +208,7 @@ export default function RebateReleaseManagement() {
     setSearchFilters({
       dateFrom: '',
       dateTo: '',
-      rebateType: 'all'
+      setupName: 'all'
     });
     setHasGenerated(false);
     setSelectedRows(new Set());
@@ -226,8 +318,14 @@ export default function RebateReleaseManagement() {
 
     const remark = remarkInputs[transaction.id] || '';
 
+    // Check if this is a combined transaction
+    const isCombined = transaction.id.includes('_combined');
+    const idsToUpdate = isCombined && (transaction as any).originalIds
+      ? (transaction as any).originalIds
+      : [transaction.id];
+
     setTransactions(prev => prev.map(t =>
-      t.id === transaction.id
+      idsToUpdate.includes(t.id)
         ? {
             ...t,
             status: 'COMPLETED' as const,
@@ -256,13 +354,19 @@ export default function RebateReleaseManagement() {
     const currentTime = new Date().toISOString().replace('T', ' ').substring(0, 19);
     const remark = remarkInputs[transaction.id] || 'Cancelled by admin';
 
+    // Check if this is a combined transaction
+    const isCombined = transaction.id.includes('_combined');
+    const idsToUpdate = isCombined && (transaction as any).originalIds
+      ? (transaction as any).originalIds
+      : [transaction.id];
+
     setTransactions(prev => prev.map(t =>
-      t.id === transaction.id
+      idsToUpdate.includes(t.id)
         ? {
             ...t,
             status: 'REJECTED' as const,
-            completeTime: currentTime,
-            completeBy: 'ADMIN001',
+            rejectTime: currentTime,
+            rejectBy: 'ADMIN001',
             remark: remark
           }
         : t
@@ -339,14 +443,15 @@ export default function RebateReleaseManagement() {
             className="h-9"
           />
 
-          <Select value={searchFilters.rebateType} onValueChange={(value) => handleInputChange('rebateType', value)}>
+          <Select value={searchFilters.setupName} onValueChange={(value) => handleInputChange('setupName', value)}>
             <SelectTrigger className="h-9">
-              <SelectValue placeholder="Rebate Type" />
+              <SelectValue placeholder="Setup Name" />
             </SelectTrigger>
             <SelectContent>
-              {rebateTypeOptions.map(type => (
-                <SelectItem key={type} value={type}>
-                  {type === 'all' ? 'All Types' : type}
+              <SelectItem value="all">All Setups</SelectItem>
+              {rebateSetupsData.map(setup => (
+                <SelectItem key={setup.id} value={setup.name}>
+                  {setup.name}
                 </SelectItem>
               ))}
             </SelectContent>

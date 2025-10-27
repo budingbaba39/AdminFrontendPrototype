@@ -38,8 +38,9 @@ const getDefaultFormData = (): Promotion => ({
   bonusRate: 0,
   bonusFixedAmount: 0,
   bonusRandom: { min: 0, max: 0 },
-  maxWithdraw: 0,
-  creditLessThan: 0,
+  maxWithdrawAmount: 0,
+  maxWithdrawPercentage: 0,
+  claimableCreditLessThan: 0,
   validFrom: '',
   validTo: '',
   status: 'Active',
@@ -877,28 +878,41 @@ export default function PromotionListManagement() {
                       </div>
 
                       <div className="w-full">
-                        <label className="block text-sm font-semibold mb-2 text-gray-700">Max withdraw (less than 1 is percent, otherwise is fix value)
- *</label>
+                        <label className="block text-sm font-semibold mb-2 text-gray-700">Max Withdraw Amount *</label>
                         <Input
                           type="number"
                           min="0"
-                          value={formData.maxWithdraw}
-                          onChange={(e) => handleInputChange('maxWithdraw', parseFloat(e.target.value) || 0)}
+                          value={formData.maxWithdrawAmount}
+                          onChange={(e) => handleInputChange('maxWithdrawAmount', parseFloat(e.target.value) || 0)}
                           disabled={isReadOnly}
-                          placeholder="Maximum withdrawal"
+                          placeholder="Maximum withdrawal amount"
                           className="w-full h-10"
                         />
                       </div>
 
                       <div className="w-full">
-                        <label className="block text-sm font-semibold mb-2 text-gray-700">Credit Less Than *</label>
+                        <label className="block text-sm font-semibold mb-2 text-gray-700">Max Withdraw Percentage (%) *</label>
                         <Input
                           type="number"
                           min="0"
-                          value={formData.creditLessThan}
-                          onChange={(e) => handleInputChange('creditLessThan', parseFloat(e.target.value) || 0)}
+                          max="100"
+                          value={formData.maxWithdrawPercentage}
+                          onChange={(e) => handleInputChange('maxWithdrawPercentage', parseFloat(e.target.value) || 0)}
                           disabled={isReadOnly}
-                          placeholder="Credit limit threshold"
+                          placeholder="0-100"
+                          className="w-full h-10"
+                        />
+                      </div>
+
+                      <div className="w-full">
+                        <label className="block text-sm font-semibold mb-2 text-gray-700">Claimable Credit Less Than *</label>
+                        <Input
+                          type="number"
+                          min="0"
+                          value={formData.claimableCreditLessThan}
+                          onChange={(e) => handleInputChange('claimableCreditLessThan', parseFloat(e.target.value) || 0)}
+                          disabled={isReadOnly}
+                          placeholder="Claimable credit threshold"
                           className="w-full h-10"
                         />
                       </div>
