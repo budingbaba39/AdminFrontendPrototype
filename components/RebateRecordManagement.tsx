@@ -56,7 +56,7 @@ export default function RebateRecordManagement() {
   // Bulk actions state
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [autoApprove, setAutoApprove] = useState(false);
-  const [givenRebateInputs, setGivenRebateInputs] = useState<Record<string, number>>({});
+  const [releaseAmountInputs, setReleaseAmountInputs] = useState<Record<string, number>>({});
   const [remarkInputs, setRemarkInputs] = useState<Record<string, string>>({});
 
   // Helper Functions
@@ -309,9 +309,15 @@ export default function RebateRecordManagement() {
     setSelectedRows(newSelected);
   };
 
-  const handleGivenRebateChange = (transactionId: string, value: string) => {
-    const numValue = parseFloat(value) || 0;
-    setGivenRebateInputs(prev => ({ ...prev, [transactionId]: numValue }));
+  const handleReleaseAmountChange = (transactionId: string, value: string) => {
+    if (value === '') {
+      const newInputs = { ...releaseAmountInputs };
+      delete newInputs[transactionId];
+      setReleaseAmountInputs(newInputs);
+    } else {
+      const numValue = parseFloat(value);
+      setReleaseAmountInputs(prev => ({ ...prev, [transactionId]: numValue }));
+    }
   };
 
   const handleRemarkChange = (transactionId: string, value: string) => {
@@ -375,12 +381,10 @@ export default function RebateRecordManagement() {
   const handleCompleteSingle = (transaction: Transaction) => {
     const currentTime = new Date().toISOString().replace('T', ' ').substring(0, 19);
 
-    const releaseAmount = givenRebateInputs[transaction.id] !== undefined
-      ? givenRebateInputs[transaction.id]
-      : calculateRebateAmount(
-          transaction.lossAmount || 0,
-          getRebateRate(transaction.lossAmount || 0, getRebateSetup(transaction.rebateName || ''))
-        );
+    // Use rebateAmount from transaction data
+    const rebateAmount = transaction.rebateAmount || 0;
+    // If release amount input exists, use it; otherwise default to rebate amount
+    const releaseAmount = transaction.id in releaseAmountInputs ? releaseAmountInputs[transaction.id] : rebateAmount;
 
     setTransactions(prev => prev.map(t =>
       t.id === transaction.id
@@ -395,9 +399,9 @@ export default function RebateRecordManagement() {
         : t
     ));
 
-    const newGivenInputs = { ...givenRebateInputs };
-    delete newGivenInputs[transaction.id];
-    setGivenRebateInputs(newGivenInputs);
+    const newReleaseInputs = { ...releaseAmountInputs };
+    delete newReleaseInputs[transaction.id];
+    setReleaseAmountInputs(newReleaseInputs);
   };
 
   const handleUnlock = (transaction: Transaction) => {
@@ -450,11 +454,16 @@ export default function RebateRecordManagement() {
 
     setTransactions(prev => prev.map(t => {
       if (selectedRows.has(t.id)) {
+        // Use rebateAmount from transaction data
+        const rebateAmount = t.rebateAmount || 0;
+        // If release amount input exists, use it; otherwise default to rebate amount
+        const releaseAmount = t.id in releaseAmountInputs ? releaseAmountInputs[t.id] : rebateAmount;
         const remark = remarkInputs[t.id] || '';
 
         return {
           ...t,
           status: 'COMPLETED' as const,
+          amount: releaseAmount,
           completeTime: currentTime,
           completeBy: 'ADMIN001',
           remark: remark
@@ -464,6 +473,7 @@ export default function RebateRecordManagement() {
     }));
 
     setSelectedRows(new Set());
+    setReleaseAmountInputs({});
     setRemarkInputs({});
   };
 
@@ -668,7 +678,6 @@ export default function RebateRecordManagement() {
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Loss Amount</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Rebate Amount</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Release Amount</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Target</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Remark</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Status</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Action</th>
@@ -727,37 +736,18 @@ export default function RebateRecordManagement() {
                         ${rebateAmount.toFixed(2)}
                       </td>
                       <td className="px-3 py-2">
-                        {activeStatus === 'PENDING' ? (
+                        {transaction.status === 'PENDING' ? (
                           <Input
                             type="number"
                             step="0.01"
-                            value={givenRebateInputs[transaction.id] || ''}
-                            onChange={(e) => handleGivenRebateChange(transaction.id, e.target.value)}
+                            value={releaseAmountInputs[transaction.id] || ''}
+                            onChange={(e) => handleReleaseAmountChange(transaction.id, e.target.value)}
                             className="h-7 w-28 text-xs"
                           />
                         ) : (
                           <span className="text-green-600 font-semibold text-xs">
                             ${transaction.amount.toFixed(2)}
                           </span>
-                        )}
-                      </td>
-                      <td className="px-3 py-2">
-                        {transaction.status === 'APPROVED' && transaction.rebateTarget ? (
-                          <div className="space-y-1 min-w-[100px]">
-                            <div className="text-gray-900 font-medium text-xs">
-                              {transaction.rebateCurrent?.toFixed(0) || 0} / {transaction.rebateTarget?.toFixed(0) || 0}
-                            </div>
-                            <div className="w-full bg-gray-200 rounded-full h-2">
-                              <div
-                                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                                style={{
-                                  width: `${Math.min((transaction.rebateCurrent! / transaction.rebateTarget) * 100, 100)}%`
-                                }}
-                              />
-                            </div>
-                          </div>
-                        ) : (
-                          <span className="text-gray-900 text-xs">-</span>
                         )}
                       </td>
                       <td className="px-3 py-2">

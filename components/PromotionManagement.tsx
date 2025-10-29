@@ -2,13 +2,13 @@ import { useState } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Badge } from './ui/badge';
 import { ChevronDown, ChevronUp, Copy, RefreshCw } from 'lucide-react';
 import { Textarea } from './ui/textarea';
 import ProfileContent from './ProfileContent';
-import { sampleOtherTransactions, Transaction, TransactionStatus, getTypeColor, getStatusColor } from './transactionData';
-import { initialPromotions } from './PromotionListData';
+import { sampleOtherTransactions, Transaction, getTypeColor, getStatusColor } from './transactionData';
+import { initialPromotions } from './PromotionSetupData';
 import { User, sampleUsers } from './UserData';
 
 // Filter transactions to only get BONUS types
@@ -17,7 +17,6 @@ const getBonusTransactions = () => {
 };
 
 const levelOptions = ['all', 'bronze', 'silver', 'gold'];
-const statusOptions = ['all', 'pending', 'completed', 'rejected'];
 
 // Generate promotion options dynamically from initialPromotions
 const promotionOptions = [
@@ -28,6 +27,8 @@ const promotionOptions = [
   }))
 ];
 
+type PromoStatus = 'ALL' | 'PENDING' | 'COMPLETED' | 'REJECTED';
+
 export default function PromotionManagement() {
   const [searchFilters, setSearchFilters] = useState({
     transactionId: '',
@@ -35,7 +36,6 @@ export default function PromotionManagement() {
     dateFrom: '',
     dateTo: '',
     level: 'all',
-    status: 'all',
     handler: '',
     minAmount: '',
     maxAmount: '',
@@ -47,18 +47,22 @@ export default function PromotionManagement() {
   const [hasSearched, setHasSearched] = useState(true);
   const [transactions, setTransactions] = useState(getBonusTransactions());
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-  const [activeStatusFilter, setActiveStatusFilter] = useState<TransactionStatus>('ALL');
+  const [activeStatusFilter, setActiveStatusFilter] = useState<PromoStatus>('ALL');
   const [viewMode, setViewMode] = useState<'all' | 'me'>('all');
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
-  const [currentModal, setCurrentModal] = useState<'process' | 'handle' | 'remark' | null>(null);
+  const [currentModal, setCurrentModal] = useState<'remark' | null>(null);
   const [remarkText, setRemarkText] = useState('');
-  const [decisionStatus, setDecisionStatus] = useState('APPROVED');
-  const [rejectionRemark, setRejectionRemark] = useState('');
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [usersData, setUsersData] = useState<Map<string, User>>(new Map());
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelRemark, setCancelRemark] = useState('');
+
+  // Bulk actions state
+  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
+  const [autoApprove, setAutoApprove] = useState(false);
+  const [releaseAmountInputs, setReleaseAmountInputs] = useState<Record<string, number>>({});
+  const [remarkInputs, setRemarkInputs] = useState<Record<string, string>>({});
 
   // Current user for demo permissions
   const currentUser = 'CS001';
@@ -74,6 +78,9 @@ export default function PromotionManagement() {
         // Exclude APPROVED transactions (they are shown in ON GOING page)
         if (transaction.status === 'APPROVED') return false;
 
+        // Status filter
+        if (activeStatusFilter !== 'ALL' && transaction.status !== activeStatusFilter) return false;
+
         // Search filters
         if (searchFilters.transactionId && !transaction.id.toLowerCase().includes(searchFilters.transactionId.toLowerCase())) return false;
         if (searchFilters.username) {
@@ -88,7 +95,6 @@ export default function PromotionManagement() {
           const user = sampleUsers.find(u => u.mobile === transaction.mobile || u.id === transaction.userID);
           if (!user || user.level !== searchFilters.level) return false;
         }
-        if (searchFilters.status && searchFilters.status !== 'all' && transaction.status !== searchFilters.status.toUpperCase()) return false;
         if (searchFilters.handler && !transaction.processBy?.toLowerCase().includes(searchFilters.handler.toLowerCase()) && !transaction.completeBy?.toLowerCase().includes(searchFilters.handler.toLowerCase())) return false;
         if (searchFilters.minAmount && transaction.amount < parseFloat(searchFilters.minAmount)) return false;
         if (searchFilters.maxAmount && transaction.amount > parseFloat(searchFilters.maxAmount)) return false;
@@ -102,36 +108,55 @@ export default function PromotionManagement() {
 
         return true;
       })
-      .filter(t => activeStatusFilter === 'ALL' || t.status === activeStatusFilter)
       .sort((a, b) => {
-        // Sort by status-specific dates
-        let dateA: string;
-        let dateB: string;
-        if (a.status === 'COMPLETED' || a.status === 'REJECTED') {
-          dateA = a.completeTime || a.rejectTime || a.submitTime;
-        } else if (a.status === 'PROCESSING') {
-          dateA = a.processTime || a.submitTime;
-        } else {
-          dateA = a.submitTime;
-        }
-        if (b.status === 'COMPLETED' || b.status === 'REJECTED') {
-          dateB = b.completeTime || b.rejectTime || b.submitTime;
-        } else if (b.status === 'PROCESSING') {
-          dateB = b.processTime || b.submitTime;
-        } else {
-          dateB = b.submitTime;
-        }
+        const dateA = a.completeTime || a.rejectTime || a.submitTime;
+        const dateB = b.completeTime || b.rejectTime || b.submitTime;
         return new Date(dateB).getTime() - new Date(dateA).getTime();
       })
     : [];
 
-  // Calculate status counts (exclude APPROVED as they are in ON GOING page)
+  // Calculate status counts
+  const calculateFilteredCountByStatus = (status: PromoStatus) => {
+    const filtered = viewFilteredTransactions.filter(transaction => {
+      if (transaction.status === 'APPROVED') return false;
+      if (status !== 'ALL' && transaction.status !== status) return false;
+
+      // Apply same search filters
+      if (searchFilters.transactionId && !transaction.id.toLowerCase().includes(searchFilters.transactionId.toLowerCase())) return false;
+      if (searchFilters.username) {
+        const user = sampleUsers.find(u => u.id === transaction.userID);
+        const userName = user?.name || transaction.userID;
+        if (!userName.toLowerCase().includes(searchFilters.username.toLowerCase()) &&
+            !transaction.mobile.includes(searchFilters.username)) return false;
+      }
+      if (searchFilters.dateFrom && new Date(transaction.submitTime) < new Date(searchFilters.dateFrom)) return false;
+      if (searchFilters.dateTo && new Date(transaction.submitTime) > new Date(searchFilters.dateTo + ' 23:59:59')) return false;
+      if (searchFilters.level && searchFilters.level !== 'all') {
+        const user = sampleUsers.find(u => u.mobile === transaction.mobile || u.id === transaction.userID);
+        if (!user || user.level !== searchFilters.level) return false;
+      }
+      if (searchFilters.handler && !transaction.processBy?.toLowerCase().includes(searchFilters.handler.toLowerCase()) && !transaction.completeBy?.toLowerCase().includes(searchFilters.handler.toLowerCase())) return false;
+      if (searchFilters.minAmount && transaction.amount < parseFloat(searchFilters.minAmount)) return false;
+      if (searchFilters.maxAmount && transaction.amount > parseFloat(searchFilters.maxAmount)) return false;
+      if (searchFilters.remark && !transaction.remark?.toLowerCase().includes(searchFilters.remark.toLowerCase())) return false;
+      if (searchFilters.promotionType && transaction.promotionID) {
+        const promotion = initialPromotions.find(p => p.id === transaction.promotionID);
+        const promoName = promotion?.promoName || '';
+        if (!promoName.toLowerCase().includes(searchFilters.promotionType.toLowerCase())) return false;
+      }
+      if (searchFilters.promotionId && searchFilters.promotionId !== 'all' && transaction.promotionID !== searchFilters.promotionId) return false;
+
+      return true;
+    });
+
+    return filtered.length;
+  };
+
   const statusCounts = {
-    'ALL': viewFilteredTransactions.filter(t => t.status !== 'APPROVED').length,
-    'PENDING': viewFilteredTransactions.filter(t => t.status === 'PENDING').length,
-    'PROCESSING': viewFilteredTransactions.filter(t => t.status === 'PROCESSING').length,
-    'COMPLETED': viewFilteredTransactions.filter(t => t.status === 'COMPLETED').length,
-    'REJECTED': viewFilteredTransactions.filter(t => t.status === 'REJECTED').length,
+    ALL: calculateFilteredCountByStatus('ALL'),
+    PENDING: calculateFilteredCountByStatus('PENDING'),
+    COMPLETED: calculateFilteredCountByStatus('COMPLETED'),
+    REJECTED: calculateFilteredCountByStatus('REJECTED'),
   };
 
   // Calculate total amount
@@ -148,7 +173,6 @@ export default function PromotionManagement() {
       dateFrom: '',
       dateTo: '',
       level: 'all',
-      status: 'all',
       handler: '',
       minAmount: '',
       maxAmount: '',
@@ -168,16 +192,13 @@ export default function PromotionManagement() {
     let user = usersData.get(transaction.userID);
 
     if (!user) {
-      // First, try to find the user in sampleUsers by mobile or username
       const foundUser = sampleUsers.find(
         u => u.mobile === transaction.mobile || u.id === transaction.userID
       );
 
       if (foundUser) {
-        // Use the found user data (override id with transaction.userID for keying)
         user = { ...foundUser, id: transaction.userID };
       } else {
-        // Fallback: create basic user with default level/tags (shouldn't happen with complete sampleUsers)
         user = {
           id: transaction.userID,
           registerDate: transaction.submitTime,
@@ -187,7 +208,7 @@ export default function PromotionManagement() {
           credit: transaction.currentCredit || 0,
           bankAccount: transaction.bankAccountNumber || '',
           bank: transaction.from || '',
-          referrer_code: `REF-${sampleUsers.find(u => u.id === transaction.userID)?.name || transaction.userID}-XXXX`,
+          referrer_code: `REF-${transaction.userID}-XXXX`,
           referrer_by: null,
           agent: 'AGENT001',
           winLoss: 0,
@@ -222,15 +243,126 @@ export default function PromotionManagement() {
     navigator.clipboard.writeText(text);
   };
 
-
-  const canEditTransaction = (transaction: Transaction) => {
-    if (viewMode === 'me') return true;
-    return !transaction.processBy || transaction.processBy === currentUser;
-  };
-
   const handleUserUpdate = (updatedUser: User) => {
     setUsersData(prev => new Map(prev).set(updatedUser.id, updatedUser));
     setSelectedUser(updatedUser);
+  };
+
+  // Bulk action handlers
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const allPendingIds = filteredTransactions
+        .filter(t => t.status === 'PENDING')
+        .map(t => t.id);
+      setSelectedRows(new Set(allPendingIds));
+    } else {
+      setSelectedRows(new Set());
+    }
+  };
+
+  const handleRowSelect = (transactionId: string, checked: boolean) => {
+    const newSelected = new Set(selectedRows);
+    if (checked) {
+      newSelected.add(transactionId);
+    } else {
+      newSelected.delete(transactionId);
+    }
+    setSelectedRows(newSelected);
+  };
+
+  const handleReleaseAmountChange = (transactionId: string, value: string) => {
+    const numValue = parseFloat(value) || 0;
+    setReleaseAmountInputs(prev => ({ ...prev, [transactionId]: numValue }));
+  };
+
+  const handleRemarkChange = (transactionId: string, value: string) => {
+    setRemarkInputs(prev => ({ ...prev, [transactionId]: value }));
+  };
+
+  const handleSubmitSingle = (transaction: Transaction) => {
+    const currentTime = new Date().toISOString().replace('T', ' ').substring(0, 19);
+
+    // Use bonusAmount from transaction data
+    const bonusAmount = transaction.bonusAmount || 0;
+    // If release amount is filled, use it; otherwise default to bonus amount
+    const releaseAmount = releaseAmountInputs[transaction.id] || bonusAmount;
+    const remark = remarkInputs[transaction.id] || '';
+
+    setTransactions(prev => prev.map(t =>
+      t.id === transaction.id
+        ? {
+            ...t,
+            status: 'COMPLETED' as const,
+            completeTime: currentTime,
+            completeBy: currentUser,
+            amount: releaseAmount,
+            remark: remark
+          }
+        : t
+    ));
+
+    // Clear inputs
+    const newReleaseAmountInputs = { ...releaseAmountInputs };
+    delete newReleaseAmountInputs[transaction.id];
+    setReleaseAmountInputs(newReleaseAmountInputs);
+
+    const newRemarkInputs = { ...remarkInputs };
+    delete newRemarkInputs[transaction.id];
+    setRemarkInputs(newRemarkInputs);
+  };
+
+  const handleCancelSingle = (transaction: Transaction) => {
+    const currentTime = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    const remark = remarkInputs[transaction.id] || 'Cancelled by admin';
+
+    setTransactions(prev => prev.map(t =>
+      t.id === transaction.id
+        ? {
+            ...t,
+            status: 'REJECTED' as const,
+            completeTime: currentTime,
+            completeBy: currentUser,
+            remark: remark
+          }
+        : t
+    ));
+
+    // Clear inputs
+    const newReleaseAmountInputs = { ...releaseAmountInputs };
+    delete newReleaseAmountInputs[transaction.id];
+    setReleaseAmountInputs(newReleaseAmountInputs);
+
+    const newRemarkInputs = { ...remarkInputs };
+    delete newRemarkInputs[transaction.id];
+    setRemarkInputs(newRemarkInputs);
+  };
+
+  const handleSubmitAll = () => {
+    const currentTime = new Date().toISOString().replace('T', ' ').substring(0, 19);
+
+    setTransactions(prev => prev.map(t => {
+      if (selectedRows.has(t.id)) {
+        // Use bonusAmount from transaction data
+        const bonusAmount = t.bonusAmount || 0;
+        // If release amount is filled, use it; otherwise default to bonus amount
+        const releaseAmount = releaseAmountInputs[t.id] || bonusAmount;
+        const remark = remarkInputs[t.id] || '';
+
+        return {
+          ...t,
+          status: 'COMPLETED' as const,
+          completeTime: currentTime,
+          completeBy: currentUser,
+          amount: releaseAmount,
+          remark: remark
+        };
+      }
+      return t;
+    }));
+
+    setSelectedRows(new Set());
+    setReleaseAmountInputs({});
+    setRemarkInputs({});
   };
 
   const handleUnlock = (tx: Transaction) => {
@@ -277,6 +409,7 @@ export default function PromotionManagement() {
     setCancelRemark('');
   };
 
+  const pendingCount = statusCounts.PENDING;
 
   return (
     <div className="p-3 space-y-3 bg-gray-50 min-h-screen">
@@ -451,36 +584,67 @@ export default function PromotionManagement() {
         </div>
 
       </div>
-      
+
       {/* Status Filter Bar */}
-      <div className="bg-white rounded-lg shadow-sm border p-3">
-        <div className="relative">
-          <div className="flex bg-gray-100 rounded-lg p-1 relative">
-            <div
-              className="absolute top-1 bottom-1 bg-[#3949ab] rounded-md transition-all duration-300 ease-in-out shadow-sm"
-              style={{
-                width: `calc(${100 / 5}% - 0.25rem)`,
-                left: `calc(${(['ALL', 'PENDING', 'PROCESSING', 'COMPLETED', 'REJECTED'].indexOf(activeStatusFilter) * 100) / 5}% + 0.125rem)`,
-              }}
-            />
-            {(['ALL', 'PENDING', 'PROCESSING', 'COMPLETED', 'REJECTED'] as TransactionStatus[]).map((status) => (
-              <button
-                key={status}
-                onClick={() => {
-                  setActiveStatusFilter(status);
+      {hasSearched && (
+        <div className="bg-white rounded-lg shadow-sm border p-4">
+          <div className="relative">
+            <div className="flex bg-gray-100 rounded-lg p-1 relative">
+              <div
+                className="absolute top-1 bottom-1 bg-[#3949ab] rounded-md transition-all duration-300 ease-in-out shadow-sm"
+                style={{
+                  width: `calc(${100 / 4}% - 0.25rem)`,
+                  left: `calc(${(['ALL', 'PENDING', 'COMPLETED', 'REJECTED'].indexOf(activeStatusFilter) * 100) / 4}% + 0.125rem)`,
                 }}
-                className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors duration-300 relative z-10 ${
-                  activeStatusFilter === status
-                    ? 'text-white'
-                    : 'text-gray-700 hover:text-gray-900'
-                }`}
-              >
-                {status.charAt(0) + status.slice(1).toLowerCase()} ({statusCounts[status] || 0})
-              </button>
-            ))}
+              />
+              {(['ALL', 'PENDING', 'COMPLETED', 'REJECTED'] as PromoStatus[]).map((status) => (
+                <button
+                  key={status}
+                  onClick={() => setActiveStatusFilter(status)}
+                  className={`flex-1 px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-300 relative z-10 ${
+                    activeStatusFilter === status
+                      ? 'text-white'
+                      : 'text-gray-700 hover:text-gray-900'
+                  }`}
+                >
+                  {status.charAt(0) + status.slice(1).toLowerCase()} ({statusCounts[status]})
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
+
+      {/* Bulk Actions for PENDING Tab */}
+      {hasSearched && activeStatusFilter === 'PENDING' && pendingCount > 0 && (
+        <div className="bg-white rounded-lg shadow-sm border p-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={autoApprove}
+                  onChange={(e) => setAutoApprove(e.target.checked)}
+                  className="w-4 h-4 text-[#3949ab] border-gray-300 rounded focus:ring-[#3949ab]"
+                />
+                <span className="text-sm font-medium text-gray-700">Auto Approve</span>
+              </label>
+
+              <span className="text-sm text-gray-600">
+                Selected: <span className="font-semibold">{selectedRows.size}</span> / {pendingCount}
+              </span>
+            </div>
+
+            <Button
+              onClick={handleSubmitAll}
+              disabled={selectedRows.size === 0}
+              className="bg-[#4caf50] hover:bg-[#45a049] text-white h-9 text-sm font-semibold px-6 disabled:bg-gray-300 disabled:cursor-not-allowed"
+            >
+              SUBMIT ALL ({selectedRows.size})
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Transaction List */}
       {hasSearched && (
@@ -489,6 +653,16 @@ export default function PromotionManagement() {
             <table className="w-full">
               <thead className="bg-gray-50 border-b">
                 <tr>
+                  {activeStatusFilter === 'PENDING' && (
+                    <th className="px-3 py-2 text-center text-xs font-semibold text-gray-900 uppercase">
+                      <input
+                        type="checkbox"
+                        checked={selectedRows.size === pendingCount && pendingCount > 0}
+                        onChange={(e) => handleSelectAll(e.target.checked)}
+                        className="w-4 h-4 text-[#3949ab] border-gray-300 rounded focus:ring-[#3949ab]"
+                      />
+                    </th>
+                  )}
                   <th className="px-3 py-2 text-center text-xs font-semibold text-gray-900 uppercase">Transaction ID</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Type</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Name</th>
@@ -497,13 +671,12 @@ export default function PromotionManagement() {
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Promo Type</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Promotion Name</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Promotion ID</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Submit Time</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Completed Time</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Handler</th>
                   <th className="px-3 py-2 text-right text-xs font-semibold text-gray-900 uppercase">Transfer Amount</th>
                   <th className="px-3 py-2 text-right text-xs font-semibold text-gray-900 uppercase">Bonus</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Target</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Submit Time</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Processing Time</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">C/R Time</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Handler</th>
+                  <th className="px-3 py-2 text-right text-xs font-semibold text-gray-900 uppercase">Release Amount</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Remark</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Status</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Action</th>
@@ -511,28 +684,9 @@ export default function PromotionManagement() {
               </thead>
               <tbody className="divide-y divide-gray-200 text-sm">
                 {filteredTransactions.map((transaction) => {
-                  // Calculate bonus amount
-                  const calculateBonus = () => {
-                    if (transaction.bonusAmount) return transaction.bonusAmount;
-
-                    const promotion = initialPromotions.find(p => p.id === transaction.promotionID);
-                    if (!promotion) return 0;
-
-                    const transferAmount = transaction.transferAmount || transaction.amount;
-
-                    if (promotion.bonusRate > 0) {
-                      const bonus = transferAmount * (promotion.bonusRate / 100);
-                      return Math.min(bonus, promotion.maxClaimBonus);
-                    } else if (promotion.bonusFixedAmount > 0) {
-                      return promotion.bonusFixedAmount;
-                    } else if (promotion.bonusRandom.max > 0) {
-                      return (promotion.bonusRandom.min + promotion.bonusRandom.max) / 2;
-                    }
-                    return 0;
-                  };
-
-                  const bonusAmount = calculateBonus();
-                  const transferAmount = transaction.transferAmount || transaction.amount;
+                  // Use data fields directly from transaction
+                  const transferAmount = transaction.transferAmount || 0;
+                  const bonusAmount = transaction.bonusAmount || 0;
 
                   // Get promotion details from promotionID
                   const promotion = initialPromotions.find(p => p.id === transaction.promotionID);
@@ -541,6 +695,16 @@ export default function PromotionManagement() {
 
                   return (
                     <tr key={transaction.id} className="hover:bg-gray-50">
+                      {activeStatusFilter === 'PENDING' && (
+                        <td className="px-3 py-2 text-center">
+                          <input
+                            type="checkbox"
+                            checked={selectedRows.has(transaction.id)}
+                            onChange={(e) => handleRowSelect(transaction.id, e.target.checked)}
+                            className="w-4 h-4 text-[#3949ab] border-gray-300 rounded focus:ring-[#3949ab]"
+                          />
+                        </td>
+                      )}
                       <td className="px-3 py-2">
                         <div className="flex items-center justify-center gap-2">
                           <span className="text-gray-900 text-xs font-medium">{transaction.id}</span>
@@ -572,6 +736,9 @@ export default function PromotionManagement() {
                       <td className="px-3 py-2 text-gray-900 text-xs">{promotionType}</td>
                       <td className="px-3 py-2 text-gray-900 text-xs">{promotionName}</td>
                       <td className="px-3 py-2 text-gray-900 text-xs">{transaction.promotionID || '-'}</td>
+                      <td className="px-3 py-2 text-gray-900 text-xs">{transaction.submitTime}</td>
+                      <td className="px-3 py-2 text-gray-900 text-xs">{transaction.completeTime || transaction.rejectTime || '-'}</td>
+                      <td className="px-3 py-2 text-blue-600 text-xs">{transaction.completeBy || transaction.rejectBy || '-'}</td>
                       <td className="px-3 py-2 text-right">
                         <span className="font-semibold text-xs text-green-600">
                           ${transferAmount.toFixed(2)}
@@ -582,24 +749,34 @@ export default function PromotionManagement() {
                           ${bonusAmount.toFixed(2)}
                         </span>
                       </td>
-                      <td className="px-3 py-2">
-                        <span className="text-xs text-gray-900">
-                          {transaction.status === 'PENDING' || transaction.status === 'PROCESSING'
-                            ? `0/${transaction.turnoverTarget || 0}`
-                            : transaction.status === 'APPROVED'
-                            ? `${transaction.turnoverCurrent || 0}/${transaction.turnoverTarget || 0}`
-                            : transaction.status === 'COMPLETED'
-                            ? `${transaction.turnoverTarget || 0}/${transaction.turnoverTarget || 0}`
-                            : '0/0'
-                          }
-                        </span>
+                      <td className="px-3 py-2 text-right">
+                        {transaction.status === 'PENDING' ? (
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={releaseAmountInputs[transaction.id] || ''}
+                            onChange={(e) => handleReleaseAmountChange(transaction.id, e.target.value)}
+                            className="h-7 w-28 text-xs"
+                          />
+                        ) : (
+                          <span className="font-semibold text-xs text-green-600">
+                            ${transaction.amount.toFixed(2)}
+                          </span>
+                        )}
                       </td>
-                      <td className="px-3 py-2 text-gray-900 text-xs">{transaction.submitTime}</td>
-                      <td className="px-3 py-2 text-gray-900 text-xs">{transaction.processTime || '-'}</td>
-                      <td className="px-3 py-2 text-gray-900 text-xs">{transaction.completeTime || transaction.rejectTime || '-'}</td>
-                      <td className="px-3 py-2 text-blue-600 text-xs">{transaction.processBy || transaction.completeBy || '-'}</td>
-                      <td className="px-3 py-2 text-gray-900 text-xs max-w-32 truncate" title={transaction.remark}>
-                        {transaction.remark || '-'}
+                      <td className="px-3 py-2">
+                        {transaction.status === 'PENDING' ? (
+                          <Input
+                            type="text"
+                            value={remarkInputs[transaction.id] || ''}
+                            onChange={(e) => setRemarkInputs({ ...remarkInputs, [transaction.id]: e.target.value })}
+                            className="h-7 w-28 text-xs"
+                          />
+                        ) : (
+                          <span className="text-gray-900 text-xs max-w-40 truncate block" title={transaction.remark}>
+                            {transaction.remark || '-'}
+                          </span>
+                        )}
                       </td>
                       <td className="px-3 py-2">
                         <Badge className={`${getStatusColor(transaction.status)} text-xs font-semibold px-2 py-1`}>
@@ -609,39 +786,24 @@ export default function PromotionManagement() {
                       <td className="px-3 py-2">
                         <div className="flex gap-1">
                           {transaction.status === 'PENDING' ? (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedTransaction(transaction);
-                                setCurrentModal('process');
-                              }}
-                              disabled={!canEditTransaction(transaction)}
-                              className={`text-xs h-6 px-2 border-0 ${
-                                canEditTransaction(transaction)
-                                  ? 'bg-[rgba(78,174,68,1)] text-white hover:bg-[#1D5B15]'
-                                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                              }`}
-                            >
-                              PROCESS
-                            </Button>
-                          ) : transaction.status === 'PROCESSING' ? (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedTransaction(transaction);
-                                setCurrentModal('handle');
-                              }}
-                              disabled={!canEditTransaction(transaction)}
-                              className={`text-xs h-6 px-2 ${
-                                canEditTransaction(transaction)
-                                  ? 'bg-orange-500 text-white hover:bg-orange-600 border-orange-500'
-                                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                              }`}
-                            >
-                              HANDLE
-                            </Button>
+                            <>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleSubmitSingle(transaction)}
+                                className="bg-[#4caf50] text-white hover:bg-[#45a049] border-[#4caf50] text-xs h-6 px-2"
+                              >
+                                SUBMIT
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleCancelSingle(transaction)}
+                                className="bg-[#f44336] text-white hover:bg-[#d32f2f] border-[#f44336] text-xs h-6 px-2"
+                              >
+                                CANCEL
+                              </Button>
+                            </>
                           ) : transaction.status === 'APPROVED' ? (
                             <>
                               <Button
@@ -661,24 +823,20 @@ export default function PromotionManagement() {
                                 CANCEL
                               </Button>
                             </>
-                          ) : null}
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedTransaction(transaction);
-                              setRemarkText(transaction.remark || '');
-                              setCurrentModal('remark');
-                            }}
-                            disabled={!canEditTransaction(transaction)}
-                            className={`text-xs h-6 px-2 ${
-                              canEditTransaction(transaction)
-                                ? 'bg-[#3949ab] text-white hover:bg-[#2c3582] border-[#3949ab]'
-                                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                            }`}
-                          >
-                            REMARK
-                          </Button>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedTransaction(transaction);
+                                setRemarkText(transaction.remark || '');
+                                setCurrentModal('remark');
+                              }}
+                              className="bg-[#3949ab] text-white hover:bg-[#2c3582] border-[#3949ab] text-xs h-6 px-2"
+                            >
+                              REMARK
+                            </Button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -690,214 +848,56 @@ export default function PromotionManagement() {
         </div>
       )}
 
-
-
-      {/* Process Modal */}
-      <Dialog open={currentModal === 'process'} onOpenChange={() => setCurrentModal(null)}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Process Bonus</DialogTitle>
-          </DialogHeader>
-          {selectedTransaction && (
-            <div className="space-y-4">
-              <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-                <div><strong>Transaction ID:</strong> {selectedTransaction.id}</div>
-                <div><strong>Name:</strong> {selectedTransaction.name}</div>
-                <div><strong>Username:</strong> {selectedTransaction.userID}</div>
-                <div><strong>Type:</strong> {selectedTransaction.type}</div>
-                <div><strong>Amount:</strong> ${selectedTransaction.amount.toFixed(2)}</div>
-              </div>
-              <Button
-                onClick={() => {
-                  setTransactions(prev => prev.map(t =>
-                    t.id === selectedTransaction.id
-                      ? { ...t, status: 'PROCESSING', processTime: new Date().toISOString().slice(0, 16).replace('T', ' '), processBy: currentUser }
-                      : t
-                  ));
-                  setCurrentModal('handle');
-                }}
-                className="w-full bg-[#4caf50] hover:bg-[#45a049] text-white h-12 text-base font-semibold"
-              >
-                START PROCESSING
-              </Button>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Handle Modal */}
-      <Dialog open={currentModal === 'handle'} onOpenChange={() => setCurrentModal(null)}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Transaction Decision</DialogTitle>
-            <DialogDescription>
-              Make the final decision to approve or reject this transaction.
-            </DialogDescription>
-          </DialogHeader>
-          {selectedTransaction && (
-            <div className="space-y-4">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Promotion Name</label>
-                  <Input value={initialPromotions.find(p => p.id === selectedTransaction.promotionID)?.promoName || '-'} readOnly className="bg-gray-50" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Promotion ID</label>
-                  <Input value={selectedTransaction.promotionID || '-'} readOnly className="bg-gray-50" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                  <Input value={selectedTransaction.type} readOnly className="bg-gray-50" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
-                  <Input value={`$${selectedTransaction.amount.toFixed(2)}`} readOnly className="bg-gray-50" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                  <Select value={decisionStatus} onValueChange={(value) => setDecisionStatus(value)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="APPROVED">APPROVED</SelectItem>
-                      <SelectItem value="REJECTED">REJECTED</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                {decisionStatus === 'REJECTED' && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Rejection Remark</label>
-                    <Textarea
-                      placeholder="Please provide a reason for rejection"
-                      value={rejectionRemark}
-                      onChange={(e) => setRejectionRemark(e.target.value)}
-                      className="min-h-[80px]"
-                    />
-                  </div>
-                )}
-              </div>
-              <div className="flex gap-3">
-                <Button
-                  onClick={() => {
-                    if (!selectedTransaction) return;
-
-                    if (decisionStatus === 'APPROVED') {
-                      // Calculate bonus and turnover for APPROVED status
-                      const promotion = initialPromotions.find(p => p.id === selectedTransaction.promotionID);
-                      const transferAmount = selectedTransaction.transferAmount || selectedTransaction.amount;
-
-                      let bonusAmount = 0;
-                      if (promotion) {
-                        if (promotion.bonusRate > 0) {
-                          const bonus = transferAmount * (promotion.bonusRate / 100);
-                          bonusAmount = Math.min(bonus, promotion.maxClaimBonus);
-                        } else if (promotion.bonusFixedAmount > 0) {
-                          bonusAmount = promotion.bonusFixedAmount;
-                        } else if (promotion.bonusRandom.max > 0) {
-                          bonusAmount = (promotion.bonusRandom.min + promotion.bonusRandom.max) / 2;
-                        }
-                      }
-
-                      // Calculate turnover target: (transferAmount + bonusAmount) * targetMultiplier
-                      const turnoverMultiplier = promotion?.targetMultiplier || 5;
-                      const turnoverTarget = (transferAmount + bonusAmount) * turnoverMultiplier;
-
-                      setTransactions(prev => prev.map(t =>
-                        t.id === selectedTransaction.id
-                          ? {
-                              ...t,
-                              status: 'APPROVED' as any,
-                              processTime: new Date().toISOString().slice(0, 19).replace('T', ' '),
-                              processBy: currentUser,
-                              startTime: new Date().toISOString().slice(0, 19).replace('T', ' '),
-                              transferAmount: transferAmount,
-                              bonusAmount: bonusAmount,
-                              turnoverCurrent: 0,
-                              turnoverTarget: turnoverTarget
-                            }
-                          : t
-                      ));
-                    } else {
-                      // REJECTED status
-                      setTransactions(prev => prev.map(t =>
-                        t.id === selectedTransaction.id
-                          ? {
-                              ...t,
-                              status: 'REJECTED' as any,
-                              rejectTime: new Date().toISOString().slice(0, 19).replace('T', ' '),
-                              rejectBy: currentUser,
-                              remark: rejectionRemark
-                            }
-                          : t
-                      ));
-                    }
-
-                    setDecisionStatus('APPROVED');
-                    setRejectionRemark('');
-                    setCurrentModal(null);
-                  }}
-                  className="flex-1 bg-green-500 hover:bg-green-600 text-white"
-                >
-                  SUBMIT
-                </Button>
-                <Button
-                  onClick={() => {
-                    setDecisionStatus('APPROVED');
-                    setRejectionRemark('');
-                    setCurrentModal(null);
-                  }}
-                  variant="outline"
-                  className="flex-1"
-                >
-                  CANCEL
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
       {/* Remark Modal */}
       <Dialog open={currentModal === 'remark'} onOpenChange={() => setCurrentModal(null)}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-4xl w-full max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Add Remark</DialogTitle>
+            <DialogTitle>Edit Remark</DialogTitle>
           </DialogHeader>
           {selectedTransaction && (
-            <div className="space-y-4">
-              <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-                <div><strong>Transaction ID:</strong> {selectedTransaction.id}</div>
-                <div><strong>Username:</strong> {selectedTransaction.userID}</div>
-                <div><strong>Amount:</strong> ${selectedTransaction.amount.toFixed(2)}</div>
+            <div className="space-y-4 pt-4">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="font-semibold">Transaction ID:</span>
+                  <p className="text-gray-600">{selectedTransaction.id}</p>
+                </div>
+                <div>
+                  <span className="font-semibold">Username:</span>
+                  <p className="text-gray-600">{selectedTransaction.userID}</p>
+                </div>
+                <div>
+                  <span className="font-semibold">Amount:</span>
+                  <p className="text-gray-600">${selectedTransaction.amount.toFixed(2)}</p>
+                </div>
               </div>
-              <Textarea
-                placeholder="Add a remark"
-                value={remarkText}
-                onChange={(e) => setRemarkText(e.target.value)}
-                className="min-h-[80px]"
-              />
-              <div className="flex gap-3">
+              <div>
+                <label className="block text-sm font-semibold mb-2">Remark:</label>
+                <Textarea
+                  value={remarkText}
+                  onChange={(e) => setRemarkText(e.target.value)}
+                  rows={4}
+                  className="w-full h-10 min-h-[80px]"
+                  placeholder="Enter remark..."
+                />
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentModal(null)}
+                  className="text-xs h-10"
+                >
+                  Cancel
+                </Button>
                 <Button
                   onClick={() => {
                     setTransactions(prev => prev.map(t =>
-                      t.id === selectedTransaction.id
-                        ? { ...t, remark: remarkText }
-                        : t
+                      t.id === selectedTransaction.id ? { ...t, remark: remarkText } : t
                     ));
                     setCurrentModal(null);
-                    setSelectedTransaction(null);
                   }}
-                  className="flex-1 bg-[#4caf50] hover:bg-[#45a049] text-white"
+                  className="bg-[#4caf50] hover:bg-[#45a049] text-white text-xs h-10"
                 >
-                  SAVE
-                </Button>
-                <Button
-                  onClick={() => setCurrentModal(null)}
-                  variant="outline"
-                  className="flex-1"
-                >
-                  CANCEL
+                  Save
                 </Button>
               </div>
             </div>

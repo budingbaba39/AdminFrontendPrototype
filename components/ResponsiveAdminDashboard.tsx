@@ -18,7 +18,7 @@ import BankListContent from './BankListContent';
 import BankSetupContent from './BankSetupContent';
 import TagContent from './TagContent';
 import PromotionContent from './PromotionContent';
-import PromotionListContent from './PromotionListContent';
+import PromotionSetupContent from './PromotionSetupContent';
 import RebateRecordContent from './RebateRecordContent';
 import OngoingManagement from './OngoingManagement';
 import RebateSetupContent from './RebateSetupContent';
@@ -38,7 +38,7 @@ import KYCContent from './KYCContent';
 import StaffManagement from './StaffManagement';
 
 // Define page type to avoid repetition
-type PageType = 'dashboard' | 'deposit' | 'withdrawal' | 'adjustment' | 'ongoing' | 'transaction-record' | 'user-record' | 'level' | 'tag' | 'promotion' | 'promotion-record' | 'promotion-list' | 'promotion-ongoing' | 'rebate' | 'rebate-record' | 'rebate-setup' | 'rebate-release' | 'rebate-schedule' | 'rebate-ongoing' | 'cashback' | 'cashback-record' | 'cashback-setup' | 'cashback-release' | 'cashback-schedule' | 'cashback-ongoing' | 'commission' | 'commission-record' | 'commission-setup' | 'commission-release' | 'commission-schedule' | 'commission-ongoing' | 'referrer-setup' | 'referrer-record' | 'game-kiosk' | 'settings' | 'security' | 'bank-list' | 'bank-setup' | 'bank-report' | 'report' | 'admin-tool' | 'api' | 'change-log' | 'display' | 'domain' | 'page' | 'staff' | 'theme' | 'tools' | 'kyc-management';
+type PageType = 'dashboard' | 'deposit' | 'withdrawal' | 'adjustment' | 'ongoing' | 'transaction-record' | 'user-record' | 'level' | 'tag' | 'promotion' | 'promotion-record' | 'promotion-setup' | 'promotion-ongoing' | 'rebate' | 'rebate-record' | 'rebate-setup' | 'rebate-release' | 'rebate-schedule' | 'rebate-ongoing' | 'cashback' | 'cashback-record' | 'cashback-setup' | 'cashback-release' | 'cashback-schedule' | 'cashback-ongoing' | 'commission' | 'commission-record' | 'commission-setup' | 'commission-release' | 'commission-schedule' | 'commission-ongoing' | 'referrer-setup' | 'referrer-record' | 'game-kiosk' | 'settings' | 'security' | 'bank-list' | 'bank-setup' | 'bank-report' | 'report' | 'admin-tool' | 'api' | 'change-log' | 'display' | 'domain' | 'page' | 'staff' | 'theme' | 'tools' | 'kyc-management';
 
 interface ResponsiveAdminDashboardProps {
   currentPage: PageType;
@@ -237,7 +237,7 @@ function PromotionMenuItem({ currentPage, onNavigate }: {
   onNavigate: (page: PageType) => void;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const isPromotionActive = ['promotion', 'promotion-record', 'promotion-list'].includes(currentPage);
+  const isPromotionActive = ['promotion', 'promotion-record', 'promotion-setup'].includes(currentPage);
 
   useEffect(() => {
     if (isPromotionActive) {
@@ -262,14 +262,14 @@ function PromotionMenuItem({ currentPage, onNavigate }: {
       {isExpanded && (
         <div className="ml-6 mt-2 space-y-1">
           <button
-            onClick={() => onNavigate('promotion-list')}
+            onClick={() => onNavigate('promotion-setup')}
             className={`w-full flex items-center p-2 rounded-lg text-sm font-medium tracking-[-0.14px] transition-colors ${
-              currentPage === 'promotion-list'
+              currentPage === 'promotion-setup'
                 ? 'bg-[#e8eaf6] text-[#3949ab]'
                 : 'text-[#3949ab] hover:bg-[#f0f0f0]'
             }`}
           >
-            <span className="text-left">3.1 PROMOTION LIST</span>
+            <span className="text-left">3.1 PROMOTION SETUP</span>
           </button>
 
           <button
@@ -753,7 +753,7 @@ function Sidebar({ currentPage, onNavigate, onLogout, className = "" }: {
 function Header({ onToggleSidebar, currentPage, onNavigate }: {
   onToggleSidebar: () => void;
   currentPage: string;
-  onNavigate: (page: 'dashboard' | 'deposit' | 'withdrawal' | 'adjustment' | 'transaction-record' | 'user-record' | 'level' | 'tag' | 'promotion' | 'promotion-record' | 'promotion-list' | 'rebate' | 'rebate-record' | 'rebate-setup' | 'rebate-release' | 'rebate-schedule' | 'cashback' | 'cashback-record' | 'cashback-setup' | 'cashback-release' | 'cashback-schedule' | 'commission' | 'commission-record' | 'game-kiosk' | 'settings' | 'security' | 'bank-list' | 'bank-setup' | 'bank-report' | 'report' | 'admin-tool' | 'api' | 'change-log' | 'display' | 'domain' | 'page' | 'staff' | 'theme' | 'tools') => void;
+  onNavigate: (page: PageType) => void;
 }) {
   return (
     <div className="bg-white border-b border-[#e0e0e0] shadow-sm">
@@ -862,8 +862,8 @@ export default function ResponsiveAdminDashboard({ currentPage, onNavigate, onLo
         return <PromotionContent />;
       case 'promotion-record':
         return <PromotionContent />; // Using existing component for promotion record
-      case 'promotion-list':
-        return <PromotionListContent />;
+      case 'promotion-setup':
+        return <PromotionSetupContent />;
       case 'rebate':
       case 'rebate-record':
         return <RebateRecordContent />;

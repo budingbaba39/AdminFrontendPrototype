@@ -59,7 +59,7 @@ export default function CashBackRecordManagement() {
   // Bulk actions state
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [autoApprove, setAutoApprove] = useState(false);
-  const [givenCashbackInputs, setGivenCashbackInputs] = useState<Record<string, number>>({});
+  const [releaseAmountInputs, setReleaseAmountInputs] = useState<Record<string, number>>({});
   const [remarkInputs, setRemarkInputs] = useState<Record<string, string>>({});
 
   // Helper Functions
@@ -315,9 +315,15 @@ export default function CashBackRecordManagement() {
     setSelectedRows(newSelected);
   };
 
-  const handleGivenCashbackChange = (transactionId: string, value: string) => {
-    const numValue = parseFloat(value) || 0;
-    setGivenCashbackInputs(prev => ({ ...prev, [transactionId]: numValue }));
+  const handleReleaseAmountChange = (transactionId: string, value: string) => {
+    if (value === '') {
+      const newInputs = { ...releaseAmountInputs };
+      delete newInputs[transactionId];
+      setReleaseAmountInputs(newInputs);
+    } else {
+      const numValue = parseFloat(value);
+      setReleaseAmountInputs(prev => ({ ...prev, [transactionId]: numValue }));
+    }
   };
 
   const handleRemarkChange = (transactionId: string, value: string) => {
@@ -381,12 +387,14 @@ export default function CashBackRecordManagement() {
   const handleCompleteSingle = (transaction: Transaction) => {
     const currentTime = new Date().toISOString().replace('T', ' ').substring(0, 19);
 
-    const releaseAmount = givenCashbackInputs[transaction.id] !== undefined
-      ? givenCashbackInputs[transaction.id]
-      : calculateCashbackAmount(
-          transaction.lossAmount || 0,
-          getCashbackRate(transaction.lossAmount || 0, getCashbackSetup(transaction.cashbackName || ''))
-        );
+    // Calculate cashback amount from data
+    const cashbackAmount = calculateCashbackAmount(
+      transaction.lossAmount || 0,
+      getCashbackRate(transaction.lossAmount || 0, getCashbackSetup(transaction.cashbackName || ''))
+    );
+
+    // If release amount input exists, use it; otherwise default to cashback amount
+    const releaseAmount = transaction.id in releaseAmountInputs ? releaseAmountInputs[transaction.id] : cashbackAmount;
 
     setTransactions(prev => prev.map(t =>
       t.id === transaction.id
@@ -401,9 +409,9 @@ export default function CashBackRecordManagement() {
         : t
     ));
 
-    const newGivenInputs = { ...givenCashbackInputs };
-    delete newGivenInputs[transaction.id];
-    setGivenCashbackInputs(newGivenInputs);
+    const newReleaseInputs = { ...releaseAmountInputs };
+    delete newReleaseInputs[transaction.id];
+    setReleaseAmountInputs(newReleaseInputs);
   };
 
   const handleUnlock = (transaction: Transaction) => {
@@ -456,11 +464,19 @@ export default function CashBackRecordManagement() {
 
     setTransactions(prev => prev.map(t => {
       if (selectedRows.has(t.id)) {
+        // Calculate cashback amount from data
+        const cashbackAmount = calculateCashbackAmount(
+          t.lossAmount || 0,
+          getCashbackRate(t.lossAmount || 0, getCashbackSetup(t.cashbackName || ''))
+        );
+        // If release amount input exists, use it; otherwise default to cashback amount
+        const releaseAmount = t.id in releaseAmountInputs ? releaseAmountInputs[t.id] : cashbackAmount;
         const remark = remarkInputs[t.id] || '';
 
         return {
           ...t,
           status: 'COMPLETED' as const,
+          amount: releaseAmount,
           completeTime: currentTime,
           completeBy: 'ADMIN001',
           remark: remark
@@ -470,6 +486,7 @@ export default function CashBackRecordManagement() {
     }));
 
     setSelectedRows(new Set());
+    setReleaseAmountInputs({});
     setRemarkInputs({});
   };
 
@@ -749,12 +766,12 @@ export default function CashBackRecordManagement() {
                         ${cashbackAmount.toFixed(2)}
                       </td>
                       <td className="px-3 py-2">
-                        {activeStatus === 'PENDING' ? (
+                        {transaction.status === 'PENDING' ? (
                           <Input
                             type="number"
                             step="0.01"
-                            value={givenCashbackInputs[transaction.id] || ''}
-                            onChange={(e) => handleGivenCashbackChange(transaction.id, e.target.value)}
+                            value={releaseAmountInputs[transaction.id] || ''}
+                            onChange={(e) => handleReleaseAmountChange(transaction.id, e.target.value)}
                             className="h-7 w-28 text-xs"
                           />
                         ) : (

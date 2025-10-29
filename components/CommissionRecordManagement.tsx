@@ -617,7 +617,6 @@ export default function CommissionRecordManagement() {
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Submit Time</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Completed Time</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Amount</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Target</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Remark</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Status</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Action</th>
@@ -679,25 +678,6 @@ export default function CommissionRecordManagement() {
                         <span className="text-green-600 font-semibold text-xs">
                           ${transaction.amount.toFixed(2)}
                         </span>
-                      </td>
-                      <td className="px-3 py-2">
-                        {transaction.status === 'APPROVED' && transaction.commissionTarget ? (
-                          <div className="space-y-1 min-w-[100px]">
-                            <div className="text-gray-900 font-medium text-xs">
-                              {transaction.commissionCurrent?.toFixed(0) || 0} / {transaction.commissionTarget?.toFixed(0) || 0}
-                            </div>
-                            <div className="w-full bg-gray-200 rounded-full h-2">
-                              <div
-                                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                                style={{
-                                  width: `${Math.min((transaction.commissionCurrent! / transaction.commissionTarget) * 100, 100)}%`
-                                }}
-                              />
-                            </div>
-                          </div>
-                        ) : (
-                          <span className="text-gray-900 text-xs">-</span>
-                        )}
                       </td>
                       <td className="px-3 py-2">
                         {transaction.status === 'PENDING' ? (

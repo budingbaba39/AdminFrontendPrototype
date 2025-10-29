@@ -88,6 +88,11 @@ export default function LevelManagement() {
     malay: { name: '', description: '', image: '' }
   });
 
+  const [validationErrors, setValidationErrors] = useState({
+    englishName: false,
+    depositTurnoverRate: false
+  });
+
   // Filter levels based on search and status
   const filteredLevels = levels.filter(level => {
     const matchesSearch = level.levelName.toLowerCase().includes(searchFilter.toLowerCase());
@@ -135,16 +140,22 @@ export default function LevelManagement() {
     setImagePreview('');
     setActiveTab('info');
     setLanguageTab('english');
+    setValidationErrors({
+      englishName: false,
+      depositTurnoverRate: false
+    });
   };
 
   const handleCreateLevel = () => {
     // Validation
-    if (formData.depositTurnoverRate <= 0) {
-      alert('Deposit Turnover Rate must be greater than 0');
-      return;
-    }
-    if (formData.autoUpgradeAmount < 0) {
-      alert('Auto Upgrade Amount must be >= 0');
+    const errors = {
+      englishName: !languageTranslations.english.name || languageTranslations.english.name.trim() === '',
+      depositTurnoverRate: formData.depositTurnoverRate <= 0
+    };
+
+    setValidationErrors(errors);
+
+    if (errors.englishName || errors.depositTurnoverRate) {
       return;
     }
 
@@ -918,7 +929,7 @@ export default function LevelManagement() {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Status *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                 <select
                   value={formData.status}
                   onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as 'Active' | 'Inactive' }))}
@@ -929,7 +940,7 @@ export default function LevelManagement() {
                 </select>
               </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1"> Minimum Deposit Amount *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1"> Minimum Deposit Amount</label>
                   <Input
                     type="number"
                     min="0"
@@ -944,7 +955,7 @@ export default function LevelManagement() {
 
             <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Minimum Withdraw Amount *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Minimum Withdraw Amount</label>
                   <Input
                     type="number"
                     min="0"
@@ -957,7 +968,7 @@ export default function LevelManagement() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Max Withdraw Amount Per Transaction *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Max Withdraw Amount Per Transaction</label>
                   <Input
                     type="number"
                     min="0"
@@ -972,7 +983,7 @@ export default function LevelManagement() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Max Withdraw Amount Per Day *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Max Withdraw Amount Per Day</label>
                 <Input
                   type="number"
                   min="0"
@@ -984,7 +995,7 @@ export default function LevelManagement() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Max Withdraw Count Per Day *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Max Withdraw Count Per Day</label>
                 <Input
                   type="number"
                   min="0"
@@ -1005,15 +1016,18 @@ export default function LevelManagement() {
                   min="0.01"
                   step="0.1"
                   value={formData.depositTurnoverRate}
-                  onChange={(e) => setFormData(prev => ({ ...prev, depositTurnoverRate: parseFloat(e.target.value) || 1 }))}
-                  className="w-full h-9"
+                  onChange={(e) => {
+                    setFormData(prev => ({ ...prev, depositTurnoverRate: parseFloat(e.target.value) || 1 }));
+                    setValidationErrors(prev => ({ ...prev, depositTurnoverRate: false }));
+                  }}
+                  className={`w-full h-9 ${validationErrors.depositTurnoverRate ? 'border-red-500 border-2' : ''}`}
                   placeholder="1.0"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Auto Upgrade Amount &gt;= *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Auto Upgrade Amount &gt;=</label>
               <Input
                 type="number"
                 min="0"
@@ -1027,7 +1041,7 @@ export default function LevelManagement() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Auto Upgrade *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Auto Upgrade</label>
                 <select
                   value={formData.autoUpgrade ? 'Yes' : 'No'}
                   onChange={(e) => setFormData(prev => ({ ...prev, autoUpgrade: e.target.value === 'Yes' }))}
@@ -1039,7 +1053,7 @@ export default function LevelManagement() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Auto Downgrade *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Auto Downgrade</label>
                 <select
                   value={formData.autoDowngrade ? 'Yes' : 'No'}
                   onChange={(e) => setFormData(prev => ({ ...prev, autoDowngrade: e.target.value === 'Yes' }))}
@@ -1053,7 +1067,7 @@ export default function LevelManagement() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Reset Frequency Type *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Reset Frequency Type</label>
                 <select
                   value={formData.resetFrequencyType}
                   onChange={(e) => {
@@ -1072,7 +1086,7 @@ export default function LevelManagement() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Reset Frequency Value *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Reset Frequency Value</label>
                 <select
                   value={formData.resetFrequencyValue}
                   onChange={(e) => setFormData(prev => ({ ...prev, resetFrequencyValue: e.target.value }))}
@@ -1086,7 +1100,7 @@ export default function LevelManagement() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Default *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Default</label>
               <select
                 value={formData.isDefault ? 'Yes' : 'No'}
                 onChange={(e) => setFormData(prev => ({ ...prev, isDefault: e.target.value === 'Yes' }))}
@@ -1152,7 +1166,7 @@ export default function LevelManagement() {
               {/* Name Input */}
               <div className="w-full">
                 <label className="block text-sm font-semibold mb-2 text-gray-700">
-                  Name ({languageTab.charAt(0).toUpperCase() + languageTab.slice(1)}) *
+                  Name ({languageTab.charAt(0).toUpperCase() + languageTab.slice(1)}) {languageTab === 'english' ? '*' : ''}
                 </label>
                 <Input
                   type="text"
@@ -1167,10 +1181,11 @@ export default function LevelManagement() {
                     // Sync English name with the main levelName field
                     if (languageTab === 'english') {
                       setFormData(prev => ({ ...prev, levelName: newName }));
+                      setValidationErrors(prev => ({ ...prev, englishName: false }));
                     }
                   }}
                   placeholder="Enter level name"
-                  className="w-full h-10"
+                  className={`w-full h-10 ${languageTab === 'english' && validationErrors.englishName ? 'border-red-500 border-2' : ''}`}
                 />
               </div>
 
@@ -1295,7 +1310,7 @@ export default function LevelManagement() {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Status *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                 <select
                     value={formData.status}
                     onChange={(e) =>setFormData(prev => ({ ...prev, status: e.target.value as 'Active' | 'Inactive' }))}
@@ -1349,7 +1364,7 @@ export default function LevelManagement() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Max Withdraw Amount Per Day *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Max Withdraw Amount Per Day</label>
                 <Input
                   type="number"
                   min="0"
@@ -1361,7 +1376,7 @@ export default function LevelManagement() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Max Withdraw Count Per Day *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Max Withdraw Count Per Day</label>
                 <Input
                   type="number"
                   min="0"
@@ -1388,7 +1403,7 @@ export default function LevelManagement() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Auto Upgrade Amount &gt;= *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Auto Upgrade Amount &gt;=</label>
               <Input
                 type="number"
                 min="0"
@@ -1401,7 +1416,7 @@ export default function LevelManagement() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Auto Upgrade *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Auto Upgrade</label>
                 <select
                   value={formData.autoUpgrade ? 'Yes' : 'No'}
                   onChange={(e) => setFormData(prev => ({ ...prev, autoUpgrade: e.target.value === 'Yes' }))}
@@ -1413,7 +1428,7 @@ export default function LevelManagement() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Auto Downgrade *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Auto Downgrade</label>
                 <select
                   value={formData.autoDowngrade ? 'Yes' : 'No'}
                   onChange={(e) => setFormData(prev => ({ ...prev, autoDowngrade: e.target.value === 'Yes' }))}
@@ -1427,7 +1442,7 @@ export default function LevelManagement() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Reset Frequency Type *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Reset Frequency Type</label>
                 <select
                   value={formData.resetFrequencyType}
                   onChange={(e) => {
@@ -1446,7 +1461,7 @@ export default function LevelManagement() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Reset Frequency Value *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Reset Frequency Value</label>
                 <select
                   value={formData.resetFrequencyValue}
                   onChange={(e) => setFormData(prev => ({ ...prev, resetFrequencyValue: e.target.value }))}
@@ -1460,7 +1475,7 @@ export default function LevelManagement() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Default *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Default</label>
               <select
                 value={formData.isDefault ? 'Yes' : 'No'}
                 onChange={(e) => setFormData(prev => ({ ...prev, isDefault: e.target.value === 'Yes' }))}
@@ -1525,7 +1540,7 @@ export default function LevelManagement() {
               {/* Name Input */}
               <div className="w-full">
                 <label className="block text-sm font-semibold mb-2 text-gray-700">
-                  Name ({languageTab.charAt(0).toUpperCase() + languageTab.slice(1)}) *
+                  Name ({languageTab.charAt(0).toUpperCase() + languageTab.slice(1)}) {languageTab === 'english' ? '*' : ''}
                 </label>
                 <Input
                   type="text"
@@ -1540,10 +1555,11 @@ export default function LevelManagement() {
                     // Sync English name with the main levelName field
                     if (languageTab === 'english') {
                       setFormData(prev => ({ ...prev, levelName: newName }));
+                      setValidationErrors(prev => ({ ...prev, englishName: false }));
                     }
                   }}
                   placeholder="Enter level name"
-                  className="w-full h-10"
+                  className={`w-full h-10 ${languageTab === 'english' && validationErrors.englishName ? 'border-red-500 border-2' : ''}`}
                 />
               </div>
 

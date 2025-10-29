@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Promotion, initialPromotions } from './PromotionListData';
+import { Promotion, initialPromotions } from './PromotionSetupData';
 import { initialLevels } from './LevelData';
 import { providersData, categoryLabels } from './ProviderData';
 import { Button } from '@/components/ui/button';
@@ -64,7 +64,7 @@ const getDefaultTranslations = () => ({
   malay: { title: '', name: '', description: '', images: [] as string[] }
 });
 
-export default function PromotionListManagement() {
+export default function PromotionSetupManagement() {
   const [promotions, setPromotions] = useState<Promotion[]>(initialPromotions);
   const [modalMode, setModalMode] = useState<ModalMode>(null);
   const [activeTab, setActiveTab] = useState<ActiveTab>('info');
