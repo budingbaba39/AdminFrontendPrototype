@@ -54,6 +54,7 @@ export default function CommissionRecordManagement() {
   // Bulk actions state
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [autoApprove, setAutoApprove] = useState(false);
+  const [releaseAmountInputs, setReleaseAmountInputs] = useState<Record<string, number>>({});
   const [remarkInputs, setRemarkInputs] = useState<Record<string, string>>({});
 
   // Modal state
@@ -278,6 +279,17 @@ export default function CommissionRecordManagement() {
     setSelectedRows(newSelected);
   };
 
+  const handleReleaseAmountChange = (transactionId: string, value: string) => {
+    if (value === '') {
+      const newInputs = { ...releaseAmountInputs };
+      delete newInputs[transactionId];
+      setReleaseAmountInputs(newInputs);
+    } else {
+      const numValue = parseFloat(value);
+      setReleaseAmountInputs(prev => ({ ...prev, [transactionId]: numValue }));
+    }
+  };
+
   const handleRemarkChange = (transactionId: string, value: string) => {
     setRemarkInputs(prev => ({ ...prev, [transactionId]: value }));
   };
@@ -285,6 +297,11 @@ export default function CommissionRecordManagement() {
   const handleSubmitSingle = (transaction: Transaction) => {
     const currentTime = new Date().toISOString().replace('T', ' ').substring(0, 19);
     const remark = remarkInputs[transaction.id] || '';
+
+    // Get commission amount from transaction data
+    const commissionAmount = transaction.amount || 0;
+    // If release amount input exists, use it; otherwise default to commission amount
+    const releaseAmount = transaction.id in releaseAmountInputs ? releaseAmountInputs[transaction.id] : commissionAmount;
 
     // Check if this is a combined transaction
     const isCombined = transaction.id.includes('_combined');
@@ -297,12 +314,17 @@ export default function CommissionRecordManagement() {
         ? {
             ...t,
             status: 'COMPLETED' as const,
+            amount: releaseAmount,
             completeTime: currentTime,
             completeBy: 'ADMIN001',
             remark: remark
           }
         : t
     ));
+
+    const newReleaseInputs = { ...releaseAmountInputs };
+    delete newReleaseInputs[transaction.id];
+    setReleaseAmountInputs(newReleaseInputs);
 
     const newRemarkInputs = { ...remarkInputs };
     delete newRemarkInputs[transaction.id];
@@ -386,11 +408,16 @@ export default function CommissionRecordManagement() {
 
     setTransactions(prev => prev.map(t => {
       if (selectedRows.has(t.id)) {
+        // Get commission amount from transaction data
+        const commissionAmount = t.amount || 0;
+        // If release amount input exists, use it; otherwise default to commission amount
+        const releaseAmount = t.id in releaseAmountInputs ? releaseAmountInputs[t.id] : commissionAmount;
         const remark = remarkInputs[t.id] || '';
 
         return {
           ...t,
           status: 'COMPLETED' as const,
+          amount: releaseAmount,
           completeTime: currentTime,
           completeBy: 'ADMIN001',
           remark: remark
@@ -400,6 +427,7 @@ export default function CommissionRecordManagement() {
     }));
 
     setSelectedRows(new Set());
+    setReleaseAmountInputs({});
     setRemarkInputs({});
     setActiveStatus('COMPLETED');
   };
@@ -617,6 +645,7 @@ export default function CommissionRecordManagement() {
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Submit Time</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Completed Time</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Amount</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Release Amount</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Remark</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Status</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Action</th>
@@ -678,6 +707,21 @@ export default function CommissionRecordManagement() {
                         <span className="text-green-600 font-semibold text-xs">
                           ${transaction.amount.toFixed(2)}
                         </span>
+                      </td>
+                      <td className="px-3 py-2">
+                        {transaction.status === 'PENDING' ? (
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={releaseAmountInputs[transaction.id] || ''}
+                            onChange={(e) => handleReleaseAmountChange(transaction.id, e.target.value)}
+                            className="h-7 w-28 text-xs"
+                          />
+                        ) : (
+                          <span className="text-green-600 font-semibold text-xs">
+                            ${transaction.amount.toFixed(2)}
+                          </span>
+                        )}
                       </td>
                       <td className="px-3 py-2">
                         {transaction.status === 'PENDING' ? (
