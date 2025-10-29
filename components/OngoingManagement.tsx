@@ -6,7 +6,7 @@ import { Badge } from './ui/badge';
 import { RefreshCw } from 'lucide-react';
 import { Transaction, allTransactions } from './transactionData';
 import { User, sampleUsers } from './UserData';
-import { initialPromotions } from './PromotionListData';
+import { initialPromotions } from './PromotionSetupData';
 import { providersData } from './ProviderData';
 import ProfileContent from './ProfileContent';
 
@@ -37,7 +37,13 @@ export default function OngoingManagement() {
 
   // Get setup name based on transaction type
   const getSetupName = (tx: Transaction): string => {
-    if (tx.type === 'BONUS' && tx.promotionName) return tx.promotionName;
+    if (tx.type === 'BONUS') {
+      if (tx.promotionName) return tx.promotionName;
+      if (tx.promotionID) {
+        const promo = initialPromotions.find(p => p.id === tx.promotionID);
+        return promo?.promoName || '-';
+      }
+    }
     if (tx.type === 'COMMISSION' && tx.commissionName) return tx.commissionName;
     if (tx.type === 'REBATE' && tx.rebateName) return tx.rebateName;
     if (tx.type === 'CASHBACK' && tx.cashbackName) return tx.cashbackName;
@@ -46,7 +52,13 @@ export default function OngoingManagement() {
 
   // Get target type based on transaction type
   const getTargetType = (tx: Transaction): string => {
-    if (tx.type === 'BONUS' && tx.promotionType) return tx.promotionType;
+    if (tx.type === 'BONUS') {
+      if (tx.promotionType) return tx.promotionType;
+      if (tx.promotionID) {
+        const promo = initialPromotions.find(p => p.id === tx.promotionID);
+        return promo?.targetType || '-';
+      }
+    }
     if (tx.type === 'COMMISSION' && tx.commissionTargetType) return tx.commissionTargetType;
     if (tx.type === 'REBATE' && tx.rebateTargetType) return tx.rebateTargetType;
     if (tx.type === 'CASHBACK' && tx.cashbackTargetType) return tx.cashbackTargetType;

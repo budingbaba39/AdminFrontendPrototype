@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ReferrerSetup, initialReferrerSetups } from './ReferrerSetupData';
-import { initialPromotions } from './PromotionListData';
+import { initialPromotions } from './PromotionSetupData';
 import { initialLevels, levelColors } from './LevelData';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
