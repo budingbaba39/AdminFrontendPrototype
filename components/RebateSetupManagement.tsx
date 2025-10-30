@@ -43,7 +43,6 @@ const getDefaultFormData = (): RebateSetup => ({
   maxWithdrawPercentage: 0,
   recurring: 'Immediate',
   includeRebate: false,
-  requireApproval: false,
   rebateCalculationType: 'Percentage',
   amountTiers: [{ validBetMoreThan: 0, rebatePercentage: 0, rebateAmount: 0 }],
   translations: getDefaultTranslations(),
@@ -900,18 +899,6 @@ export default function RebateSetupManagement() {
                           <select
                             value={formData.includeRebate ? 'Yes' : 'No'}
                             onChange={(e) => handleInputChange('includeRebate', e.target.value === 'Yes')}
-                            className="w-full h-10 px-3 py-2 border rounded-md"
-                          >
-                            <option value="Yes">Yes</option>
-                            <option value="No">No</option>
-                          </select>
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-semibold mb-2 text-gray-700">Require Approval</label>
-                          <select
-                            value={formData.requireApproval ? 'Yes' : 'No'}
-                            onChange={(e) => handleInputChange('requireApproval', e.target.value === 'Yes')}
                             className="w-full h-10 px-3 py-2 border rounded-md"
                           >
                             <option value="Yes">Yes</option>

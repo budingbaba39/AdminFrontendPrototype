@@ -262,17 +262,6 @@ function PromotionMenuItem({ currentPage, onNavigate }: {
       {isExpanded && (
         <div className="ml-6 mt-2 space-y-1">
           <button
-            onClick={() => onNavigate('promotion-setup')}
-            className={`w-full flex items-center p-2 rounded-lg text-sm font-medium tracking-[-0.14px] transition-colors ${
-              currentPage === 'promotion-setup'
-                ? 'bg-[#e8eaf6] text-[#3949ab]'
-                : 'text-[#3949ab] hover:bg-[#f0f0f0]'
-            }`}
-          >
-            <span className="text-left">3.1 PROMOTION SETUP</span>
-          </button>
-
-          <button
             onClick={() => onNavigate('promotion')}
             className={`w-full flex items-center p-2 rounded-lg text-sm font-medium tracking-[-0.14px] transition-colors ${
               currentPage === 'promotion'
@@ -280,7 +269,18 @@ function PromotionMenuItem({ currentPage, onNavigate }: {
                 : 'text-[#3949ab] hover:bg-[#f0f0f0]'
             }`}
           >
-            <span className="text-left">3.2 PROMOTION RECORD</span>
+            <span className="text-left">3.1 PROMOTION RECORD</span>
+          </button>
+
+          <button
+            onClick={() => onNavigate('promotion-setup')}
+            className={`w-full flex items-center p-2 rounded-lg text-sm font-medium tracking-[-0.14px] transition-colors ${
+              currentPage === 'promotion-setup'
+                ? 'bg-[#e8eaf6] text-[#3949ab]'
+                : 'text-[#3949ab] hover:bg-[#f0f0f0]'
+            }`}
+          >
+            <span className="text-left">3.2 PROMOTION SETUP</span>
           </button>
         </div>
       )}
