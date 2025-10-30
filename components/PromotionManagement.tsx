@@ -27,7 +27,7 @@ const promotionOptions = [
   }))
 ];
 
-type PromoStatus = 'ALL' | 'PENDING' | 'COMPLETED' | 'REJECTED';
+type PromoStatus = 'ALL' | 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'REJECTED';
 
 export default function PromotionManagement() {
   const [searchFilters, setSearchFilters] = useState({
@@ -58,9 +58,7 @@ export default function PromotionManagement() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelRemark, setCancelRemark] = useState('');
 
-  // Bulk actions state
-  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
-  const [autoApprove, setAutoApprove] = useState(false);
+  // Input state for PENDING records
   const [releaseAmountInputs, setReleaseAmountInputs] = useState<Record<string, number>>({});
   const [remarkInputs, setRemarkInputs] = useState<Record<string, string>>({});
 
@@ -155,6 +153,7 @@ export default function PromotionManagement() {
   const statusCounts = {
     ALL: calculateFilteredCountByStatus('ALL'),
     PENDING: calculateFilteredCountByStatus('PENDING'),
+    PROCESSING: calculateFilteredCountByStatus('PROCESSING'),
     COMPLETED: calculateFilteredCountByStatus('COMPLETED'),
     REJECTED: calculateFilteredCountByStatus('REJECTED'),
   };
@@ -248,28 +247,6 @@ export default function PromotionManagement() {
     setSelectedUser(updatedUser);
   };
 
-  // Bulk action handlers
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      const allPendingIds = filteredTransactions
-        .filter(t => t.status === 'PENDING')
-        .map(t => t.id);
-      setSelectedRows(new Set(allPendingIds));
-    } else {
-      setSelectedRows(new Set());
-    }
-  };
-
-  const handleRowSelect = (transactionId: string, checked: boolean) => {
-    const newSelected = new Set(selectedRows);
-    if (checked) {
-      newSelected.add(transactionId);
-    } else {
-      newSelected.delete(transactionId);
-    }
-    setSelectedRows(newSelected);
-  };
-
   const handleReleaseAmountChange = (transactionId: string, value: string) => {
     const numValue = parseFloat(value) || 0;
     setReleaseAmountInputs(prev => ({ ...prev, [transactionId]: numValue }));
@@ -279,12 +256,11 @@ export default function PromotionManagement() {
     setRemarkInputs(prev => ({ ...prev, [transactionId]: value }));
   };
 
-  const handleSubmitSingle = (transaction: Transaction) => {
+  const handleProcess = (transaction: Transaction) => {
     const currentTime = new Date().toISOString().replace('T', ' ').substring(0, 19);
 
-    // Use bonusAmount from transaction data
+    // Get release amount and remark from inputs
     const bonusAmount = transaction.bonusAmount || 0;
-    // If release amount is filled, use it; otherwise default to bonus amount
     const releaseAmount = releaseAmountInputs[transaction.id] || bonusAmount;
     const remark = remarkInputs[transaction.id] || '';
 
@@ -292,9 +268,9 @@ export default function PromotionManagement() {
       t.id === transaction.id
         ? {
             ...t,
-            status: 'COMPLETED' as const,
-            completeTime: currentTime,
-            completeBy: currentUser,
+            status: 'PROCESSING' as const,
+            processTime: currentTime,
+            processBy: currentUser,
             amount: releaseAmount,
             remark: remark
           }
@@ -311,58 +287,25 @@ export default function PromotionManagement() {
     setRemarkInputs(newRemarkInputs);
   };
 
-  const handleCancelSingle = (transaction: Transaction) => {
+  const handleApprove = (transaction: Transaction) => {
+    // Simulate moving to ONGOING by removing from list (no backend)
+    setTransactions(prev => prev.filter(t => t.id !== transaction.id));
+  };
+
+  const handleCancelProcessing = (transaction: Transaction) => {
     const currentTime = new Date().toISOString().replace('T', ' ').substring(0, 19);
-    const remark = remarkInputs[transaction.id] || 'Cancelled by admin';
 
     setTransactions(prev => prev.map(t =>
       t.id === transaction.id
         ? {
             ...t,
             status: 'REJECTED' as const,
-            completeTime: currentTime,
-            completeBy: currentUser,
-            remark: remark
+            rejectTime: currentTime,
+            rejectBy: currentUser,
+            remark: t.remark || 'Cancelled from processing'
           }
         : t
     ));
-
-    // Clear inputs
-    const newReleaseAmountInputs = { ...releaseAmountInputs };
-    delete newReleaseAmountInputs[transaction.id];
-    setReleaseAmountInputs(newReleaseAmountInputs);
-
-    const newRemarkInputs = { ...remarkInputs };
-    delete newRemarkInputs[transaction.id];
-    setRemarkInputs(newRemarkInputs);
-  };
-
-  const handleSubmitAll = () => {
-    const currentTime = new Date().toISOString().replace('T', ' ').substring(0, 19);
-
-    setTransactions(prev => prev.map(t => {
-      if (selectedRows.has(t.id)) {
-        // Use bonusAmount from transaction data
-        const bonusAmount = t.bonusAmount || 0;
-        // If release amount is filled, use it; otherwise default to bonus amount
-        const releaseAmount = releaseAmountInputs[t.id] || bonusAmount;
-        const remark = remarkInputs[t.id] || '';
-
-        return {
-          ...t,
-          status: 'COMPLETED' as const,
-          completeTime: currentTime,
-          completeBy: currentUser,
-          amount: releaseAmount,
-          remark: remark
-        };
-      }
-      return t;
-    }));
-
-    setSelectedRows(new Set());
-    setReleaseAmountInputs({});
-    setRemarkInputs({});
   };
 
   const handleUnlock = (tx: Transaction) => {
@@ -408,8 +351,6 @@ export default function PromotionManagement() {
     setSelectedTransaction(null);
     setCancelRemark('');
   };
-
-  const pendingCount = statusCounts.PENDING;
 
   return (
     <div className="p-3 space-y-3 bg-gray-50 min-h-screen">
@@ -593,11 +534,11 @@ export default function PromotionManagement() {
               <div
                 className="absolute top-1 bottom-1 bg-[#3949ab] rounded-md transition-all duration-300 ease-in-out shadow-sm"
                 style={{
-                  width: `calc(${100 / 4}% - 0.25rem)`,
-                  left: `calc(${(['ALL', 'PENDING', 'COMPLETED', 'REJECTED'].indexOf(activeStatusFilter) * 100) / 4}% + 0.125rem)`,
+                  width: `calc(${100 / 5}% - 0.25rem)`,
+                  left: `calc(${(['ALL', 'PENDING', 'PROCESSING', 'COMPLETED', 'REJECTED'].indexOf(activeStatusFilter) * 100) / 5}% + 0.125rem)`,
                 }}
               />
-              {(['ALL', 'PENDING', 'COMPLETED', 'REJECTED'] as PromoStatus[]).map((status) => (
+              {(['ALL', 'PENDING', 'PROCESSING', 'COMPLETED', 'REJECTED'] as PromoStatus[]).map((status) => (
                 <button
                   key={status}
                   onClick={() => setActiveStatusFilter(status)}
@@ -615,37 +556,6 @@ export default function PromotionManagement() {
         </div>
       )}
 
-      {/* Bulk Actions for PENDING Tab */}
-      {hasSearched && activeStatusFilter === 'PENDING' && pendingCount > 0 && (
-        <div className="bg-white rounded-lg shadow-sm border p-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={autoApprove}
-                  onChange={(e) => setAutoApprove(e.target.checked)}
-                  className="w-4 h-4 text-[#3949ab] border-gray-300 rounded focus:ring-[#3949ab]"
-                />
-                <span className="text-sm font-medium text-gray-700">Auto Approve</span>
-              </label>
-
-              <span className="text-sm text-gray-600">
-                Selected: <span className="font-semibold">{selectedRows.size}</span> / {pendingCount}
-              </span>
-            </div>
-
-            <Button
-              onClick={handleSubmitAll}
-              disabled={selectedRows.size === 0}
-              className="bg-[#4caf50] hover:bg-[#45a049] text-white h-9 text-sm font-semibold px-6 disabled:bg-gray-300 disabled:cursor-not-allowed"
-            >
-              SUBMIT ALL ({selectedRows.size})
-            </Button>
-          </div>
-        </div>
-      )}
-
       {/* Transaction List */}
       {hasSearched && (
         <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
@@ -653,16 +563,6 @@ export default function PromotionManagement() {
             <table className="w-full">
               <thead className="bg-gray-50 border-b">
                 <tr>
-                  {activeStatusFilter === 'PENDING' && (
-                    <th className="px-3 py-2 text-center text-xs font-semibold text-gray-900 uppercase">
-                      <input
-                        type="checkbox"
-                        checked={selectedRows.size === pendingCount && pendingCount > 0}
-                        onChange={(e) => handleSelectAll(e.target.checked)}
-                        className="w-4 h-4 text-[#3949ab] border-gray-300 rounded focus:ring-[#3949ab]"
-                      />
-                    </th>
-                  )}
                   <th className="px-3 py-2 text-center text-xs font-semibold text-gray-900 uppercase">Transaction ID</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Type</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Name</th>
@@ -695,16 +595,6 @@ export default function PromotionManagement() {
 
                   return (
                     <tr key={transaction.id} className="hover:bg-gray-50">
-                      {activeStatusFilter === 'PENDING' && (
-                        <td className="px-3 py-2 text-center">
-                          <input
-                            type="checkbox"
-                            checked={selectedRows.has(transaction.id)}
-                            onChange={(e) => handleRowSelect(transaction.id, e.target.checked)}
-                            className="w-4 h-4 text-[#3949ab] border-gray-300 rounded focus:ring-[#3949ab]"
-                          />
-                        </td>
-                      )}
                       <td className="px-3 py-2">
                         <div className="flex items-center justify-center gap-2">
                           <span className="text-gray-900 text-xs font-medium">{transaction.id}</span>
@@ -738,7 +628,7 @@ export default function PromotionManagement() {
                       <td className="px-3 py-2 text-gray-900 text-xs">{transaction.promotionID || '-'}</td>
                       <td className="px-3 py-2 text-gray-900 text-xs">{transaction.submitTime}</td>
                       <td className="px-3 py-2 text-gray-900 text-xs">{transaction.completeTime || transaction.rejectTime || '-'}</td>
-                      <td className="px-3 py-2 text-blue-600 text-xs">{transaction.completeBy || transaction.rejectBy || '-'}</td>
+                      <td className="px-3 py-2 text-blue-600 text-xs">{transaction.processBy || transaction.completeBy || transaction.rejectBy || '-'}</td>
                       <td className="px-3 py-2 text-right">
                         <span className="font-semibold text-xs text-green-600">
                           ${transferAmount.toFixed(2)}
@@ -786,38 +676,28 @@ export default function PromotionManagement() {
                       <td className="px-3 py-2">
                         <div className="flex gap-1">
                           {transaction.status === 'PENDING' ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleProcess(transaction)}
+                              className="bg-[#ff9800] text-white hover:bg-[#f57c00] border-[#ff9800] text-xs h-6 px-2"
+                            >
+                              PROCESS
+                            </Button>
+                          ) : transaction.status === 'PROCESSING' ? (
                             <>
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleSubmitSingle(transaction)}
+                                onClick={() => handleApprove(transaction)}
                                 className="bg-[#4caf50] text-white hover:bg-[#45a049] border-[#4caf50] text-xs h-6 px-2"
                               >
-                                SUBMIT
+                                APPROVE
                               </Button>
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleCancelSingle(transaction)}
-                                className="bg-[#f44336] text-white hover:bg-[#d32f2f] border-[#f44336] text-xs h-6 px-2"
-                              >
-                                CANCEL
-                              </Button>
-                            </>
-                          ) : transaction.status === 'APPROVED' ? (
-                            <>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleUnlock(transaction)}
-                                className="bg-[#4caf50] text-white hover:bg-[#45a049] border-[#4caf50] text-xs h-6 px-2"
-                              >
-                                UNLOCK
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleCancelClick(transaction)}
+                                onClick={() => handleCancelProcessing(transaction)}
                                 className="bg-[#f44336] text-white hover:bg-[#d32f2f] border-[#f44336] text-xs h-6 px-2"
                               >
                                 CANCEL
