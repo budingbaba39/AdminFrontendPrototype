@@ -8,24 +8,22 @@ export type CashBackSetupFormula =
 
 // Per-provider cashback settings
 export interface ProviderCashBackSetting {
-  formula: CashBackSetupFormula | '';  // Empty string for "Please Select"
-  targetAmount: number;  // Dynamic: winLoss / positiveAmount / totalWinLoss based on cashbackType
-  cashbackPercentage: number;
-  maxPayoutPerProvider: number;
+  minBetAmount: number;
+  maxBetAmount: number;
 }
 
 export interface CashBackAmountTier {
   amountMoreThanOrEqual: number;
   cashbackPercentage: number;
   cashbackAmount: number;
+  providerIds?: number[];  // Changed from providerId to providerIds array
+  formula?: CashBackSetupFormula | '';
 }
 
 export interface CashBackSetup {
   id: string; // Format: CASH001, CASH002, etc.
   name: string;
   cashbackType: 'By Net Lose Only' | 'By Net Deposit' | 'By Total WinLose Only';
-  minLimit: number;
-  maxLimit: number;
 
   // Info Tab fields
   targetMultiplier: number;
@@ -38,7 +36,7 @@ export interface CashBackSetup {
   // Details Tab fields
   unlockRateWin: number;
   unlockAmountLose: number;
-  maxPayoutAmount: number;
+  maxTotalPayoutAmount: number;
   maxWithdrawAmount: number;
   maxWithdrawPercentage: number;
   recurring: 'Immediate' | 'One Time' | 'Recurring';
@@ -73,8 +71,6 @@ export const cashBackSetupsData: CashBackSetup[] = [
     id: 'CASH001',
     name: 'Bronze CashBack',
     cashbackType: 'By Net Lose Only',
-    minLimit: 1,
-    maxLimit: 99999,
     targetMultiplier: 1,
     claimableCreditLessThan: 5000,
     allowInterTransfer: false,
@@ -83,7 +79,7 @@ export const cashBackSetupsData: CashBackSetup[] = [
     timeTo: '23:59',
     unlockRateWin: 50,
     unlockAmountLose: 500,
-    maxPayoutAmount: 10000,
+    maxTotalPayoutAmount: 10000,
     maxWithdrawAmount: 3000,
     maxWithdrawPercentage: 80,
     recurring: 'Recurring',
@@ -116,16 +112,12 @@ export const cashBackSetupsData: CashBackSetup[] = [
     levelIds: [1],
     providerSettings: {
       6: {
-        formula: 'MORE_THAN_OR_EQUAL',
-        targetAmount: 500,
-        cashbackPercentage: 5,
-        maxPayoutPerProvider: 2000
+        minBetAmount: 1,
+        maxBetAmount: 1000
       },
       16: {
-        formula: 'MORE_THAN',
-        targetAmount: 300,
-        cashbackPercentage: 6,
-        maxPayoutPerProvider: 1500
+        minBetAmount: 1,
+        maxBetAmount: 500
       }
     },
     createdDate: '2024-01-15',
@@ -135,8 +127,6 @@ export const cashBackSetupsData: CashBackSetup[] = [
     id: 'CASH002',
     name: 'Silver CashBack',
     cashbackType: 'By Net Deposit',
-    minLimit: 1,
-    maxLimit: 99999,
     targetMultiplier: 1,
     claimableCreditLessThan: 10000,
     allowInterTransfer: true,
@@ -145,7 +135,7 @@ export const cashBackSetupsData: CashBackSetup[] = [
     timeTo: '23:59',
     unlockRateWin: 60,
     unlockAmountLose: 1000,
-    maxPayoutAmount: 15000,
+    maxTotalPayoutAmount: 15000,
     maxWithdrawAmount: 5000,
     maxWithdrawPercentage: 85,
     recurring: 'One Time',
@@ -178,22 +168,16 @@ export const cashBackSetupsData: CashBackSetup[] = [
     levelIds: [2, 3],
     providerSettings: {
       6: {
-        formula: 'MORE_THAN_OR_EQUAL',
-        targetAmount: 1000,
-        cashbackPercentage: 8,
-        maxPayoutPerProvider: 4000
+        minBetAmount: 10,
+        maxBetAmount: 2000
       },
       16: {
-        formula: 'EQUAL',
-        targetAmount: 2000,
-        cashbackPercentage: 10,
-        maxPayoutPerProvider: 5000
+        minBetAmount: 10,
+        maxBetAmount: 3000
       },
       31: {
-        formula: 'MORE_THAN',
-        targetAmount: 800,
-        cashbackPercentage: 9,
-        maxPayoutPerProvider: 3500
+        minBetAmount: 5,
+        maxBetAmount: 1500
       }
     },
     createdDate: '2024-01-20',
@@ -203,8 +187,6 @@ export const cashBackSetupsData: CashBackSetup[] = [
     id: 'CASH003',
     name: 'Gold CashBack',
     cashbackType: 'By Total WinLose Only',
-    minLimit: 1,
-    maxLimit: 99999,
     targetMultiplier: 1,
     claimableCreditLessThan: 20000,
     allowInterTransfer: true,
@@ -213,7 +195,7 @@ export const cashBackSetupsData: CashBackSetup[] = [
     timeTo: '23:59',
     unlockRateWin: 70,
     unlockAmountLose: 2000,
-    maxPayoutAmount: 20000,
+    maxTotalPayoutAmount: 20000,
     maxWithdrawAmount: 8000,
     maxWithdrawPercentage: 90,
     recurring: 'Recurring',
@@ -247,28 +229,20 @@ export const cashBackSetupsData: CashBackSetup[] = [
     levelIds: [3],
     providerSettings: {
       6: {
-        formula: 'MORE_THAN_OR_EQUAL',
-        targetAmount: 5000,
-        cashbackPercentage: 15,
-        maxPayoutPerProvider: 10000
+        minBetAmount: 50,
+        maxBetAmount: 10000
       },
       16: {
-        formula: 'MORE_THAN',
-        targetAmount: 3000,
-        cashbackPercentage: 13,
-        maxPayoutPerProvider: 8000
+        minBetAmount: 50,
+        maxBetAmount: 8000
       },
       31: {
-        formula: 'LESS_THAN_OR_EQUAL',
-        targetAmount: 8000,
-        cashbackPercentage: 14,
-        maxPayoutPerProvider: 9000
+        minBetAmount: 20,
+        maxBetAmount: 5000
       },
       32: {
-        formula: 'MORE_THAN_OR_EQUAL',
-        targetAmount: 4000,
-        cashbackPercentage: 15,
-        maxPayoutPerProvider: 12000
+        minBetAmount: 100,
+        maxBetAmount: 15000
       }
     },
     createdDate: '2024-02-01',

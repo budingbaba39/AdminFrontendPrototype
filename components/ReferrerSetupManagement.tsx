@@ -28,7 +28,6 @@ const getDefaultFormData = (): ReferrerSetup => ({
   recurring: 'One Time',
   status: 'Active',
   autoApprovedAmount: 1000,
-  maxPayoutPerDownline: 1000,
   promoId: referrerPromotions.length > 0 ? referrerPromotions[0].id : '',
   levelId: undefined,
   createdDate: new Date().toISOString().split('T')[0],
@@ -93,7 +92,6 @@ export default function ReferrerSetupManagement() {
 
     if (!formData.name.trim()) errors.name = 'Name is required';
     if (typeof formData.autoApprovedAmount !== 'number' || formData.autoApprovedAmount < 0) errors.autoApprovedAmount = 'Must be >= 0';
-    if (typeof formData.maxPayoutPerDownline !== 'number' || formData.maxPayoutPerDownline < 0) errors.maxPayoutPerDownline = 'Must be >= 0';
     if (!formData.promoId) errors.promoId = 'Promo Type is required';
 
     setValidationErrors(errors);
@@ -192,7 +190,6 @@ export default function ReferrerSetupManagement() {
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Level</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Name</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Auto Approved Amount &lt;=</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Max Payout Amount (Per Downline)</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Created Date</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Promo Type</th>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-gray-900 uppercase">Status</th>
@@ -225,9 +222,6 @@ export default function ReferrerSetupManagement() {
                     <td className="px-4 py-3 font-semibold text-gray-900">{setup.name}</td>
                     <td className="px-4 py-3 text-gray-900 font-medium">
                       ${setup.autoApprovedAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </td>
-                    <td className="px-4 py-3 text-gray-900 font-medium">
-                      ${setup.maxPayoutPerDownline.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className="px-4 py-3 text-gray-900 text-xs">{setup.createdDate}</td>
                     <td className="px-4 py-3 text-gray-900">{promo?.promoName || 'Unknown'}</td>
@@ -269,7 +263,7 @@ export default function ReferrerSetupManagement() {
               })}
               {filteredSetups.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="px-4 py-8 text-center text-gray-500">
+                  <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
                     No referrer setups found
                   </td>
                 </tr>
@@ -350,21 +344,6 @@ export default function ReferrerSetupManagement() {
               />
               {validationErrors.autoApprovedAmount && (
                 <p className="text-red-600 text-sm mt-1">{validationErrors.autoApprovedAmount}</p>
-              )}
-            </div>
-
-            <div className="w-full">
-              <label className="block text-sm font-semibold mb-2 text-gray-700">Max Payout Amount (Per Downline) *</label>
-              <Input
-                type="number"
-                min="0"
-                value={formData.maxPayoutPerDownline}
-                onChange={(e) => handleInputChange('maxPayoutPerDownline', e.target.value === '' ? '' : parseFloat(e.target.value))}
-                placeholder="1000"
-                className="w-full h-10"
-              />
-              {validationErrors.maxPayoutPerDownline && (
-                <p className="text-red-600 text-sm mt-1">{validationErrors.maxPayoutPerDownline}</p>
               )}
             </div>
 

@@ -8,10 +8,8 @@ export type RebateSetupFormula =
 
 // Per-provider rebate settings
 export interface ProviderRebateSetting {
-  formula: RebateSetupFormula | '';  // Empty string for "Please Select"
-  validBetAmount: number;
-  rebatePercentage: number;
-  maxPayoutPerProvider: number;
+  minBetAmount: number;
+  maxBetAmount: number;
 }
 
 // Rebate Amount Tier interface
@@ -19,14 +17,14 @@ export interface RebateAmountTier {
   validBetMoreThan: number; // The threshold amount
   rebatePercentage: number; // Rebate percentage
   rebateAmount: number; // Rebate fixed amount
+  providerIds?: number[];  // Changed from providerId to providerIds array
+  formula?: RebateSetupFormula | '';
 }
 
 export interface RebateSetup {
   id: string; // Format: REB001, REB002, etc.
   name: string;
   rebateType: 'Valid Bet';
-  minLimit: number;
-  maxLimit: number;
 
   // NEW FIELDS for Info Tab
   targetMultiplier: number; // 1x, 2x, 3x
@@ -39,7 +37,7 @@ export interface RebateSetup {
   // NEW FIELDS for Details Tab
   unlockRateWin: number; // Unlock Rate (%) <=
   unlockAmountLose: number; // Unlock Amount <=
-  maxPayoutAmount: number;
+  maxTotalPayoutAmount: number;
   maxWithdrawAmount: number;
   maxWithdrawPercentage: number;
   recurring: 'Immediate' | 'One Time' | 'Recurring';
@@ -77,8 +75,6 @@ export const rebateSetupsData: RebateSetup[] = [
     id: 'REB001',
     name: '1% Daily TurnOver Rebate',
     rebateType: 'Valid Bet',
-    minLimit: 1,
-    maxLimit: 99999,
     targetMultiplier: 1,
     claimableCreditLessThan: 5000,
     allowInterTransfer: false,
@@ -87,7 +83,7 @@ export const rebateSetupsData: RebateSetup[] = [
     timeTo: '23:59',
     unlockRateWin: 50,
     unlockAmountLose: 500,
-    maxPayoutAmount: 10000,
+    maxTotalPayoutAmount: 10000,
     maxWithdrawAmount: 3000,
     maxWithdrawPercentage: 80,
     recurring: 'Recurring',
@@ -118,22 +114,16 @@ export const rebateSetupsData: RebateSetup[] = [
     levelIds: [1], // Bronze
     providerSettings: {
       6: { // Pragmatic Play
-        formula: 'MORE_THAN_OR_EQUAL',
-        validBetAmount: 1000,
-        rebatePercentage: 1,
-        maxPayoutPerProvider: 5000
+        minBetAmount: 1,
+        maxBetAmount: 1000
       },
       16: { // Evolution Gaming
-        formula: 'MORE_THAN',
-        validBetAmount: 500,
-        rebatePercentage: 1.5,
-        maxPayoutPerProvider: 3000
+        minBetAmount: 1,
+        maxBetAmount: 500
       },
       31: { // PG Soft
-        formula: 'MORE_THAN_OR_EQUAL',
-        validBetAmount: 1000,
-        rebatePercentage: 1,
-        maxPayoutPerProvider: 5000
+        minBetAmount: 1,
+        maxBetAmount: 1000
       }
     },
     createdDate: '2024-01-15',
@@ -143,8 +133,6 @@ export const rebateSetupsData: RebateSetup[] = [
     id: 'REB002',
     name: '3% Daily TurnOver Rebate',
     rebateType: 'Valid Bet',
-    minLimit: 1,
-    maxLimit: 99999,
     targetMultiplier: 1,
     claimableCreditLessThan: 10000,
     allowInterTransfer: true,
@@ -153,7 +141,7 @@ export const rebateSetupsData: RebateSetup[] = [
     timeTo: '23:59',
     unlockRateWin: 60,
     unlockAmountLose: 1000,
-    maxPayoutAmount: 15000,
+    maxTotalPayoutAmount: 15000,
     maxWithdrawAmount: 5000,
     maxWithdrawPercentage: 85,
     recurring: 'Recurring',
@@ -185,34 +173,24 @@ export const rebateSetupsData: RebateSetup[] = [
     levelIds: [2, 3], // Silver and Gold
     providerSettings: {
       6: { // Pragmatic Play
-        formula: 'MORE_THAN_OR_EQUAL',
-        validBetAmount: 2000,
-        rebatePercentage: 3,
-        maxPayoutPerProvider: 8000
+        minBetAmount: 10,
+        maxBetAmount: 2000
       },
       16: { // Evolution Gaming
-        formula: 'MORE_THAN_OR_EQUAL',
-        validBetAmount: 1500,
-        rebatePercentage: 3.5,
-        maxPayoutPerProvider: 6000
+        minBetAmount: 10,
+        maxBetAmount: 1500
       },
       31: { // PG Soft
-        formula: 'MORE_THAN',
-        validBetAmount: 1800,
-        rebatePercentage: 3,
-        maxPayoutPerProvider: 7000
+        minBetAmount: 5,
+        maxBetAmount: 1800
       },
       32: { // NetEnt
-        formula: 'MORE_THAN_OR_EQUAL',
-        validBetAmount: 2000,
-        rebatePercentage: 3.2,
-        maxPayoutPerProvider: 8500
+        minBetAmount: 10,
+        maxBetAmount: 2000
       },
       33: { // Microgaming
-        formula: 'EQUAL',
-        validBetAmount: 2500,
-        rebatePercentage: 4,
-        maxPayoutPerProvider: 10000
+        minBetAmount: 15,
+        maxBetAmount: 2500
       }
     },
     createdDate: '2024-01-20',
@@ -222,8 +200,6 @@ export const rebateSetupsData: RebateSetup[] = [
     id: 'REB003',
     name: '10% Daily TurnOver Rebate',
     rebateType: 'Valid Bet',
-    minLimit: 1,
-    maxLimit: 99999,
     targetMultiplier: 1,
     claimableCreditLessThan: 20000,
     allowInterTransfer: true,
@@ -232,7 +208,7 @@ export const rebateSetupsData: RebateSetup[] = [
     timeTo: '23:59',
     unlockRateWin: 70,
     unlockAmountLose: 2000,
-    maxPayoutAmount: 20000,
+    maxTotalPayoutAmount: 20000,
     maxWithdrawAmount: 8000,
     maxWithdrawPercentage: 90,
     recurring: 'Recurring',
@@ -264,34 +240,24 @@ export const rebateSetupsData: RebateSetup[] = [
     levelIds: [3], // Gold only
     providerSettings: {
       6: { // Pragmatic Play
-        formula: 'MORE_THAN_OR_EQUAL',
-        validBetAmount: 5000,
-        rebatePercentage: 10,
-        maxPayoutPerProvider: 15000
+        minBetAmount: 50,
+        maxBetAmount: 10000
       },
       16: { // Evolution Gaming
-        formula: 'EQUAL',
-        validBetAmount: 10000,
-        rebatePercentage: 12,
-        maxPayoutPerProvider: 20000
+        minBetAmount: 100,
+        maxBetAmount: 15000
       },
       31: { // PG Soft
-        formula: 'MORE_THAN',
-        validBetAmount: 3000,
-        rebatePercentage: 10,
-        maxPayoutPerProvider: 10000
+        minBetAmount: 30,
+        maxBetAmount: 8000
       },
       32: { // NetEnt
-        formula: 'MORE_THAN_OR_EQUAL',
-        validBetAmount: 5000,
-        rebatePercentage: 11,
-        maxPayoutPerProvider: 18000
+        minBetAmount: 50,
+        maxBetAmount: 12000
       },
       33: { // Microgaming
-        formula: 'LESS_THAN_OR_EQUAL',
-        validBetAmount: 8000,
-        rebatePercentage: 10.5,
-        maxPayoutPerProvider: 16000
+        minBetAmount: 50,
+        maxBetAmount: 10000
       }
     },
     createdDate: '2024-02-01',
