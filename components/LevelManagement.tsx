@@ -2058,7 +2058,8 @@ export default function LevelManagement() {
                     <th className="px-4 py-3 text-center text-xs font-semibold text-gray-900 uppercase w-16">SELECT</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Rebate Name</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Rebate Type</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Min/Max Limit</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Rebate</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-900 uppercase">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -2089,7 +2090,21 @@ export default function LevelManagement() {
                           {rebate.rebateType}
                         </Badge>
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-900">${rebate.minLimit} - ${rebate.maxLimit}</td>
+                      <td className="px-4 py-3 text-sm text-gray-900 font-medium">
+                        {rebate.rebateCalculationType === 'Percentage'
+                          ? (rebate.amountTiers[0]?.rebatePercentage ? `${rebate.amountTiers[0].rebatePercentage}%` : '-')
+                          : (rebate.amountTiers[0]?.rebateAmount ? `$${rebate.amountTiers[0].rebateAmount.toLocaleString()}` : '-')
+                        }
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <Badge className={`font-semibold text-xs ${
+                          rebate.status === 'Active'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {rebate.status}
+                        </Badge>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -2216,7 +2231,8 @@ export default function LevelManagement() {
                     <th className="px-4 py-3 text-center text-xs font-semibold text-gray-900 uppercase w-16">SELECT</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">CashBack Name</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">CashBack Type</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Max Limit</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">CashBack</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-gray-900 uppercase">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -2248,7 +2264,19 @@ export default function LevelManagement() {
                         </Badge>
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-900 font-medium">
-                        {cashback.maxLimit ? `$${cashback.maxLimit.toLocaleString()}` : 'Unlimited'}
+                        {cashback.cashbackCalculationType === 'Percentage'
+                          ? (cashback.amountTiers[0]?.cashbackPercentage ? `${cashback.amountTiers[0].cashbackPercentage}%` : '-')
+                          : (cashback.amountTiers[0]?.cashbackAmount ? `$${cashback.amountTiers[0].cashbackAmount.toLocaleString()}` : '-')
+                        }
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <Badge className={`font-semibold text-xs ${
+                          cashback.status === 'Active'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {cashback.status}
+                        </Badge>
                       </td>
                     </tr>
                   ))}
@@ -2391,7 +2419,7 @@ export default function LevelManagement() {
                     <th className="px-4 py-3 text-center text-xs font-semibold text-gray-900 uppercase w-16">SELECT</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Commission Name</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Target Type</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Commission %</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Commission</th>
                     <th className="px-4 py-3 text-center text-xs font-semibold text-gray-900 uppercase">Status</th>
                   </tr>
                 </thead>
@@ -2427,7 +2455,10 @@ export default function LevelManagement() {
                         </Badge>
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-900 font-medium">
-                        {commission.amountTiers[0]?.percentage ? `${commission.amountTiers[0].percentage}%` : '-'}
+                        {commission.commissionType === 'Percentage'
+                          ? (commission.amountTiers[0]?.percentage ? `${commission.amountTiers[0].percentage}%` : '-')
+                          : (commission.amountTiers[0]?.amount ? `$${commission.amountTiers[0].amount.toLocaleString()}` : '-')
+                        }
                       </td>
                       <td className="px-4 py-3 text-center">
                         <Badge className={`font-semibold text-xs ${
@@ -2578,7 +2609,6 @@ export default function LevelManagement() {
                     <th className="px-4 py-3 text-center text-xs font-semibold text-gray-900 uppercase w-16">SELECT</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Referrer Name</th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Target Type</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Max Payout</th>
                     <th className="px-4 py-3 text-center text-xs font-semibold text-gray-900 uppercase">Status</th>
                   </tr>
                 </thead>
@@ -2612,9 +2642,6 @@ export default function LevelManagement() {
                         <Badge className="bg-purple-100 text-purple-800 font-semibold text-xs">
                           {referrer.targetType}
                         </Badge>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-900 font-medium">
-                        ${referrer.maxPayoutPerDownline.toLocaleString()}
                       </td>
                       <td className="px-4 py-3 text-center">
                         <Badge className={`font-semibold text-xs ${
