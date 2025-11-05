@@ -288,7 +288,7 @@ export default function CommissionSetupManagement() {
     }));
   };
 
-  const handleTierChange = (index: number, field: 'threshold' | 'amount' | 'percentage', value: number) => {
+  const handleTierChange = (index: number, field: 'threshold' | 'amount' | 'percentage' | 'formula', value: number | string) => {
     setFormData(prev => {
       const updatedTiers = [...prev.amountTiers];
       updatedTiers[index] = { ...updatedTiers[index], [field]: value };
@@ -300,13 +300,13 @@ export default function CommissionSetupManagement() {
   const getTargetTypeLabel = (targetType: string): string => {
     switch (targetType) {
       case 'Deposit - Withdraw':
-        return 'Deposit - Withdraw More Than';
+        return 'Deposit - Withdraw';
       case 'Deposit - Withdraw - Rebate - Bonus':
-        return 'Deposit - Withdraw - Rebate - Bonus More Than';
+        return 'Deposit - Withdraw - Rebate - Bonus';
       case 'Valid Bet':
-        return 'Valid Bet More Than';
+        return 'Valid Bet';
       default:
-        return 'More Than';
+        return '';
     }
   };
 
@@ -442,7 +442,7 @@ export default function CommissionSetupManagement() {
 
       {/* Create/Edit Modal */}
       <Dialog open={modalMode !== null} onOpenChange={closeModal}>
-        <DialogContent className="max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogContent className="max-w-[60vw] w-full max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle className="text-[#3949ab] font-semibold text-lg">
               {modalMode === 'create' ? 'CREATE COMMISSION' : 'EDIT COMMISSION'}
@@ -694,6 +694,7 @@ export default function CommissionSetupManagement() {
                             <th className="px-4 py-2 text-left text-xs font-semibold text-gray-900 border-b">
                               {getTargetTypeLabel(formData.targetType)}
                             </th>
+                            <th className="px-4 py-2 text-left text-xs font-semibold text-gray-900 border-b">Formula</th>
                             <th className="px-4 py-2 text-left text-xs font-semibold text-gray-900 border-b">Amount</th>
                             <th className="px-4 py-2 text-left text-xs font-semibold text-gray-900 border-b">
                               {formData.commissionType === 'Percentage' ? 'Commission Percentage (%)' : 'Commission Amount'}
@@ -707,6 +708,20 @@ export default function CommissionSetupManagement() {
                             <tr key={index} className="border-b">
                               <td className="px-4 py-2 text-sm text-gray-700">
                                 {getTargetTypeLabel(formData.targetType)}
+                              </td>
+                              <td className="px-4 py-2">
+                                <select
+                                  value={tier.formula || ''}
+                                  onChange={(e) => handleTierChange(index, 'formula', e.target.value)}
+                                  className="w-full px-2 py-1 text-sm border rounded h-8"
+                                >
+                                  <option value="">Please Select</option>
+                                  <option value="MORE_THAN">MORE_THAN</option>
+                                  <option value="MORE_THAN_OR_EQUAL">MORE_THAN_OR_EQUAL</option>
+                                  <option value="EQUAL">EQUAL</option>
+                                  <option value="LESS_THAN">LESS_THAN</option>
+                                  <option value="LESS_THAN_OR_EQUAL">LESS_THAN_OR_EQUAL</option>
+                                </select>
                               </td>
                               <td className="px-4 py-2">
                                 <Input

@@ -1,7 +1,6 @@
 export interface ReferrerSetup {
   id: string;
   name: string;
-  targetType: 'By Deposit' | 'By Register';
   recurring: 'One Time';
   status: 'Active' | 'Inactive';
   autoApprovedAmount: number;
@@ -15,7 +14,6 @@ export const initialReferrerSetups: ReferrerSetup[] = [
   {
     id: 'REF001',
     name: 'Bronze Referral Program',
-    targetType: 'By Deposit',
     recurring: 'One Time',
     status: 'Active',
     autoApprovedAmount: 1000,
@@ -27,7 +25,6 @@ export const initialReferrerSetups: ReferrerSetup[] = [
   {
     id: 'REF002',
     name: 'Silver Registration Bonus',
-    targetType: 'By Register',
     recurring: 'One Time',
     status: 'Active',
     autoApprovedAmount: 500,
@@ -39,7 +36,6 @@ export const initialReferrerSetups: ReferrerSetup[] = [
   {
     id: 'REF003',
     name: 'Gold VIP Referral',
-    targetType: 'By Deposit',
     recurring: 'One Time',
     status: 'Inactive',
     autoApprovedAmount: 2000,

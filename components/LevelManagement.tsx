@@ -11,6 +11,7 @@ import { rebateSetupsData } from './RebateSetupData';
 import { cashBackSetupsData } from './CashBackSetupData';
 import { sampleCommissionSetups, CommissionSetup } from './CommissionSetupData';
 import { initialReferrerSetups, ReferrerSetup } from './ReferrerSetupData';
+import { initialPromotions } from './PromotionSetupData';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
@@ -43,6 +44,7 @@ export default function LevelManagement() {
   const [selectedCashbackIds, setSelectedCashbackIds] = useState<string[]>([]);
   const [rebateNameFilter, setRebateNameFilter] = useState('');
   const [cashbackNameFilter, setCashbackNameFilter] = useState('');
+  const [cashbackTargetTypeFilter, setCashbackTargetTypeFilter] = useState<string>('all');
   const [notification, setNotification] = useState<{type: 'error' | 'success' | 'warning', message: string} | null>(null);
 
   // Commission Setup Modal
@@ -445,18 +447,29 @@ export default function LevelManagement() {
       const newReferrer = initialReferrerSetups.find(r => r.id === referrerId);
       if (!newReferrer) return;
 
+      // Get targetType from the linked promotion
+      const newReferrerPromo = initialPromotions.find(p => p.id === newReferrer.promoId);
+      const newReferrerTargetType = newReferrerPromo?.targetType;
+
       // Validation: No duplicate target types
       const existingTypes = selectedReferrerIds
-        .map(id => initialReferrerSetups.find(r => r.id === id)?.targetType)
+        .map(id => {
+          const referrer = initialReferrerSetups.find(r => r.id === id);
+          const promo = referrer ? initialPromotions.find(p => p.id === referrer.promoId) : null;
+          return promo?.targetType;
+        })
         .filter(Boolean);
 
-      if (newReferrer && existingTypes.includes(newReferrer.targetType)) {
+      if (newReferrer && newReferrerTargetType && existingTypes.includes(newReferrerTargetType)) {
         const duplicateReferrer = selectedReferrerIds
           .map(id => initialReferrerSetups.find(r => r.id === id))
-          .find(r => r?.targetType === newReferrer.targetType);
+          .find(r => {
+            const promo = r ? initialPromotions.find(p => p.id === r.promoId) : null;
+            return promo?.targetType === newReferrerTargetType;
+          });
         setNotification({
           type: 'error',
-          message: `Cannot select duplicate referrer target types! A setup with target type "${newReferrer.targetType}" is already selected: "${duplicateReferrer?.name}". Only ONE setup per target type is allowed.`
+          message: `Cannot select duplicate referrer target types! A setup with target type "${newReferrerTargetType}" is already selected: "${duplicateReferrer?.name}". Only ONE setup per target type is allowed.`
         });
         return;
       }
@@ -2214,14 +2227,29 @@ export default function LevelManagement() {
             )}
 
             {/* Filter Section */}
-            <div className="bg-gray-50 p-3 rounded-lg border">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Search Name</label>
-              <Input
-                placeholder="Search cashback name..."
-                value={cashbackNameFilter}
-                onChange={(e) => setCashbackNameFilter(e.target.value || '')}
-                className="w-full h-9"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-gray-50 p-3 rounded-lg border">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Search Name</label>
+                <Input
+                  placeholder="Search cashback name..."
+                  value={cashbackNameFilter}
+                  onChange={(e) => setCashbackNameFilter(e.target.value || '')}
+                  className="w-full h-9"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">CashBack Type</label>
+                <select
+                  value={cashbackTargetTypeFilter}
+                  onChange={(e) => setCashbackTargetTypeFilter(e.target.value)}
+                  className="w-full h-9 px-3 rounded-md border border-gray-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="all">All CashBack Types</option>
+                  <option value="By Net Lose Only">By Net Lose Only</option>
+                  <option value="By Net Deposit">By Net Deposit</option>
+                  <option value="By Total WinLose Only">By Total WinLose Only</option>
+                </select>
+              </div>
             </div>
 
             <div className="border rounded-lg overflow-hidden">
@@ -2238,6 +2266,9 @@ export default function LevelManagement() {
                 <tbody className="divide-y divide-gray-200">
                   {cashBackSetupsData.filter((cashback) => {
                     if (cashbackNameFilter && !cashback.name.toLowerCase().includes(cashbackNameFilter.toLowerCase())) {
+                      return false;
+                    }
+                    if (cashbackTargetTypeFilter !== 'all' && cashback.cashbackType !== cashbackTargetTypeFilter) {
                       return false;
                     }
                     return true;
@@ -2617,11 +2648,14 @@ export default function LevelManagement() {
                     if (referrerNameFilter && !referrer.name.toLowerCase().includes(referrerNameFilter.toLowerCase())) {
                       return false;
                     }
-                    if (referrerTargetTypeFilter !== 'all' && referrer.targetType !== referrerTargetTypeFilter) {
+                    const promo = initialPromotions.find(p => p.id === referrer.promoId);
+                    if (referrerTargetTypeFilter !== 'all' && promo?.targetType !== referrerTargetTypeFilter) {
                       return false;
                     }
                     return true;
-                  }).map((referrer) => (
+                  }).map((referrer) => {
+                    const promo = initialPromotions.find(p => p.id === referrer.promoId);
+                    return (
                     <tr
                       key={referrer.id}
                       className={`hover:bg-gray-50 cursor-pointer ${
@@ -2640,7 +2674,7 @@ export default function LevelManagement() {
                       <td className="px-4 py-3 font-medium text-gray-900 text-sm">{referrer.name}</td>
                       <td className="px-4 py-3 text-sm">
                         <Badge className="bg-purple-100 text-purple-800 font-semibold text-xs">
-                          {referrer.targetType}
+                          {promo?.targetType || 'N/A'}
                         </Badge>
                       </td>
                       <td className="px-4 py-3 text-center">
@@ -2653,7 +2687,8 @@ export default function LevelManagement() {
                         </Badge>
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

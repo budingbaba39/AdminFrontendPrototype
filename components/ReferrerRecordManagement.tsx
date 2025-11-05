@@ -9,6 +9,7 @@ import ProfileContent from './ProfileContent';
 import { sampleUsers, User } from './UserData';
 import { ReferrerBonus, referrerBonusList } from './ReferrerRecordData';
 import { initialReferrerSetups } from './ReferrerSetupData';
+import { initialPromotions } from './PromotionSetupData';
 import { getStatusColor } from './transactionData';
 
 // Generate referrer setup options
@@ -35,9 +36,10 @@ const getUserDetails = (username: string) => {
 // Helper function to get referrer setup details
 const getReferrerSetupDetails = (referrerSetupId: string) => {
   const setup = initialReferrerSetups.find(s => s.id === referrerSetupId);
+  const promo = setup ? initialPromotions.find(p => p.id === setup.promoId) : null;
   return {
     name: setup?.name || 'Unknown Setup',
-    targetType: setup?.targetType || 'N/A',
+    targetType: promo?.targetType || 'N/A',
     createdDate: setup?.createdDate || 'N/A',
     autoApprovedAmount: setup?.autoApprovedAmount || 0
   };

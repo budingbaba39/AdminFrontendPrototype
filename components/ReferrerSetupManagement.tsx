@@ -24,7 +24,6 @@ const getLevelBadgeColors = (levelName: string) => {
 const getDefaultFormData = (): ReferrerSetup => ({
   id: '',
   name: '',
-  targetType: 'By Deposit',
   recurring: 'One Time',
   status: 'Active',
   autoApprovedAmount: 1000,
@@ -39,7 +38,6 @@ export default function ReferrerSetupManagement() {
   const [modalMode, setModalMode] = useState<ModalMode>(null);
 
   // Filter states
-  const [filterTargetType, setFilterTargetType] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
 
   // Form state
@@ -49,14 +47,12 @@ export default function ReferrerSetupManagement() {
   // Get filtered setups
   const getFilteredSetups = () => {
     return setups.filter(setup => {
-      if (filterTargetType !== 'all' && setup.targetType !== filterTargetType) return false;
       if (filterStatus !== 'all' && setup.status !== filterStatus) return false;
       return true;
     });
   };
 
   const handleResetFilters = () => {
-    setFilterTargetType('all');
     setFilterStatus('all');
   };
 
@@ -142,18 +138,7 @@ export default function ReferrerSetupManagement() {
 
       {/* Filter Section */}
       <div className="bg-white rounded-lg shadow border p-6 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-          <Select value={filterTargetType} onValueChange={setFilterTargetType}>
-            <SelectTrigger className="h-9">
-              <SelectValue placeholder="Target Type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Target Types</SelectItem>
-              <SelectItem value="By Deposit">By Deposit</SelectItem>
-              <SelectItem value="By Register">By Register</SelectItem>
-            </SelectContent>
-          </Select>
-
+        <div className="grid grid-cols-1 gap-3 mb-3">
           <Select value={filterStatus} onValueChange={setFilterStatus}>
             <SelectTrigger className="h-9">
               <SelectValue placeholder="Status" />
@@ -295,18 +280,6 @@ export default function ReferrerSetupManagement() {
               {validationErrors.name && (
                 <p className="text-red-600 text-sm mt-1">{validationErrors.name}</p>
               )}
-            </div>
-
-            <div className="w-full">
-              <label className="block text-sm font-semibold mb-2 text-gray-700">Target Type *</label>
-              <select
-                value={formData.targetType}
-                onChange={(e) => handleInputChange('targetType', e.target.value as 'By Deposit' | 'By Register')}
-                className="w-full h-10 px-3 py-2 border rounded-md"
-              >
-                <option value="By Deposit">By Deposit</option>
-                <option value="By Register">By Register</option>
-              </select>
             </div>
 
             <div className="w-full">
