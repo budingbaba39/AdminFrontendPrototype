@@ -626,7 +626,16 @@ export default function PromotionSetupManagement() {
                         <label className="block text-sm font-semibold mb-2 text-gray-700">Promo Type *</label>
                         <select
                           value={formData.promoType}
-                          onChange={(e) => handleInputChange('promoType', e.target.value as 'Deposit' | 'Free' | 'Referrer')}
+                          onChange={(e) => {
+                            const newPromoType = e.target.value as 'Deposit' | 'Free' | 'Referrer';
+                            handleInputChange('promoType', newPromoType);
+                            // Auto-update targetType based on promoType
+                            if (newPromoType === 'Referrer') {
+                              handleInputChange('targetType', 'By Deposit');
+                            } else {
+                              handleInputChange('targetType', 'Valid Bet');
+                            }
+                          }}
                           className="w-full h-10 px-3 py-2 border rounded-md"
                           disabled={isReadOnly}
                         >
@@ -926,12 +935,21 @@ export default function PromotionSetupManagement() {
                         <label className="block text-sm font-semibold mb-2 text-gray-700">Target Type *</label>
                         <select
                           value={formData.targetType}
-                          onChange={(e) => handleInputChange('targetType', e.target.value as 'Valid Bet' | 'By Balance WinOver')}
+                          onChange={(e) => handleInputChange('targetType', e.target.value as 'Valid Bet' | 'By Balance WinOver' | 'By Deposit' | 'By Register')}
                           className="w-full h-10 px-3 py-2 border rounded-md"
                           disabled={isReadOnly}
                         >
-                          <option value="Valid Bet">Valid Bet</option>
-                          <option value="By Balance WinOver">By Balance WinOver</option>
+                          {formData.promoType === 'Referrer' ? (
+                            <>
+                              <option value="By Deposit">By Deposit</option>
+                              <option value="By Register">By Register</option>
+                            </>
+                          ) : (
+                            <>
+                              <option value="Valid Bet">Valid Bet</option>
+                              <option value="By Balance WinOver">By Balance WinOver</option>
+                            </>
+                          )}
                         </select>
                       </div>
 

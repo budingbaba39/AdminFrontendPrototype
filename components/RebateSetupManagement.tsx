@@ -587,7 +587,7 @@ export default function RebateSetupManagement() {
 
       {/* Create/Edit Modal */}
       <Dialog open={modalMode !== null} onOpenChange={closeModal}>
-        <DialogContent className="max-w-[85vw] w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogContent className="max-w-[60vw] w-full max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle className="text-[#3949ab] font-semibold text-lg">
               {modalMode === 'create' ? 'CREATE REBATE' : 'EDIT REBATE'}
@@ -1339,7 +1339,7 @@ export default function RebateSetupManagement() {
 
       {/* Tier Provider Selection Modal */}
       <Dialog open={showTierProviderModal} onOpenChange={setShowTierProviderModal}>
-        <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogContent className="max-w-[60vw] max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle className="text-[#3949ab] font-semibold text-lg">
               Select Providers for Amount Tier

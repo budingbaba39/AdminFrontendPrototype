@@ -1,8 +1,17 @@
+// Formula enum for commission tiers
+export type CommissionSetupFormula =
+  | 'MORE_THAN'
+  | 'MORE_THAN_OR_EQUAL'
+  | 'EQUAL'
+  | 'LESS_THAN'
+  | 'LESS_THAN_OR_EQUAL';
+
 // Commission Amount Tier interface
 export interface CommissionAmountTier {
   threshold: number; // The "More Than" amount
   amount: number; // Fixed amount (if used)
   percentage: number; // Percentage value (if used)
+  formula?: CommissionSetupFormula | '';
 }
 
 export interface CommissionSetup {

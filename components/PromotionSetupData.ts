@@ -26,7 +26,7 @@ export interface Promotion {
   validFrom: string; // date string (YYYY-MM-DD)
   validTo: string; // date string (YYYY-MM-DD)
   status: 'Active' | 'Inactive';
-  targetType: 'Valid Bet' | 'By Balance WinOver';
+  targetType: 'Valid Bet' | 'By Balance WinOver' | 'By Deposit' | 'By Register';
   targetMultiplier: number;
   recurring: 'Immediate' | 'One Time' | 'Recurring';
   resetFrequency?: 'Everyday' | 'Every Week' | 'Every Month'; // only if recurring
@@ -194,7 +194,7 @@ export const initialPromotions: Promotion[] = [
     validFrom: '2024-01-01',
     validTo: '2025-12-31',
     status: 'Active',
-    targetType: 'Valid Bet',
+    targetType: 'By Deposit',
     targetMultiplier: 2,
     recurring: 'One Time',
     timeFrom: '00:00',
@@ -233,7 +233,7 @@ export const initialPromotions: Promotion[] = [
     validFrom: '2024-02-01',
     validTo: '2025-12-31',
     status: 'Active',
-    targetType: 'Valid Bet',
+    targetType: 'By Register',
     targetMultiplier: 1.5,
     recurring: 'One Time',
     timeFrom: '00:00',
@@ -269,7 +269,7 @@ export const initialPromotions: Promotion[] = [
     validFrom: '2024-03-01',
     validTo: '2025-06-30',
     status: 'Active',
-    targetType: 'By Balance WinOver',
+    targetType: 'By Deposit',
     targetMultiplier: 2,
     recurring: 'One Time',
     timeFrom: '00:00',
