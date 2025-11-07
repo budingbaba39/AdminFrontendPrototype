@@ -9,7 +9,6 @@ import ProfileContent from './ProfileContent';
 import { sampleUsers, User } from './UserData';
 import { ReferrerBonus, referrerBonusList } from './ReferrerRecordData';
 import { initialReferrerSetups } from './ReferrerSetupData';
-import { initialPromotions } from './PromotionSetupData';
 import { getStatusColor } from './transactionData';
 
 // Generate referrer setup options
@@ -36,10 +35,9 @@ const getUserDetails = (username: string) => {
 // Helper function to get referrer setup details
 const getReferrerSetupDetails = (referrerSetupId: string) => {
   const setup = initialReferrerSetups.find(s => s.id === referrerSetupId);
-  const promo = setup ? initialPromotions.find(p => p.id === setup.promoId) : null;
   return {
     name: setup?.name || 'Unknown Setup',
-    targetType: promo?.targetType || 'N/A',
+    targetType: setup?.targetType || 'N/A',
     createdDate: setup?.createdDate || 'N/A',
     autoApprovedAmount: setup?.autoApprovedAmount || 0
   };
@@ -376,16 +374,18 @@ export default function ReferrerRecordManagement() {
               <thead className="bg-gray-50 border-b">
                 <tr>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Username</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Amount</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Confirmed Amount</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Referee</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Referrer Setup</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Referrer Setup Name</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Created Date</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Auto Approved &lt;=</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Target Type</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Submit Time</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">C/R Time</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Handler</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Status</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Amount</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Confirmed Amount</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Remark</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Status</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Action</th>
                 </tr>
               </thead>
@@ -405,12 +405,6 @@ export default function ReferrerRecordManagement() {
                         {userDetails.name}
                       </span>
                     </td>
-                    <td className="px-3 py-2 text-green-600 font-semibold text-xs">
-                      ${bonus.amount.toFixed(2)}
-                    </td>
-                    <td className="px-3 py-2 text-green-600 font-semibold text-xs">
-                      ${bonus.confirmedAmount.toFixed(2)}
-                    </td>
                     <td className="px-3 py-2 text-xs">
                       {bonus.referee ? (
                         <span
@@ -423,23 +417,20 @@ export default function ReferrerRecordManagement() {
                         '-'
                       )}
                     </td>
-                    <td className="px-3 py-2 text-gray-900 text-xs">
-                      <div className="flex flex-col gap-0.5">
-                        <div>Name: {referrerSetup.name}</div>
-                        <div>Created: {referrerSetup.createdDate}</div>
-                        <div>Auto Approved: ${referrerSetup.autoApprovedAmount.toFixed(2)}</div>
-                      </div>
-                    </td>
+                    <td className="px-3 py-2 text-gray-900 text-xs font-medium">{referrerSetup.name}</td>
+                    <td className="px-3 py-2 text-gray-900 text-xs">{referrerSetup.createdDate}</td>
+                    <td className="px-3 py-2 text-gray-900 text-xs font-medium">${referrerSetup.autoApprovedAmount.toFixed(2)}</td>
                     <td className="px-3 py-2 text-gray-900 text-xs">{referrerSetup.targetType}</td>
                     <td className="px-3 py-2 text-gray-900 text-xs">{bonus.submitTime}</td>
                     <td className="px-3 py-2 text-gray-900 text-xs">
                       {bonus.completeTime || bonus.rejectTime || '-'}
                     </td>
                     <td className="px-3 py-2 text-blue-600 text-xs">{bonus.handler || '-'}</td>
-                    <td className="px-3 py-2">
-                      <Badge className={`${getStatusColor(bonus.status)} text-xs font-semibold px-2 py-1`}>
-                        {bonus.status}
-                      </Badge>
+                    <td className="px-3 py-2 text-green-600 font-semibold text-xs">
+                      ${bonus.amount.toFixed(2)}
+                    </td>
+                    <td className="px-3 py-2 text-green-600 font-semibold text-xs">
+                      ${bonus.confirmedAmount.toFixed(2)}
                     </td>
                     <td className="px-3 py-2">
                       {bonus.status === 'PENDING' ? (
@@ -454,6 +445,11 @@ export default function ReferrerRecordManagement() {
                           {bonus.remark || '-'}
                         </span>
                       )}
+                    </td>
+                    <td className="px-3 py-2">
+                      <Badge className={`${getStatusColor(bonus.status)} text-xs font-semibold px-2 py-1`}>
+                        {bonus.status}
+                      </Badge>
                     </td>
                     <td className="px-3 py-2">
                       <div className="flex gap-1">

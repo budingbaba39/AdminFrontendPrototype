@@ -1,9 +1,15 @@
+// Per-provider promotion settings
+export interface ProviderPromotionSetting {
+  minBetAmount: number;
+  maxBetAmount: number;
+}
+
 export interface Promotion {
   id: string;
 
   // Basic Info
   promoName: string;
-  promoType: 'Deposit' | 'Free' | 'Referrer';
+  promoType: 'Deposit' | 'Free';
   allowInterTransfer: boolean;
 
   // Bonus Info
@@ -11,7 +17,7 @@ export interface Promotion {
   unlockAmountLose: number;
   minTimeOfDeposit: number;
   minDeposit: number;
-  maxClaimBonus: number;
+  maxTotalPayoutAmount: number;
   bonusRate: number; // percentage
   bonusFixedAmount: number;
   bonusRandom: {
@@ -26,7 +32,7 @@ export interface Promotion {
   validFrom: string; // date string (YYYY-MM-DD)
   validTo: string; // date string (YYYY-MM-DD)
   status: 'Active' | 'Inactive';
-  targetType: 'Valid Bet' | 'By Balance WinOver' | 'By Deposit' | 'By Register';
+  targetType: 'Valid Bet' | 'By Balance WinOver';
   targetMultiplier: number;
   recurring: 'Immediate' | 'One Time' | 'Recurring';
   resetFrequency?: 'Everyday' | 'Every Week' | 'Every Month'; // only if recurring
@@ -39,7 +45,12 @@ export interface Promotion {
 
   // Relationships
   levelIds: number[]; // array of level IDs that can access this promotion
-  providerIds: number[]; // array of provider IDs
+  providerIds: number[]; // array of provider IDs (deprecated, use providerSettings instead)
+
+  // Per-Provider Settings
+  providerSettings: {
+    [providerId: number]: ProviderPromotionSetting;
+  };
 
   // Languages
   translations?: {
@@ -63,7 +74,7 @@ export const initialPromotions: Promotion[] = [
     unlockAmountLose: 100,
     minTimeOfDeposit: 1,
     minDeposit: 50,
-    maxClaimBonus: 500,
+    maxTotalPayoutAmount: 500,
     bonusRate: 20, // Only bonus rate has value
     bonusFixedAmount: 0,
     bonusRandom: {
@@ -85,6 +96,11 @@ export const initialPromotions: Promotion[] = [
     requireApproval: false,
     levelIds: [1, 2, 3], // All levels
     providerIds: [6, 16, 31], // Pragmatic Play, Evolution Gaming, Betradar
+    providerSettings: {
+      6: { minBetAmount: 1, maxBetAmount: 1000 },
+      16: { minBetAmount: 5, maxBetAmount: 2000 },
+      31: { minBetAmount: 10, maxBetAmount: 5000 }
+    },
     translations: {
       english: { title: '20%x3 Slot Daily Reload Bonus', name: '20% Bonus with 3x Turnover for Slot Daily Reload', description: '', images: [] },
       chinese: { title: '20%x3 老虎机每日充值奖金', name: '老虎机每日充值20%奖金（3倍流水）', description: '', images: [] },
@@ -102,7 +118,7 @@ export const initialPromotions: Promotion[] = [
     unlockAmountLose: 50,
     minTimeOfDeposit: 0,
     minDeposit: 0,
-    maxClaimBonus: 500,
+    maxTotalPayoutAmount: 500,
     bonusRate: 10,
     bonusFixedAmount: 0,
     bonusRandom: {
@@ -126,6 +142,13 @@ export const initialPromotions: Promotion[] = [
     requireApproval: true,
     levelIds: [1, 2, 3], // All levels
     providerIds: [31,32,33,34,35], // PG Soft, Spadegaming
+    providerSettings: {
+      31: { minBetAmount: 5, maxBetAmount: 500 },
+      32: { minBetAmount: 10, maxBetAmount: 1000 },
+      33: { minBetAmount: 1, maxBetAmount: 800 },
+      34: { minBetAmount: 2, maxBetAmount: 600 },
+      35: { minBetAmount: 5, maxBetAmount: 1500 }
+    },
     translations: {
       english: { title: '10%x1 Daily Sport Bonus', name: '10% Bonus with 1x Turnover for Daily Sport', description: '', images: [] },
       chinese: { title: '10%x1 每日体育奖金', name: '每日体育10%奖金（1倍流水）', description: '', images: [] },
@@ -143,7 +166,7 @@ export const initialPromotions: Promotion[] = [
     unlockAmountLose: 500,
     minTimeOfDeposit: 3,
     minDeposit: 200,
-    maxClaimBonus: 500,
+    maxTotalPayoutAmount: 500,
     bonusRate: 6,
     bonusFixedAmount: 0,
     bonusRandom: { min: 0, max: 0 },
@@ -164,6 +187,11 @@ export const initialPromotions: Promotion[] = [
     requireApproval: false,
     levelIds: [3], // Only Gold level
     providerIds: [16, 17, 18], // Evolution Gaming, Pragmatic Play Live, Ezugi
+    providerSettings: {
+      16: { minBetAmount: 20, maxBetAmount: 5000 },
+      17: { minBetAmount: 10, maxBetAmount: 3000 },
+      18: { minBetAmount: 15, maxBetAmount: 4000 }
+    },
     translations: {
       english: { title: '6%x1 Unlimited Reload Bonus', name: '6% Bonus with 1x Turnover for Unlimited Reload', description: '', images: [] },
       chinese: { title: '6%x1 无限充值奖金', name: '无限充值6%奖金（1倍流水）', description: '', images: [] },
@@ -171,119 +199,5 @@ export const initialPromotions: Promotion[] = [
     },
     memberApplied: 89,
     createdDate: '2024-01-01'
-  },
-  {
-    id: 'PROMO004',
-    promoName: 'Referrer Promotion',
-    promoType: 'Referrer',
-    allowInterTransfer: false,
-    unlockRateWin: 60,
-    unlockAmountLose: 200,
-    minTimeOfDeposit: 1,
-    minDeposit: 100,
-    maxClaimBonus: 1000,
-    bonusRate: 15, // Only bonus rate has value
-    bonusFixedAmount: 0,
-    bonusRandom: {
-      min: 0,
-      max: 0
-    },
-    maxWithdrawAmount: 5000,
-    maxWithdrawPercentage: 0,
-    claimableCreditLessThan: 10000,
-    validFrom: '2024-01-01',
-    validTo: '2025-12-31',
-    status: 'Active',
-    targetType: 'By Deposit',
-    targetMultiplier: 2,
-    recurring: 'One Time',
-    timeFrom: '00:00',
-    timeTo: '23:59',
-    includeRebate: false,
-    requireApproval: true,
-    levelIds: [1],
-    providerIds: [6, 16, 31, 32],
-    translations: {
-      english: { title: 'Referrer Promotion', name: 'Refer a Friend and Earn Bonus', description: '', images: [] },
-      chinese: { title: '推荐人促销', name: '推荐朋友并获得奖金', description: '', images: [] },
-      malay: { title: 'Promosi Rujukan', name: 'Rujuk Rakan dan Dapatkan Bonus', description: '', images: [] }
-    },
-    memberApplied: 156,
-    createdDate: '2024-01-15'
-  },
-  {
-    id: 'PROMO005',
-    promoName: 'VIP Referral Bonus',
-    promoType: 'Referrer',
-    allowInterTransfer: false,
-    unlockRateWin: 70,
-    unlockAmountLose: 300,
-    minTimeOfDeposit: 2,
-    minDeposit: 200,
-    maxClaimBonus: 500,
-    bonusRate: 25,
-    bonusFixedAmount: 0,
-    bonusRandom: {
-      min: 0,
-      max: 0
-    },
-    maxWithdrawAmount: 8000,
-    maxWithdrawPercentage: 0,
-    claimableCreditLessThan: 20000,
-    validFrom: '2024-02-01',
-    validTo: '2025-12-31',
-    status: 'Active',
-    targetType: 'By Register',
-    targetMultiplier: 1.5,
-    recurring: 'One Time',
-    timeFrom: '00:00',
-    timeTo: '23:59',
-    includeRebate: false,
-    requireApproval: true,
-    levelIds: [2], // Silver and Gold only
-    providerIds: [6, 16, 17, 31, 32],
-    translations: {
-      english: { title: 'VIP Referral Bonus', name: 'VIP Members Get $150 per Referral', description: '', images: [] },
-      chinese: { title: 'VIP推荐奖金', name: 'VIP会员每推荐获得$150', description: '', images: [] },
-      malay: { title: 'Bonus Rujukan VIP', name: 'Ahli VIP Dapat $150 setiap Rujukan', description: '', images: [] }
-    },
-    memberApplied: 78,
-    createdDate: '2024-02-01'
-  },
-  {
-    id: 'PROMO006',
-    promoName: 'Lucky Referral Reward',
-    promoType: 'Referrer',
-    allowInterTransfer: false,
-    unlockRateWin: 50,
-    unlockAmountLose: 150,
-    minTimeOfDeposit: 1,
-    minDeposit: 50,
-    maxClaimBonus: 500, // Only bonus rate has value
-    bonusRate: 10,
-    bonusFixedAmount: 0,
-    bonusRandom: { min: 0, max: 0 },
-    maxWithdrawAmount: 3000,
-    maxWithdrawPercentage: 0,
-    claimableCreditLessThan: 8000,
-    validFrom: '2024-03-01',
-    validTo: '2025-06-30',
-    status: 'Active',
-    targetType: 'By Deposit',
-    targetMultiplier: 2,
-    recurring: 'One Time',
-    timeFrom: '00:00',
-    timeTo: '23:59',
-    includeRebate: true,
-    requireApproval: false,
-    levelIds: [3], // All levels
-    providerIds: [6, 16, 31, 32, 33],
-    translations: {
-      english: { title: 'Lucky Referral Reward', name: 'Win Random Bonus $25-$200 for Each Referral', description: '', images: [] },
-      chinese: { title: '幸运推荐奖励', name: '每次推荐赢取$25-$200随机奖金', description: '', images: [] },
-      malay: { title: 'Ganjaran Rujukan Bertuah', name: 'Menang Bonus Rawak $25-$200 untuk Setiap Rujukan', description: '', images: [] }
-    },
-    memberApplied: 234,
-    createdDate: '2024-03-01'
   }
 ];
