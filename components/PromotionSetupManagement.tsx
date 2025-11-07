@@ -34,7 +34,7 @@ const getDefaultFormData = (): Promotion => ({
   unlockAmountLose: 0,
   minTimeOfDeposit: 0,
   minDeposit: 1,
-  maxClaimBonus: 1,
+  maxTotalPayoutAmount: 1,
   bonusRate: 0,
   bonusFixedAmount: 0,
   bonusRandom: { min: 0, max: 0 },
@@ -53,6 +53,7 @@ const getDefaultFormData = (): Promotion => ({
   requireApproval: false,
   levelIds: [],
   providerIds: [],
+  providerSettings: {},
   memberApplied: 0,
   createdDate: new Date().toISOString().split('T')[0]
 });
@@ -153,7 +154,7 @@ export default function PromotionSetupManagement() {
 
     if (!formData.promoName.trim()) errors.promoName = 'Promotion name is required';
     if (formData.minDeposit <= 0) errors.minDeposit = 'Min deposit must be greater than 0';
-    if (formData.maxClaimBonus < formData.minDeposit) errors.maxClaimBonus = 'Max claim bonus must be >= min deposit';
+    if (formData.maxTotalPayoutAmount < formData.minDeposit) errors.maxTotalPayoutAmount = 'Max total payout amount must be >= min deposit';
     if (formData.bonusRate < 0 || formData.bonusRate > 100) errors.bonusRate = 'Bonus rate must be between 0-100%';
     if (formData.unlockRateWin < 0 || formData.unlockRateWin > 100) errors.unlockRateWin = 'Unlock rate must be between 0-100%';
     if (formData.targetMultiplier <= 0) errors.targetMultiplier = 'Target multiplier must be greater than 0';
@@ -164,8 +165,8 @@ export default function PromotionSetupManagement() {
     }
     if (formData.timeTo <= formData.timeFrom) errors.timeTo = 'Time to must be after time from';
 
-    // Level validation - NOT required for Referrer type
-    if (formData.promoType !== 'Referrer' && formData.levelIds.length === 0) {
+    // Level validation
+    if (formData.levelIds.length === 0) {
       errors.levelIds = 'At least one level must be selected';
     }
 
@@ -208,11 +209,6 @@ export default function PromotionSetupManagement() {
         updated.resetFrequencyDay = undefined;
       }
 
-      // Clear level selection when changing to Referrer type
-      if (field === 'promoType' && value === 'Referrer') {
-        updated.levelIds = [];
-      }
-
       return updated;
     });
   };
@@ -235,11 +231,41 @@ export default function PromotionSetupManagement() {
   };
 
   const toggleProvider = (providerId: number) => {
+    setFormData(prev => {
+      const isCurrentlySelected = prev.providerIds.includes(providerId);
+      if (isCurrentlySelected) {
+        // Remove provider and its settings
+        const newSettings = { ...prev.providerSettings };
+        delete newSettings[providerId];
+        return {
+          ...prev,
+          providerIds: prev.providerIds.filter(id => id !== providerId),
+          providerSettings: newSettings
+        };
+      } else {
+        // Add provider with default settings
+        return {
+          ...prev,
+          providerIds: [...prev.providerIds, providerId],
+          providerSettings: {
+            ...prev.providerSettings,
+            [providerId]: { minBetAmount: 0, maxBetAmount: 99999 }
+          }
+        };
+      }
+    });
+  };
+
+  const handleProviderSettingChange = (providerId: number, field: 'minBetAmount' | 'maxBetAmount', value: number) => {
     setFormData(prev => ({
       ...prev,
-      providerIds: prev.providerIds.includes(providerId)
-        ? prev.providerIds.filter(id => id !== providerId)
-        : [...prev.providerIds, providerId]
+      providerSettings: {
+        ...prev.providerSettings,
+        [providerId]: {
+          ...prev.providerSettings[providerId],
+          [field]: value
+        }
+      }
     }));
   };
 
@@ -318,7 +344,6 @@ export default function PromotionSetupManagement() {
               <option value="All">All</option>
               <option value="Deposit">Deposit</option>
               <option value="Free">Free</option>
-              <option value="Referrer">Referrer</option>
             </select>
           </div>
 
@@ -543,7 +568,7 @@ export default function PromotionSetupManagement() {
 
       {/* Create/Edit/View Modal */}
       <Dialog open={modalMode !== null} onOpenChange={closeModal}>
-        <DialogContent className="max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogContent className="w-[60vw] max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle className="text-[#3949ab] font-semibold text-lg">
               {modalMode === 'create' ? 'CREATE PROMOTION' : modalMode === 'edit' ? 'EDIT PROMOTION' : 'VIEW PROMOTION'}
@@ -627,21 +652,14 @@ export default function PromotionSetupManagement() {
                         <select
                           value={formData.promoType}
                           onChange={(e) => {
-                            const newPromoType = e.target.value as 'Deposit' | 'Free' | 'Referrer';
+                            const newPromoType = e.target.value as 'Deposit' | 'Free';
                             handleInputChange('promoType', newPromoType);
-                            // Auto-update targetType based on promoType
-                            if (newPromoType === 'Referrer') {
-                              handleInputChange('targetType', 'By Deposit');
-                            } else {
-                              handleInputChange('targetType', 'Valid Bet');
-                            }
                           }}
                           className="w-full h-10 px-3 py-2 border rounded-md"
                           disabled={isReadOnly}
                         >
                           <option value="Deposit">Deposit</option>
                           <option value="Free">Free</option>
-                          <option value="Referrer">Referrer</option>
                         </select>
                       </div>
 
@@ -805,18 +823,18 @@ export default function PromotionSetupManagement() {
                       </div>
 
                       <div className="w-full">
-                        <label className="block text-sm font-semibold mb-2 text-gray-700">Max Claim Bonus *</label>
+                        <label className="block text-sm font-semibold mb-2 text-gray-700">Max Total Payout Amount *</label>
                         <Input
                           type="number"
                           min="0"
-                          value={formData.maxClaimBonus}
-                          onChange={(e) => handleInputChange('maxClaimBonus', parseFloat(e.target.value) || 0)}
+                          value={formData.maxTotalPayoutAmount}
+                          onChange={(e) => handleInputChange('maxTotalPayoutAmount', parseFloat(e.target.value) || 0)}
                           disabled={isReadOnly}
-                          placeholder="Maximum bonus"
+                          placeholder="Maximum total payout"
                           className="w-full h-10"
                         />
-                        {validationErrors.maxClaimBonus && (
-                          <p className="text-red-600 text-sm mt-1">{validationErrors.maxClaimBonus}</p>
+                        {validationErrors.maxTotalPayoutAmount && (
+                          <p className="text-red-600 text-sm mt-1">{validationErrors.maxTotalPayoutAmount}</p>
                         )}
                       </div>
 
@@ -935,21 +953,12 @@ export default function PromotionSetupManagement() {
                         <label className="block text-sm font-semibold mb-2 text-gray-700">Target Type *</label>
                         <select
                           value={formData.targetType}
-                          onChange={(e) => handleInputChange('targetType', e.target.value as 'Valid Bet' | 'By Balance WinOver' | 'By Deposit' | 'By Register')}
+                          onChange={(e) => handleInputChange('targetType', e.target.value as 'Valid Bet' | 'By Balance WinOver')}
                           className="w-full h-10 px-3 py-2 border rounded-md"
                           disabled={isReadOnly}
                         >
-                          {formData.promoType === 'Referrer' ? (
-                            <>
-                              <option value="By Deposit">By Deposit</option>
-                              <option value="By Register">By Register</option>
-                            </>
-                          ) : (
-                            <>
-                              <option value="Valid Bet">Valid Bet</option>
-                              <option value="By Balance WinOver">By Balance WinOver</option>
-                            </>
-                          )}
+                          <option value="Valid Bet">Valid Bet</option>
+                          <option value="By Balance WinOver">By Balance WinOver</option>
                         </select>
                       </div>
 
@@ -1218,8 +1227,6 @@ export default function PromotionSetupManagement() {
 
               {activeTab === 'eligibility' && (
                 <div className="space-y-4 min-h-[500px]">
-                  {/* Only show level selection if NOT Referrer type */}
-                  {formData.promoType !== 'Referrer' && (
                   <div>
                     <h3 className="text-lg font-bold mb-4 text-gray-800 pb-2 border-b">Level Selection</h3>
                     <div className="bg-white rounded-lg border overflow-hidden">
@@ -1274,9 +1281,8 @@ export default function PromotionSetupManagement() {
                       <p className="text-red-600 text-sm mt-1">{validationErrors.levelIds}</p>
                     )}
                   </div>
-                  )}
 
-                  {/* Provider Selection - always show */}
+                  {/* Provider Selection */}
                   <div>
                     <h3 className="text-lg font-bold mb-4 text-gray-800 pb-2 border-b">Provider Selection</h3>
                     {/* Category Filter */}
@@ -1396,9 +1402,27 @@ export default function PromotionSetupManagement() {
                                   const allFilteredSelected = filteredIds.every(id => formData.providerIds.includes(id));
 
                                   if (allFilteredSelected) {
-                                    handleInputChange('providerIds', formData.providerIds.filter(id => !filteredIds.includes(id)));
+                                    // Deselect all filtered providers
+                                    const newSettings = { ...formData.providerSettings };
+                                    filteredIds.forEach(id => delete newSettings[id]);
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      providerIds: prev.providerIds.filter(id => !filteredIds.includes(id)),
+                                      providerSettings: newSettings
+                                    }));
                                   } else {
-                                    handleInputChange('providerIds', [...new Set([...formData.providerIds, ...filteredIds])]);
+                                    // Select all filtered providers with default settings
+                                    const newSettings = { ...formData.providerSettings };
+                                    filteredIds.forEach(id => {
+                                      if (!newSettings[id]) {
+                                        newSettings[id] = { minBetAmount: 0, maxBetAmount: 99999 };
+                                      }
+                                    });
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      providerIds: [...new Set([...prev.providerIds, ...filteredIds])],
+                                      providerSettings: newSettings
+                                    }));
                                   }
                                 }}
                                 disabled={isReadOnly}
@@ -1407,45 +1431,75 @@ export default function PromotionSetupManagement() {
                             </th>
                             <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Category</th>
                             <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Provider Name</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Min Bet Amount</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Max Bet Amount</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200 text-sm">
                           {providersData
                             .filter(p => providerCategoryFilter === 'all' || p.category === providerCategoryFilter)
-                            .map((provider) => (
-                            <tr
-                              key={provider.id}
-                              className={`hover:bg-gray-50 cursor-pointer ${
-                                formData.providerIds.includes(provider.id) ? 'bg-blue-50' : ''
-                              }`}
-                              onClick={() => !isReadOnly && toggleProvider(provider.id)}
-                            >
-                              <td className="px-4 py-3 text-center">
-                                <input
-                                  type="checkbox"
-                                  checked={formData.providerIds.includes(provider.id)}
-                                  onChange={() => toggleProvider(provider.id)}
-                                  onClick={(e) => e.stopPropagation()}
-                                  disabled={isReadOnly}
-                                  className="w-4 h-4 text-[#3949ab] border-gray-300 rounded focus:ring-[#3949ab]"
-                                />
-                              </td>
-                              <td className="px-4 py-3">
-                                <Badge className="bg-[#3949ab] text-white font-semibold">
-                                  {categoryLabels[provider.category]}
-                                </Badge>
-                              </td>
-                              <td className="px-4 py-3 font-semibold text-gray-900">
-                                {provider.name}
-                              </td>
-                            </tr>
-                          ))}
+                            .map((provider) => {
+                              const settings = formData.providerSettings[provider.id] || {
+                                minBetAmount: 0,
+                                maxBetAmount: 99999
+                              };
+                              const isSelected = formData.providerIds.includes(provider.id);
+
+                              return (
+                                <tr
+                                  key={provider.id}
+                                  className={`hover:bg-gray-50 ${
+                                    isSelected ? 'bg-blue-50' : ''
+                                  }`}
+                                >
+                                  <td className="px-4 py-3 text-center">
+                                    <input
+                                      type="checkbox"
+                                      checked={isSelected}
+                                      onChange={() => toggleProvider(provider.id)}
+                                      disabled={isReadOnly}
+                                      className="w-4 h-4 text-[#3949ab] border-gray-300 rounded focus:ring-[#3949ab]"
+                                    />
+                                  </td>
+                                  <td className="px-4 py-3">
+                                    <Badge className="bg-[#3949ab] text-white font-semibold">
+                                      {categoryLabels[provider.category]}
+                                    </Badge>
+                                  </td>
+                                  <td className="px-4 py-3 font-semibold text-gray-900">
+                                    {provider.name}
+                                  </td>
+                                  <td className="px-4 py-3">
+                                    <Input
+                                      type="number"
+                                      value={settings.minBetAmount}
+                                      onChange={(e) => handleProviderSettingChange(provider.id, 'minBetAmount', Number(e.target.value))}
+                                      placeholder="0"
+                                      className="w-28 h-8 text-sm"
+                                      step="0.01"
+                                      disabled={isReadOnly}
+                                    />
+                                  </td>
+                                  <td className="px-4 py-3">
+                                    <Input
+                                      type="number"
+                                      value={settings.maxBetAmount}
+                                      onChange={(e) => handleProviderSettingChange(provider.id, 'maxBetAmount', Number(e.target.value))}
+                                      placeholder="99999"
+                                      className="w-28 h-8 text-sm"
+                                      step="0.01"
+                                      disabled={isReadOnly}
+                                    />
+                                  </td>
+                                </tr>
+                              );
+                            })}
                         </tbody>
                       </table>
                     </div>
                     <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded">
                       <p className="text-sm text-gray-700">
-                        <span className="font-semibold">{formData.providerIds.length}</span> provider(s) selected out of <span className="font-semibold">{providersData.length}</span> total
+                        <span className="font-semibold">{Object.keys(formData.providerSettings).length}</span> provider(s) selected out of <span className="font-semibold">{providersData.length}</span> total
                         {providerCategoryFilter !== 'all' && (
                           <span> ({providersData.filter(p => p.category === providerCategoryFilter).length} in current filter)</span>
                         )}
@@ -1455,19 +1509,6 @@ export default function PromotionSetupManagement() {
                       <p className="text-red-600 text-sm mt-1">{validationErrors.providerIds}</p>
                     )}
                   </div>
-
-                  {/* Info message for Referrer type */}
-                  {formData.promoType === 'Referrer' && (
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center mt-4">
-                      <p className="text-lg font-semibold text-yellow-800 mb-2">
-                        Level Selection Not Applicable
-                      </p>
-                      <p className="text-sm text-yellow-700">
-                        For Referrer promotions, level selection is managed through the Referrer Setup in Level Management.
-                        Only provider selection is available here.
-                      </p>
-                    </div>
-                  )}
                 </div>
               )}
             </div>

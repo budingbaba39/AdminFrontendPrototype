@@ -11,10 +11,8 @@ import { rebateSetupsData } from './RebateSetupData';
 import { cashBackSetupsData } from './CashBackSetupData';
 import { sampleCommissionSetups, CommissionSetup } from './CommissionSetupData';
 import { initialReferrerSetups, ReferrerSetup } from './ReferrerSetupData';
-import { initialPromotions } from './PromotionSetupData';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-
 export default function LevelManagement() {
   const [levels, setLevels] = useState<Level[]>(initialLevels);
   const [searchFilter, setSearchFilter] = useState('');
@@ -46,15 +44,11 @@ export default function LevelManagement() {
   const [cashbackNameFilter, setCashbackNameFilter] = useState('');
   const [cashbackTargetTypeFilter, setCashbackTargetTypeFilter] = useState<string>('all');
   const [notification, setNotification] = useState<{type: 'error' | 'success' | 'warning', message: string} | null>(null);
-
-  // Commission Setup Modal
   const [showCommissionSetupModal, setShowCommissionSetupModal] = useState(false);
   const [selectedLevelForCommission, setSelectedLevelForCommission] = useState<Level | null>(null);
   const [selectedCommissionIds, setSelectedCommissionIds] = useState<string[]>([]);
   const [commissionNameFilter, setCommissionNameFilter] = useState('');
   const [commissionTargetTypeFilter, setCommissionTargetTypeFilter] = useState<string>('all');
-
-  // Referrer Setup Modal
   const [showReferrerSetupModal, setShowReferrerSetupModal] = useState(false);
   const [selectedLevelForReferrer, setSelectedLevelForReferrer] = useState<Level | null>(null);
   const [selectedReferrerIds, setSelectedReferrerIds] = useState<string[]>([]);
@@ -447,26 +441,21 @@ export default function LevelManagement() {
       const newReferrer = initialReferrerSetups.find(r => r.id === referrerId);
       if (!newReferrer) return;
 
-      // Get targetType from the linked promotion
-      const newReferrerPromo = initialPromotions.find(p => p.id === newReferrer.promoId);
-      const newReferrerTargetType = newReferrerPromo?.targetType;
+      // Get targetType directly from referrer
+      const newReferrerTargetType = newReferrer.targetType;
 
       // Validation: No duplicate target types
       const existingTypes = selectedReferrerIds
         .map(id => {
           const referrer = initialReferrerSetups.find(r => r.id === id);
-          const promo = referrer ? initialPromotions.find(p => p.id === referrer.promoId) : null;
-          return promo?.targetType;
+          return referrer?.targetType;
         })
         .filter(Boolean);
 
       if (newReferrer && newReferrerTargetType && existingTypes.includes(newReferrerTargetType)) {
         const duplicateReferrer = selectedReferrerIds
           .map(id => initialReferrerSetups.find(r => r.id === id))
-          .find(r => {
-            const promo = r ? initialPromotions.find(p => p.id === r.promoId) : null;
-            return promo?.targetType === newReferrerTargetType;
-          });
+          .find(r => r?.targetType === newReferrerTargetType);
         setNotification({
           type: 'error',
           message: `Cannot select duplicate referrer target types! A setup with target type "${newReferrerTargetType}" is already selected: "${duplicateReferrer?.name}". Only ONE setup per target type is allowed.`
@@ -2648,14 +2637,11 @@ export default function LevelManagement() {
                     if (referrerNameFilter && !referrer.name.toLowerCase().includes(referrerNameFilter.toLowerCase())) {
                       return false;
                     }
-                    const promo = initialPromotions.find(p => p.id === referrer.promoId);
-                    if (referrerTargetTypeFilter !== 'all' && promo?.targetType !== referrerTargetTypeFilter) {
+                    if (referrerTargetTypeFilter !== 'all' && referrer.targetType !== referrerTargetTypeFilter) {
                       return false;
                     }
                     return true;
-                  }).map((referrer) => {
-                    const promo = initialPromotions.find(p => p.id === referrer.promoId);
-                    return (
+                  }).map((referrer) => (
                     <tr
                       key={referrer.id}
                       className={`hover:bg-gray-50 cursor-pointer ${
@@ -2674,7 +2660,7 @@ export default function LevelManagement() {
                       <td className="px-4 py-3 font-medium text-gray-900 text-sm">{referrer.name}</td>
                       <td className="px-4 py-3 text-sm">
                         <Badge className="bg-purple-100 text-purple-800 font-semibold text-xs">
-                          {promo?.targetType || 'N/A'}
+                          {referrer.targetType}
                         </Badge>
                       </td>
                       <td className="px-4 py-3 text-center">
@@ -2687,8 +2673,7 @@ export default function LevelManagement() {
                         </Badge>
                       </td>
                     </tr>
-                    );
-                  })}
+                  ))}
                 </tbody>
               </table>
             </div>
