@@ -52,7 +52,7 @@ interface ProfileManagementProps {
   onUserUpdate?: (updatedUser: User) => void;
 }
 
-type TabType = 'TRANSACTION' | 'BET HISTORY' | 'COMMISSION' | 'CREDIT' | 'BANK' | 'SETTING' | 'GAME' | 'IP' | 'LOG';
+type TabType = 'TRANSACTION' | 'BET HISTORY' | 'COMMISSION' | 'CREDIT' | 'BANK' | 'SETTING' | 'GAME' | 'IP' | 'LOG' | 'REFERRER' | 'ONGOING';
 
 // Sample data for various tabs
 const sampleTransactionData = [
@@ -80,6 +80,23 @@ const sampleIPData = [
   { time: '2023-08-24 20:15', ip: '192.168.1.102', isp: 'Digi', city: 'Shah Alam', country: 'Malaysia', userAgent: 'Firefox 116.0' },
 ];
 
+const sampleReferrerData = [
+  { setupName: 'Referrer Setup 1', referee: 'USER001', amount: 100.00, confirmedAmount: 80.00, status: 'ACTIVE' },
+  { setupName: 'Referrer Setup 2', referee: 'USER002', amount: 150.00, confirmedAmount: 150.00, status: 'COMPLETED' },
+];
+
+const sampleOngoingData: Array<{
+  type: string;
+  name: string;
+  current: number;
+  target: number;
+  status: string;
+}> = [
+  { type: 'PROMOTION', name: 'Welcome Bonus 100%', current: 5000, target: 10000, status: 'ONGOING' },
+  { type: 'REBATE', name: 'Weekly Rebate Setup', current: 7500, target: 15000, status: 'ONGOING' },
+  { type: 'CASHBACK', name: 'Loss Cashback Setup', current: 3000, target: 5000, status: 'ONGOING' },
+];
+
 export default function ProfileManagement({ user, transactions = [], onUserUpdate }: ProfileManagementProps) {
   const [activeTab, setActiveTab] = useState<TabType>('TRANSACTION');
   const [currentUser, setCurrentUser] = useState<User>(user);
@@ -96,6 +113,7 @@ export default function ProfileManagement({ user, transactions = [], onUserUpdat
   const [creditForm, setCreditForm] = useState({
     type: 'MANUAL',
     amount: '',
+    operation: 'increase', // 'increase' or 'deduct'
     transferBank: '(optional)',
     remarks: '',
     promotion: '',
@@ -150,7 +168,7 @@ export default function ProfileManagement({ user, transactions = [], onUserUpdat
     }
   }, [currentUser]);
 
-  const tabs: TabType[] = ['TRANSACTION', 'BET HISTORY', 'COMMISSION', 'CREDIT', 'BANK', 'SETTING', 'GAME', 'IP', 'LOG'];
+  const tabs: TabType[] = ['TRANSACTION', 'BET HISTORY', 'COMMISSION', 'CREDIT', 'BANK', 'SETTING', 'GAME', 'IP', 'LOG', 'REFERRER', 'ONGOING'];
 
   // Function to get level colors
   const getLevelColors = (level: string) => {
@@ -248,7 +266,6 @@ export default function ProfileManagement({ user, transactions = [], onUserUpdat
                     <SelectItem value="REBATE">REBATE</SelectItem>
                     <SelectItem value="CASHBACK">CASHBACK</SelectItem>
                     <SelectItem value="FORFEITED">FORFEITED</SelectItem>
-                    <SelectItem value="COMMISSION">COMMISSION</SelectItem>
                     <SelectItem value="LOSSCREDIT">LOSSCREDIT</SelectItem>
                   </SelectContent>
                 </Select>
@@ -305,7 +322,7 @@ export default function ProfileManagement({ user, transactions = [], onUserUpdat
                     <th className="px-4 py-2 text-left text-xs font-semibold text-gray-900 uppercase border">ID</th>
                     <th className="px-4 py-2 text-left text-xs font-semibold text-gray-900 uppercase border">Type</th>
                     <th className="px-4 py-2 text-left text-xs font-semibold text-gray-900 uppercase border">Description</th>
-                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-900 uppercase border">Promotion</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-900 uppercase border">Setup Name</th>
                     <th className="px-4 py-2 text-left text-xs font-semibold text-gray-900 uppercase border">Amount</th>
                     <th className="px-4 py-2 text-left text-xs font-semibold text-gray-900 uppercase border">Status</th>
                     <th className="px-4 py-2 text-left text-xs font-semibold text-gray-900 uppercase border">Action</th>
@@ -331,11 +348,38 @@ export default function ProfileManagement({ user, transactions = [], onUserUpdat
                       </td>
                       <td className="px-4 py-2 text-sm border">{('remark' in transaction) ? transaction.remark : transaction.description}</td>
                       <td className="px-4 py-2 text-sm border">
-                        {('promotionID' in transaction && transaction.promotionID) ? (
-                          <Badge className="bg-purple-100 text-purple-700 border border-purple-200">
-                            {transaction.promotionID}
-                          </Badge>
-                        ) : '-'}
+                        {(() => {
+                          if ('promotionID' in transaction && transaction.promotionID && transaction.type === 'BONUS') {
+                            return (
+                              <Badge className="bg-purple-100 text-purple-700 border border-purple-200">
+                                {transaction.promotionID}
+                              </Badge>
+                            );
+                          }
+                          // For REBATE, CASHBACK, COMMISSION - show their respective setup names
+                          if (transaction.type === 'REBATE' && 'rebateSetupId' in transaction && transaction.rebateSetupId) {
+                            return (
+                              <Badge className="bg-purple-100 text-purple-700 border border-purple-200">
+                                {transaction.rebateSetupId}
+                              </Badge>
+                            );
+                          }
+                          if (transaction.type === 'CASHBACK' && 'cashbackSetupId' in transaction && transaction.cashbackSetupId) {
+                            return (
+                              <Badge className="bg-purple-100 text-purple-700 border border-purple-200">
+                                {transaction.cashbackSetupId}
+                              </Badge>
+                            );
+                          }
+                          if (transaction.type === 'COMMISSION' && 'commissionSetupId' in transaction && transaction.commissionSetupId) {
+                            return (
+                              <Badge className="bg-purple-100 text-purple-700 border border-purple-200">
+                                {transaction.commissionSetupId}
+                              </Badge>
+                            );
+                          }
+                          return '-';
+                        })()}
                       </td>
                       <td className={`px-4 py-2 text-sm font-semibold border ${transaction.amount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                         {transaction.amount >= 0 ? '+' : ''}{transaction.amount.toFixed(2)}
@@ -344,27 +388,27 @@ export default function ProfileManagement({ user, transactions = [], onUserUpdat
                         <Badge className="bg-gray-100 text-gray-700">{transaction.status}</Badge>
                       </td>
                       <td className="px-4 py-2 text-sm border">
-                        {transaction.type === 'BONUS' ? (
+                        {(transaction.type === 'BONUS' || transaction.type === 'REBATE' || transaction.type === 'CASHBACK' || transaction.type === 'COMMISSION') ? (
                           <div className="flex gap-1">
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
+                            <Button
+                              size="sm"
+                              variant="outline"
                               className="px-2 py-1 text-xs border-blue-300 text-blue-600 hover:bg-blue-50"
                               onClick={() => console.log('Reset R/T clicked for', transaction.id)}
                             >
                               RESET R/T
                             </Button>
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
+                            <Button
+                              size="sm"
+                              variant="outline"
                               className="px-2 py-1 text-xs border-orange-300 text-orange-600 hover:bg-orange-50"
                               onClick={() => console.log('Cancel R/T clicked for', transaction.id)}
                             >
                               CANCEL R/T
                             </Button>
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
+                            <Button
+                              size="sm"
+                              variant="outline"
                               className="px-2 py-1 text-xs border-red-300 text-red-600 hover:bg-red-50"
                               onClick={() => console.log('Cancel clicked for', transaction.id)}
                             >
@@ -613,16 +657,43 @@ export default function ProfileManagement({ user, transactions = [], onUserUpdat
               {creditForm.type === 'MANUAL' && (
                 <>
                   <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Operation</label>
+                    <div className="flex gap-4">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="operation"
+                          value="increase"
+                          checked={creditForm.operation === 'increase'}
+                          onChange={(e) => setCreditForm(prev => ({ ...prev, operation: e.target.value }))}
+                          className="w-4 h-4"
+                        />
+                        <span className="text-sm font-medium text-gray-700">Increase (+)</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="operation"
+                          value="deduct"
+                          checked={creditForm.operation === 'deduct'}
+                          onChange={(e) => setCreditForm(prev => ({ ...prev, operation: e.target.value }))}
+                          className="w-4 h-4"
+                        />
+                        <span className="text-sm font-medium text-gray-700">Deduct (-)</span>
+                      </label>
+                    </div>
+                  </div>
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
-                    <Input 
+                    <Input
                       value={creditForm.amount}
                       onChange={(e) => setCreditForm(prev => ({ ...prev, amount: e.target.value }))}
-                      placeholder="+100.00 / -100.00"
+                      placeholder="100"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Remarks</label>
-                    <Input 
+                    <Input
                       value={creditForm.remarks}
                       onChange={(e) => setCreditForm(prev => ({ ...prev, remarks: e.target.value }))}
                       placeholder="(optional)"
@@ -1283,6 +1354,105 @@ export default function ProfileManagement({ user, transactions = [], onUserUpdat
             <div className="text-center text-gray-500">
               <div className="text-lg font-medium mb-2">Activity Log</div>
               <div className="text-sm">No log data available</div>
+            </div>
+          </div>
+        );
+
+      case 'REFERRER':
+        return (
+          <div className="space-y-4">
+            <div className="overflow-x-auto">
+              <table className="w-full border">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-900 uppercase border">Referrer Setup Name</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-900 uppercase border">Referee</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-900 uppercase border">Amount</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-900 uppercase border">Confirmed Amount</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-900 uppercase border">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sampleReferrerData.map((referrer, index) => (
+                    <tr key={index} className="hover:bg-gray-50">
+                      <td className="px-4 py-2 text-sm border">{referrer.setupName}</td>
+                      <td className="px-4 py-2 text-sm border">{referrer.referee}</td>
+                      <td className="px-4 py-2 text-sm font-semibold text-green-600 border">
+                        +{referrer.amount.toFixed(2)}
+                      </td>
+                      <td className="px-4 py-2 text-sm font-semibold text-blue-600 border">
+                        {referrer.confirmedAmount.toFixed(2)}
+                      </td>
+                      <td className="px-4 py-2 text-sm border">
+                        <Badge className={referrer.status === 'COMPLETED' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}>
+                          {referrer.status}
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+
+      case 'ONGOING':
+        return (
+          <div className="space-y-4">
+            <div className="overflow-x-auto">
+              <table className="w-full border">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-900 uppercase border">Type</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-900 uppercase border">Name</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-900 uppercase border">Progress/Amount</th>
+                    <th className="px-4 py-2 text-left text-xs font-semibold text-gray-900 uppercase border">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sampleOngoingData.map((ongoing, index) => {
+                    const percentage = (ongoing.current / ongoing.target) * 100;
+                    return (
+                      <tr key={index} className="hover:bg-gray-50">
+                        <td className="px-4 py-2 text-sm border">
+                          <Badge className={
+                            ongoing.type === 'PROMOTION' ? 'bg-purple-100 text-purple-700' :
+                            ongoing.type === 'REBATE' ? 'bg-blue-100 text-blue-700' :
+                            ongoing.type === 'CASHBACK' ? 'bg-green-100 text-green-700' :
+                            'bg-gray-100 text-gray-700'
+                          }>
+                            {ongoing.type}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-2 text-sm border">{ongoing.name}</td>
+                        <td className="px-4 py-2 text-sm border">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-medium text-gray-600">
+                                {ongoing.current.toLocaleString()} / {ongoing.target.toLocaleString()}
+                              </span>
+                              <span className="text-xs font-semibold text-blue-600">
+                                {percentage.toFixed(1)}%
+                              </span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div
+                                className="bg-blue-600 h-2 rounded-full transition-all"
+                                style={{ width: `${Math.min(percentage, 100)}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-2 text-sm border">
+                          <Badge className="bg-yellow-100 text-yellow-700">
+                            {ongoing.status}
+                          </Badge>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           </div>
         );
