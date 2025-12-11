@@ -11,8 +11,8 @@ import { rebateSetupsData } from './RebateSetupData';
 import { cashBackSetupsData } from './CashBackSetupData';
 import { sampleCommissionSetups, CommissionSetup } from './CommissionSetupData';
 import { initialReferrerSetups, ReferrerSetup } from './ReferrerSetupData';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 export default function LevelManagement() {
   const [levels, setLevels] = useState<Level[]>(initialLevels);
   const [searchFilter, setSearchFilter] = useState('');
