@@ -1,31 +1,6 @@
 import { useState } from 'react';
 import svgPaths from "./svg-305fothfoh";
 
-// Demo accounts for quick login
-const demoAccounts = [
-  {
-    id: 'admin',
-    username: 'admin',
-    phoneNumber: '+1234567890',
-    role: 'Admin',
-    description: 'Full access to all features'
-  },
-  {
-    id: 'manager',
-    username: 'manager',
-    phoneNumber: '+0987654321',
-    role: 'Manager',
-    description: 'Manager level access'
-  },
-  {
-    id: 'agent',
-    username: 'agent',
-    phoneNumber: '+1122334455',
-    role: 'Agent',
-    description: 'Customer service agent'
-  }
-];
-
 function PaginationBar() {
   return (
     <div className="h-[76px] relative shrink-0 w-full" data-name="Pagination Bar">
@@ -56,42 +31,30 @@ function PaginationBar() {
   );
 }
 
-export default function AdminLoginPage({ onLogin }: { onLogin?: () => void }) {
+export default function AdminLoginPage({ onLogin }: { onLogin?: (username: string, phoneNumber: string) => boolean }) {
   const [formData, setFormData] = useState({
     username: '',
     phoneNumber: ''
   });
 
   const [isRecaptchaChecked, setIsRecaptchaChecked] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage('');
+
     if (formData.username && formData.phoneNumber && isRecaptchaChecked) {
-      onLogin?.();
+      const success = onLogin?.(formData.username, formData.phoneNumber);
+      if (!success) {
+        setErrorMessage('Invalid username or phone number');
+      }
     }
   };
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleDemoLogin = (account: typeof demoAccounts[0]) => {
-    setFormData({
-      username: account.username,
-      phoneNumber: account.phoneNumber
-    });
-  };
-
-  const handleQuickLogin = (account: typeof demoAccounts[0]) => {
-    setFormData({
-      username: account.username,
-      phoneNumber: account.phoneNumber
-    });
-    setIsRecaptchaChecked(true);
-    // Auto-login after a brief delay to show the filled form
-    setTimeout(() => {
-      onLogin?.();
-    }, 300);
+    setErrorMessage('');
   };
 
   return (
@@ -187,6 +150,15 @@ export default function AdminLoginPage({ onLogin }: { onLogin?: () => void }) {
                         </div>
                       </div>
 
+                      {/* Error Message */}
+                      {errorMessage && (
+                        <div className="w-full max-w-md">
+                          <div className="bg-red-50 border border-red-300 rounded-lg p-3 text-center">
+                            <p className="text-sm text-red-600 font-medium">{errorMessage}</p>
+                          </div>
+                        </div>
+                      )}
+
                       {/* Login Button */}
                       <div className="relative shrink-0 w-full" data-name="Depth 4, Frame 4">
                         <div className="flex flex-row justify-center relative size-full">
@@ -206,50 +178,6 @@ export default function AdminLoginPage({ onLogin }: { onLogin?: () => void }) {
                           </div>
                         </div>
                       </div>
-                    {/* Demo Accounts Section */}
-                    <div className="w-full max-w-md mb-6">
-                      <div className="bg-[#f8f9fa] rounded-lg p-4 border border-[#e5dbdb]">
-                        <h3 className="text-sm font-semibold text-[#171212] mb-3 text-center">
-                          Demo Accounts - Quick Login
-                        </h3>
-                        <div className="grid grid-cols-1 gap-2">
-                          {demoAccounts.map((account) => (
-                            <div key={account.id} className="flex items-center justify-between p-3 bg-white rounded-lg border border-[#e5dbdb] hover:bg-[#f0f0f0] transition-colors">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <span className="font-semibold text-[#171212] text-sm">{account.role}</span>
-                                  <span className="text-xs bg-[#e8eaf6] text-[#3949ab] px-2 py-0.5 rounded-full">
-                                    {account.username}
-                                  </span>
-                                </div>
-                                <p className="text-xs text-[#8c5e5e]">{account.description}</p>
-                              </div>
-                              <div className="flex gap-1 ml-2">
-                                <button
-                                  onClick={() => handleDemoLogin(account)}
-                                  className="px-2 py-1 text-xs bg-[#e8eaf6] text-[#3949ab] rounded hover:bg-[#d1d5db] transition-colors"
-                                  title="Fill form"
-                                >
-                                  Fill
-                                </button>
-                                <button
-                                  onClick={() => handleQuickLogin(account)}
-                                  className="px-2 py-1 text-xs bg-[#fa0505] text-white rounded hover:bg-[#e50404] transition-colors"
-                                  title="Quick login"
-                                >
-                                  Login
-                                </button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                        <div className="mt-3 pt-2 border-t border-[#e5dbdb]">
-                          <p className="text-xs text-[#8c5e5e] text-center">
-                            Click "Fill" to populate form or "Login" to login directly
-                          </p>
-                        </div>
-                      </div>
-                    </div>
                     </form>
                   </div>
                 </div>
