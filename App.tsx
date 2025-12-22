@@ -3,13 +3,26 @@ import { useState } from 'react';
 import AdminLoginPage from './imports/AdminLoginPage';
 import ResponsiveAdminDashboard from './components/ResponsiveAdminDashboard';
 
+const validCredentials = [
+  { username: 'admin1', phoneNumber: '123456' },
+  { username: 'staff1', phoneNumber: '123456' }
+];
+
 export default function App() {
   const [currentPage, setCurrentPage] = useState<'login' | 'dashboard' | 'deposit' | 'withdrawal' | 'adjustment' | 'ongoing' | 'transaction-record' | 'user-record' | 'level' | 'tag' | 'promotion' | 'promotion-record' | 'promotion-setup' | 'promotion-ongoing' | 'rebate' | 'rebate-record' | 'rebate-setup' | 'rebate-release' | 'rebate-schedule' | 'rebate-ongoing' | 'cashback' | 'cashback-record' | 'cashback-setup' | 'cashback-release' | 'cashback-schedule' | 'cashback-ongoing' | 'commission' | 'commission-record' | 'commission-setup' | 'commission-release' | 'commission-schedule' | 'commission-ongoing' | 'referrer-setup' | 'referrer-record' | 'game-kiosk' | 'settings' | 'security' | 'bank-list' | 'bank-setup' | 'bank-report' | 'report' | 'admin-tool' | 'api' | 'change-log' | 'display' | 'domain' | 'page' | 'staff' | 'theme' | 'tools' | 'kyc-management'>('login');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  const handleLogin = () => {
-    setIsLoggedIn(true);
-    setCurrentPage('dashboard');
+  const handleLogin = (username: string, phoneNumber: string) => {
+    const isValid = validCredentials.some(
+      cred => cred.username === username && cred.phoneNumber === phoneNumber
+    );
+
+    if (isValid) {
+      setIsLoggedIn(true);
+      setCurrentPage('dashboard');
+      return true;
+    }
+    return false;
   };
 
   const handleNavigation = (page: 'dashboard' | 'deposit' | 'withdrawal' | 'adjustment' | 'ongoing' | 'transaction-record' | 'user-record' | 'level' | 'tag' | 'promotion' | 'promotion-record' | 'promotion-setup' | 'promotion-ongoing' | 'rebate' | 'rebate-record' | 'rebate-setup' | 'rebate-release' | 'rebate-schedule' | 'rebate-ongoing' | 'cashback' | 'cashback-record' | 'cashback-setup' | 'cashback-release' | 'cashback-schedule' | 'cashback-ongoing' | 'commission' | 'commission-record' | 'commission-setup' | 'commission-release' | 'commission-schedule' | 'commission-ongoing' | 'referrer-setup' | 'referrer-record' | 'game-kiosk' | 'settings' | 'security' | 'bank-list' | 'bank-setup' | 'bank-report' | 'report' | 'admin-tool' | 'api' | 'change-log' | 'display' | 'domain' | 'page' | 'staff' | 'theme' | 'tools' | 'kyc-management') => {
