@@ -33,8 +33,7 @@ type RebateStatus = 'ALL' | 'PENDING' | 'COMPLETED' | 'REJECTED';
 export default function RebateRecordManagement() {
   const [searchFilters, setSearchFilters] = useState({
     username: '',
-    dateFrom: '',
-    dateTo: '',
+    rebateDate: '',
     level: 'all',
     handler: '',
     rebateName: 'all'
@@ -137,8 +136,10 @@ export default function RebateRecordManagement() {
           if (!userName.toLowerCase().includes(searchFilters.username.toLowerCase()) &&
               !transaction.mobile.includes(searchFilters.username)) return false;
         }
-        if (searchFilters.dateFrom && new Date(transaction.submitTime) < new Date(searchFilters.dateFrom)) return false;
-        if (searchFilters.dateTo && new Date(transaction.submitTime) > new Date(searchFilters.dateTo + ' 23:59:59')) return false;
+        if (searchFilters.rebateDate) {
+          const transactionDate = new Date(transaction.submitTime).toISOString().split('T')[0];
+          if (transactionDate !== searchFilters.rebateDate) return false;
+        }
         if (searchFilters.level && searchFilters.level !== 'all') {
           const user = sampleUsers.find(u => u.mobile === transaction.mobile || u.id === transaction.userID);
           if (!user || user.level !== searchFilters.level) return false;
@@ -184,8 +185,10 @@ export default function RebateRecordManagement() {
         if (!userName.toLowerCase().includes(searchFilters.username.toLowerCase()) &&
             !transaction.mobile.includes(searchFilters.username)) return false;
       }
-      if (searchFilters.dateFrom && new Date(transaction.submitTime) < new Date(searchFilters.dateFrom)) return false;
-      if (searchFilters.dateTo && new Date(transaction.submitTime) > new Date(searchFilters.dateTo + ' 23:59:59')) return false;
+      if (searchFilters.rebateDate) {
+        const transactionDate = new Date(transaction.submitTime).toISOString().split('T')[0];
+        if (transactionDate !== searchFilters.rebateDate) return false;
+      }
       if (searchFilters.level && searchFilters.level !== 'all') {
         const user = sampleUsers.find(u => u.mobile === transaction.mobile || u.id === transaction.userID);
         if (!user || user.level !== searchFilters.level) return false;
@@ -215,8 +218,7 @@ export default function RebateRecordManagement() {
   const handleReset = () => {
     setSearchFilters({
       username: '',
-      dateFrom: '',
-      dateTo: '',
+      rebateDate: '',
       level: 'all',
       handler: '',
       rebateName: 'all'
@@ -497,17 +499,9 @@ export default function RebateRecordManagement() {
 
           <Input
             type="date"
-            placeholder="Date From (Submit Time)"
-            value={searchFilters.dateFrom}
-            onChange={(e) => handleInputChange('dateFrom', e.target.value)}
-            className="h-9"
-          />
-
-          <Input
-            type="date"
-            placeholder="Date To (Submit Time)"
-            value={searchFilters.dateTo}
-            onChange={(e) => handleInputChange('dateTo', e.target.value)}
+            placeholder="Rebate Date"
+            value={searchFilters.rebateDate}
+            onChange={(e) => handleInputChange('rebateDate', e.target.value)}
             className="h-9"
           />
         </div>
@@ -669,14 +663,15 @@ export default function RebateRecordManagement() {
                   )}
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Username</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Level</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Rebate Type</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Rebate Tier</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Rebate Rate (%)</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Rebate Max Limit</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Rebate Amount</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Handler</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Submit Time</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Completed Time</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Loss Amount</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Rebate Amount</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Valid Bet Amount</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Rebate Reward Amount</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Release Amount</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Remark</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Status</th>
@@ -690,7 +685,12 @@ export default function RebateRecordManagement() {
                   const rebateTier = getRebateTier(transaction.lossAmount || 0, rebateSetup);
                   const rebateRate = getRebateRate(transaction.lossAmount || 0, rebateSetup);
                   const rebateAmount = calculateRebateAmount(transaction.lossAmount || 0, rebateRate);
-                  const maxLimit = getRebateMaxLimit(rebateSetup);
+
+                  // Determine if this tier uses percentage or amount
+                  const isPercentageType = rebateSetup?.rebateCalculationType === 'Percentage';
+                  const displayRebateRate = isPercentageType && typeof rebateRate === 'number' ? `${rebateRate}%` : '-';
+                  const displayRebateAmount = !isPercentageType && rebateSetup ?
+                    `$${(rebateSetup.amountTiers.find(t => (transaction.lossAmount || 0) >= t.validBetMoreThan)?.rebateAmount || 0).toFixed(2)}` : '-';
 
                   return (
                     <tr key={transaction.id} className="hover:bg-gray-50">
@@ -721,15 +721,14 @@ export default function RebateRecordManagement() {
                           {userLevel.toUpperCase()}
                         </Badge>
                       </td>
+                      <td className="px-3 py-2 text-gray-900 text-xs">{transaction.rebateType || 'Valid Bet'}</td>
                       <td className="px-3 py-2 text-gray-900 text-xs">{rebateTier}</td>
-                      <td className="px-3 py-2 text-gray-900 text-xs">
-                        {typeof rebateRate === 'string' ? rebateRate : `${rebateRate}%`}
-                      </td>
-                      <td className="px-3 py-2 text-gray-900 text-xs">{maxLimit}</td>
+                      <td className="px-3 py-2 text-gray-900 text-xs">{displayRebateRate}</td>
+                      <td className="px-3 py-2 text-gray-900 text-xs">{displayRebateAmount}</td>
                       <td className="px-3 py-2 text-blue-600 text-xs">{transaction.completeBy || '-'}</td>
                       <td className="px-3 py-2 text-gray-900 text-xs">{transaction.submitTime}</td>
                       <td className="px-3 py-2 text-gray-900 text-xs">{transaction.completeTime || '-'}</td>
-                      <td className="px-3 py-2 text-red-600 font-semibold text-xs">
+                      <td className="px-3 py-2 text-gray-900 text-xs">
                         ${(transaction.lossAmount || 0).toFixed(2)}
                       </td>
                       <td className="px-3 py-2 text-green-600 font-semibold text-xs">

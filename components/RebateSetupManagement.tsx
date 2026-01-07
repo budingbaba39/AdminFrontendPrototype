@@ -11,8 +11,17 @@ import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 
 type ModalMode = 'create' | 'edit' | null;
-type ActiveTab = 'info' | 'details' | 'languages' | 'eligibility';
+type ActiveTab = 'info' | 'details' | 'languages' | 'eligibility' | 'providerAmountSettings';
 type LanguageTab = 'english' | 'chinese' | 'malay';
+
+// Provider tier data structure
+interface ProviderTier {
+  id: string;
+  formula: RebateSetupFormula | '';
+  validBetAmount: number;
+  rebatePercentage: number;
+  rebateAmount: number;
+}
 
 const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -67,6 +76,20 @@ export default function RebateSetupManagement() {
 
   // Provider category filter for eligibility tab
   const [providerCategoryFilter, setProviderCategoryFilter] = useState<string>('all');
+
+  // Provider Amount Settings tab states
+  const [providerTiers, setProviderTiers] = useState<Record<number, ProviderTier[]>>({});
+  const [providerAmountCategoryFilter, setProviderAmountCategoryFilter] = useState<string>('all');
+  const [selectedTierRows, setSelectedTierRows] = useState<Set<string>>(new Set());
+  const [showBulkUpdateModal, setShowBulkUpdateModal] = useState(false);
+  const [bulkUpdateData, setBulkUpdateData] = useState({
+    formula: '' as RebateSetupFormula | '',
+    validBetAmount: '',
+    rebatePercentage: '',
+    rebateAmount: ''
+  });
+  // Per-provider calculation type (Percentage or Amount)
+  const [providerCalculationType, setProviderCalculationType] = useState<Record<number, 'Percentage' | 'Amount'>>({});
 
   // Provider selection modal states for Amount Settings tiers
   const [showTierProviderModal, setShowTierProviderModal] = useState(false);
@@ -618,6 +641,16 @@ export default function RebateSetupManagement() {
                 Details
               </button>
               <button
+                onClick={() => setActiveTab('providerAmountSettings')}
+                className={`w-full text-left px-4 py-2 rounded font-medium transition-colors ${
+                  activeTab === 'providerAmountSettings'
+                    ? 'bg-[#3949ab] text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Provider Amount
+              </button>
+              <button
                 onClick={() => setActiveTab('languages')}
                 className={`w-full text-left px-4 py-2 rounded font-medium transition-colors ${
                   activeTab === 'languages'
@@ -704,7 +737,7 @@ export default function RebateSetupManagement() {
                         )}
                       </div>
 
-                      <div className="w-full">
+                      <div className="w-full" style={{display: 'none'}}>
                         <label className="block text-sm font-semibold mb-2 text-gray-700">Allow Inter-Transfer</label>
                         <select
                           value={formData.allowInterTransfer ? 'Yes' : 'No'}
@@ -728,7 +761,7 @@ export default function RebateSetupManagement() {
                         </select>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-2 gap-4" style={{display: 'none'}}>
                         <div>
                           <label className="block text-sm font-semibold mb-2 text-gray-700">Time From *</label>
                           <Input
@@ -846,7 +879,7 @@ export default function RebateSetupManagement() {
                         </div>
                       </div>
 
-                      <div className="w-full">
+                      <div className="w-full" style={{display: 'none'}}>
                         <label className="block text-sm font-semibold mb-2 text-gray-700">Recurring *</label>
                         <select
                           value={formData.recurring}
@@ -861,7 +894,7 @@ export default function RebateSetupManagement() {
 
                       {formData.recurring === 'Recurring' && (
                         <>
-                          <div className="w-full">
+                          <div className="w-full" style={{display: 'none'}}>
                             <label className="block text-sm font-semibold mb-2 text-gray-700">Reset Frequency *</label>
                             <select
                               value={formData.resetFrequency || ''}
@@ -876,7 +909,7 @@ export default function RebateSetupManagement() {
                           </div>
 
                           {formData.resetFrequency === 'Every Week' && (
-                            <div className="w-full">
+                            <div className="w-full" style={{display: 'none'}}>
                               <label className="block text-sm font-semibold mb-2 text-gray-700">Day of Week *</label>
                               <select
                                 value={formData.resetFrequencyDay as string || ''}
@@ -892,7 +925,7 @@ export default function RebateSetupManagement() {
                           )}
 
                           {formData.resetFrequency === 'Every Month' && (
-                            <div className="w-full">
+                            <div className="w-full" style={{display: 'none'}}>
                               <label className="block text-sm font-semibold mb-2 text-gray-700">Day of Month (1-28) *</label>
                               <select
                                 value={formData.resetFrequencyDay as number || ''}
@@ -909,7 +942,7 @@ export default function RebateSetupManagement() {
                         </>
                       )}
 
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-2 gap-4" style={{display: 'none'}}>
                         <div>
                           <label className="block text-sm font-semibold mb-2 text-gray-700">Include Rebate</label>
                           <select
@@ -934,116 +967,9 @@ export default function RebateSetupManagement() {
                           <option value="Percentage">Percentage</option>
                           <option value="Amount">Amount</option>
                         </select>
+                        <p className="text-xs text-gray-500 mt-1">Configure amount settings in the "Provider Amount Settings" tab</p>
                       </div>
                     </div>
-                  </div>
-
-                  {/* Amount Settings Section */}
-                  <div className="mt-6">
-                    <div className="flex justify-between items-center mb-4 pb-2 border-b">
-                      <h3 className="text-lg font-bold text-gray-800">Amount Settings</h3>
-                      <Button
-                        onClick={handleAddTier}
-                        className="bg-green-600 hover:bg-green-700 text-white h-8 px-3 text-sm"
-                      >
-                        <Plus className="w-4 h-4 mr-1" />
-                        Add Row
-                      </Button>
-                    </div>
-
-                    <div className="overflow-x-auto">
-                      <table className="w-full border">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-4 py-2 text-left text-xs font-semibold text-gray-900 border-b">Valid Bet</th>
-                            <th className="px-4 py-2 text-left text-xs font-semibold text-gray-900 border-b">Formula</th>
-                            <th className="px-4 py-2 text-left text-xs font-semibold text-gray-900 border-b">Amount</th>
-                            <th className="px-4 py-2 text-left text-xs font-semibold text-gray-900 border-b">
-                              {formData.rebateCalculationType === 'Percentage' ? 'Rebate Percentage (%)' : 'Rebate Amount'}
-                            </th>
-                            <th className="px-4 py-2 text-left text-xs font-semibold text-gray-900 border-b">Provider</th>
-                            <th className="px-4 py-2 text-center text-xs font-semibold text-gray-900 border-b">Action</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {formData.amountTiers.map((tier, index) => (
-                            <tr key={index} className="border-b">
-                              <td className="px-4 py-2 text-sm text-gray-700">
-                                Valid Bet
-                              </td>
-                              <td className="px-4 py-2">
-                                <select
-                                  value={tier.formula || ''}
-                                  onChange={(e) => handleTierChange(index, 'formula', e.target.value)}
-                                  className="w-full px-2 py-1 text-sm border rounded h-8"
-                                >
-                                  <option value="">Please Select</option>
-                                  <option value="MORE_THAN">MORE_THAN</option>
-                                  <option value="MORE_THAN_OR_EQUAL">MORE_THAN_OR_EQUAL</option>
-                                  <option value="EQUAL">EQUAL</option>
-                                  <option value="LESS_THAN">LESS_THAN</option>
-                                  <option value="LESS_THAN_OR_EQUAL">LESS_THAN_OR_EQUAL</option>
-                                </select>
-                              </td>
-                              <td className="px-4 py-2">
-                                <Input
-                                  type="number"
-                                  value={tier.validBetMoreThan || ''}
-                                  onChange={(e) => handleTierChange(index, 'validBetMoreThan', parseFloat(e.target.value) || 0)}
-                                  placeholder="0"
-                                  className="h-8"
-                                />
-                              </td>
-                              <td className="px-4 py-2">
-                                {formData.rebateCalculationType === 'Percentage' ? (
-                                  <Input
-                                    type="number"
-                                    step="0.1"
-                                    value={tier.rebatePercentage || ''}
-                                    onChange={(e) => handleTierChange(index, 'rebatePercentage', parseFloat(e.target.value) || 0)}
-                                    placeholder="0.0"
-                                    className="h-8"
-                                  />
-                                ) : (
-                                  <Input
-                                    type="number"
-                                    step="0.01"
-                                    value={tier.rebateAmount || ''}
-                                    onChange={(e) => handleTierChange(index, 'rebateAmount', parseFloat(e.target.value) || 0)}
-                                    placeholder="0.00"
-                                    className="h-8"
-                                  />
-                                )}
-                              </td>
-                              <td className="px-4 py-2">
-                                <button
-                                  type="button"
-                                  onClick={() => handleOpenTierProviderModal(index)}
-                                  className="w-full px-3 py-1.5 border rounded-md text-left bg-white hover:bg-gray-50 text-sm h-8"
-                                >
-                                  {!tier.providerIds || tier.providerIds.length === 0
-                                    ? 'Select providers'
-                                    : `${tier.providerIds.length} selected`}
-                                </button>
-                              </td>
-                              <td className="px-4 py-2 text-center">
-                                <Button
-                                  onClick={() => handleDeleteTier(index)}
-                                  className="bg-[#f44336] text-white hover:bg-[#d32f2f] h-7 px-2 text-xs"
-                                  disabled={formData.amountTiers.length === 1}
-                                >
-                                  <Trash2 className="w-3 h-3" />
-                                </Button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-
-                    {validationErrors.amountTiers && (
-                      <p className="text-red-600 text-sm mt-2">{validationErrors.amountTiers}</p>
-                    )}
                   </div>
                 </div>
               )}
@@ -1314,6 +1240,265 @@ export default function RebateSetupManagement() {
                   </div>
                 </div>
               )}
+
+              {/* Provider Amount Tab */}
+              {activeTab === 'providerAmountSettings' && (
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-800 mb-4">Provider Amount</h3>
+
+                    {/* Category Filter */}
+                    <div className="mb-4">
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          type="button"
+                          onClick={() => setProviderAmountCategoryFilter('all')}
+                          variant={providerAmountCategoryFilter === 'all' ? 'default' : 'outline'}
+                          className="h-8 text-xs"
+                        >
+                          All Categories
+                        </Button>
+                        {Object.entries(categoryLabels).map(([key, label]) => (
+                          <Button
+                            key={key}
+                            type="button"
+                            onClick={() => setProviderAmountCategoryFilter(key)}
+                            variant={providerAmountCategoryFilter === key ? 'default' : 'outline'}
+                            className="h-8 text-xs"
+                          >
+                            {label}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Bulk Update Controls */}
+                    {selectedTierRows.size > 0 && (
+                      <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded flex justify-between items-center">
+                        <span className="text-sm font-medium text-gray-700">
+                          {selectedTierRows.size} row(s) selected
+                        </span>
+                        <Button
+                          type="button"
+                          onClick={() => setShowBulkUpdateModal(true)}
+                          className="bg-[#3949ab] text-white hover:bg-[#2c3785] h-8 text-xs"
+                        >
+                          Bulk Update
+                        </Button>
+                      </div>
+                    )}
+
+                    {/* Provider Tier Tables - 2 columns grid */}
+                    <div className="grid grid-cols-2 gap-4">
+                      {providersData
+                        .filter(p => providerAmountCategoryFilter === 'all' || p.category === providerAmountCategoryFilter)
+                        .map((provider) => {
+                          const tiers = providerTiers[provider.id] || [];
+
+                          const currentCalcType = providerCalculationType[provider.id] || 'Percentage';
+
+                          return (
+                            <div key={provider.id} className="border rounded-lg p-3 bg-gray-50">
+                              <div className="flex justify-between items-center mb-2">
+                                <div className="flex items-center gap-2">
+                                  <h4 className="font-semibold text-sm text-gray-900">{provider.name}</h4>
+                                  <Badge variant="secondary" className="text-xs">
+                                    {categoryLabels[provider.category]}
+                                  </Badge>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs font-medium text-gray-700">Type:</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setProviderCalculationType(prev => ({
+                                        ...prev,
+                                        [provider.id]: currentCalcType === 'Percentage' ? 'Amount' : 'Percentage'
+                                      }));
+                                    }}
+                                    className={`relative inline-flex h-6 w-20 items-center rounded-full transition-colors ${
+                                      currentCalcType === 'Percentage' ? 'bg-blue-600' : 'bg-green-600'
+                                    }`}
+                                  >
+                                    <span
+                                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                        currentCalcType === 'Percentage' ? 'translate-x-1' : 'translate-x-[3.5rem]'
+                                      }`}
+                                    />
+                                    <span className="absolute left-1 text-[10px] font-semibold text-white">
+                                      {currentCalcType === 'Percentage' ? '%' : '$'}
+                                    </span>
+                                  </button>
+                                </div>
+                              </div>
+
+                              <div className="overflow-x-auto">
+                                <table className="w-full border bg-white text-xs">
+                                  <thead className="bg-gray-100">
+                                    <tr>
+                                      <th className="px-2 py-1.5 text-center text-xs font-semibold text-gray-900 w-10">
+                                        Select
+                                      </th>
+                                      <th className="px-2 py-1.5 text-left text-xs font-semibold text-gray-900">Tier</th>
+                                      <th className="px-2 py-1.5 text-left text-xs font-semibold text-gray-900">Formula</th>
+                                      <th className="px-2 py-1.5 text-left text-xs font-semibold text-gray-900">Valid Bet</th>
+                                      <th className="px-2 py-1.5 text-left text-xs font-semibold text-gray-900">
+                                        {currentCalcType === 'Percentage' ? 'Rebate %' : 'Rebate $'}
+                                      </th>
+                                      <th className="px-2 py-1.5 text-center text-xs font-semibold text-gray-900">Action</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {[...tiers, { id: `new-${provider.id}`, formula: '', validBetAmount: 0, rebatePercentage: 0, rebateAmount: 0 }].map((tier, index) => {
+                                      const isNewRow = tier.id.toString().startsWith('new-');
+                                      const rowKey = `${provider.id}-${tier.id}`;
+
+                                      return (
+                                        <tr key={tier.id} className="border-t">
+                                          <td className="px-2 py-1.5 text-center">
+                                            <input
+                                              type="checkbox"
+                                              checked={selectedTierRows.has(rowKey)}
+                                              onChange={(e) => {
+                                                const newSelected = new Set(selectedTierRows);
+                                                if (e.target.checked) {
+                                                  newSelected.add(rowKey);
+                                                } else {
+                                                  newSelected.delete(rowKey);
+                                                }
+                                                setSelectedTierRows(newSelected);
+                                              }}
+                                              className="w-4 h-4"
+                                            />
+                                          </td>
+                                          <td className="px-2 py-1.5 text-xs text-gray-700">
+                                            {isNewRow ? '-' : index + 1}
+                                          </td>
+                                          <td className="px-2 py-1.5">
+                                            <select
+                                              value={tier.formula}
+                                              onChange={(e) => {
+                                                const formulaValue = e.target.value as RebateSetupFormula | '';
+                                                if (isNewRow) {
+                                                  const newTiers: ProviderTier[] = [...tiers, {
+                                                    id: Date.now().toString(),
+                                                    formula: formulaValue,
+                                                    validBetAmount: 0,
+                                                    rebatePercentage: 0,
+                                                    rebateAmount: 0
+                                                  }];
+                                                  setProviderTiers(prev => ({ ...prev, [provider.id]: newTiers }));
+                                                } else {
+                                                  const updatedTiers: ProviderTier[] = tiers.map(t =>
+                                                    t.id === tier.id ? { ...t, formula: formulaValue } : t
+                                                  );
+                                                  setProviderTiers(prev => ({ ...prev, [provider.id]: updatedTiers }));
+                                                }
+                                              }}
+                                              className="w-full px-1 py-1 text-xs border rounded h-7"
+                                            >
+                                              <option value="">Select</option>
+                                              <option value="MORE_THAN">&gt;</option>
+                                              <option value="MORE_THAN_OR_EQUAL">&gt;=</option>
+                                              <option value="EQUAL">=</option>
+                                              <option value="LESS_THAN">&lt;</option>
+                                              <option value="LESS_THAN_OR_EQUAL">&lt;=</option>
+                                            </select>
+                                          </td>
+                                          <td className="px-2 py-1.5">
+                                            <Input
+                                              type="number"
+                                              value={isNewRow ? '' : tier.validBetAmount}
+                                              onChange={(e) => {
+                                                const value = parseFloat(e.target.value) || 0;
+                                                if (isNewRow && tier.formula) {
+                                                  const newTier: ProviderTier = {
+                                                    id: Date.now().toString(),
+                                                    formula: tier.formula as RebateSetupFormula,
+                                                    validBetAmount: value,
+                                                    rebatePercentage: 0,
+                                                    rebateAmount: 0
+                                                  };
+                                                  const newTiers: ProviderTier[] = [...tiers, newTier];
+                                                  setProviderTiers(prev => ({ ...prev, [provider.id]: newTiers }));
+                                                } else if (!isNewRow) {
+                                                  const updatedTiers: ProviderTier[] = tiers.map(t =>
+                                                    t.id === tier.id ? { ...t, validBetAmount: value } : t
+                                                  );
+                                                  setProviderTiers(prev => ({ ...prev, [provider.id]: updatedTiers }));
+                                                }
+                                              }}
+                                              onBlur={() => {
+                                                // Auto-sort after user finishes editing
+                                                if (!isNewRow && tiers.length > 0) {
+                                                  const sortedTiers: ProviderTier[] = [...tiers].sort((a, b) => a.validBetAmount - b.validBetAmount);
+                                                  setProviderTiers(prev => ({ ...prev, [provider.id]: sortedTiers }));
+                                                }
+                                              }}
+                                              placeholder="0"
+                                              className="h-7 text-xs w-full"
+                                            />
+                                          </td>
+                                          <td className="px-2 py-1.5">
+                                            <Input
+                                              type="number"
+                                              step="0.01"
+                                              value={isNewRow ? '' : (currentCalcType === 'Percentage' ? tier.rebatePercentage : tier.rebateAmount)}
+                                              onChange={(e) => {
+                                                const value = parseFloat(e.target.value) || 0;
+                                                const field = currentCalcType === 'Percentage' ? 'rebatePercentage' : 'rebateAmount';
+
+                                                if (isNewRow && tier.formula) {
+                                                  const newTier: ProviderTier = {
+                                                    id: Date.now().toString(),
+                                                    formula: tier.formula as RebateSetupFormula,
+                                                    validBetAmount: tier.validBetAmount,
+                                                    rebatePercentage: field === 'rebatePercentage' ? value : 0,
+                                                    rebateAmount: field === 'rebateAmount' ? value : 0
+                                                  };
+                                                  const newTiers: ProviderTier[] = [...tiers, newTier];
+                                                  setProviderTiers(prev => ({ ...prev, [provider.id]: newTiers }));
+                                                } else if (!isNewRow) {
+                                                  const updatedTiers: ProviderTier[] = tiers.map(t =>
+                                                    t.id === tier.id ? { ...t, [field]: value } : t
+                                                  );
+                                                  setProviderTiers(prev => ({ ...prev, [provider.id]: updatedTiers }));
+                                                }
+                                              }}
+                                              placeholder="0"
+                                              className="h-7 text-xs w-full"
+                                            />
+                                          </td>
+                                          <td className="px-2 py-1.5 text-center">
+                                            {!isNewRow && (
+                                              <Button
+                                                type="button"
+                                                onClick={() => {
+                                                  const updatedTiers: ProviderTier[] = tiers.filter(t => t.id !== tier.id);
+                                                  setProviderTiers(prev => ({ ...prev, [provider.id]: updatedTiers }));
+                                                  const newSelected = new Set(selectedTierRows);
+                                                  newSelected.delete(rowKey);
+                                                  setSelectedTierRows(newSelected);
+                                                }}
+                                                className="bg-[#f44336] text-white hover:bg-[#d32f2f] h-6 px-1.5 text-xs"
+                                              >
+                                                <Trash2 className="w-3 h-3" />
+                                              </Button>
+                                            )}
+                                          </td>
+                                        </tr>
+                                      );
+                                    })}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -1332,6 +1517,170 @@ export default function RebateSetupManagement() {
               size="lg"
             >
               {modalMode === 'create' ? 'CREATE' : 'UPDATE'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Update Modal */}
+      <Dialog open={showBulkUpdateModal} onOpenChange={setShowBulkUpdateModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-[#3949ab] font-semibold text-lg">
+              Bulk Update Tiers
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <p className="text-sm text-gray-600">
+              Update {selectedTierRows.size} selected tier(s)
+            </p>
+
+            <div>
+              <label className="block text-sm font-semibold mb-2 text-gray-700">Formula</label>
+              <select
+                value={bulkUpdateData.formula}
+                onChange={(e) => setBulkUpdateData({ ...bulkUpdateData, formula: e.target.value as RebateSetupFormula | '' })}
+                className="w-full px-3 py-2 border rounded-md h-10"
+              >
+                <option value="">Don't Change</option>
+                <option value="MORE_THAN">MORE_THAN</option>
+                <option value="MORE_THAN_OR_EQUAL">MORE_THAN_OR_EQUAL</option>
+                <option value="EQUAL">EQUAL</option>
+                <option value="LESS_THAN">LESS_THAN</option>
+                <option value="LESS_THAN_OR_EQUAL">LESS_THAN_OR_EQUAL</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold mb-2 text-gray-700">Valid Bet Amount</label>
+              <Input
+                type="number"
+                value={bulkUpdateData.validBetAmount}
+                onChange={(e) => setBulkUpdateData({ ...bulkUpdateData, validBetAmount: e.target.value })}
+                placeholder="Leave empty to keep current values"
+                className="h-10"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold mb-2 text-gray-700">Rebate Percentage (%)</label>
+              <Input
+                type="number"
+                step="0.01"
+                value={bulkUpdateData.rebatePercentage}
+                onChange={(e) => setBulkUpdateData({ ...bulkUpdateData, rebatePercentage: e.target.value })}
+                placeholder="Leave empty to keep current values"
+                className="h-10"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold mb-2 text-gray-700">Rebate Amount ($)</label>
+              <Input
+                type="number"
+                step="0.01"
+                value={bulkUpdateData.rebateAmount}
+                onChange={(e) => setBulkUpdateData({ ...bulkUpdateData, rebateAmount: e.target.value })}
+                placeholder="Leave empty to keep current values"
+                className="h-10"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t">
+            <Button
+              type="button"
+              onClick={() => {
+                setShowBulkUpdateModal(false);
+                setBulkUpdateData({ formula: '', validBetAmount: '', rebatePercentage: '', rebateAmount: '' });
+              }}
+              className="bg-gray-500 hover:bg-gray-600 text-white"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                // Apply bulk update to all selected rows
+                const updatedProviderTiers = { ...providerTiers };
+
+                selectedTierRows.forEach(rowKey => {
+                  // Split by last hyphen to handle "new-123" cases
+                  const parts = rowKey.split('-');
+                  const providerId = parts[0];
+                  const tierId = parts.slice(1).join('-');
+                  const providerIdNum = parseInt(providerId);
+
+                  // Initialize provider tiers array if doesn't exist
+                  if (!updatedProviderTiers[providerIdNum]) {
+                    updatedProviderTiers[providerIdNum] = [];
+                  }
+
+                  // Check if this is a "new-X" row (empty n+1 row)
+                  const isNewRow = tierId.startsWith('new-');
+
+                  if (isNewRow) {
+                    // Create a brand new tier for empty rows
+                    const newTier: ProviderTier = {
+                      id: Date.now().toString() + '-' + providerIdNum + '-' + Math.random().toString(36).substr(2, 9),
+                      formula: (bulkUpdateData.formula || '') as RebateSetupFormula | '',
+                      validBetAmount: bulkUpdateData.validBetAmount ? parseFloat(bulkUpdateData.validBetAmount) : 0,
+                      rebatePercentage: bulkUpdateData.rebatePercentage ? parseFloat(bulkUpdateData.rebatePercentage) : 0,
+                      rebateAmount: bulkUpdateData.rebateAmount ? parseFloat(bulkUpdateData.rebateAmount) : 0
+                    };
+                    updatedProviderTiers[providerIdNum].push(newTier);
+                  } else {
+                    // Check if tier exists for non-new rows
+                    const existingTierIndex = updatedProviderTiers[providerIdNum].findIndex(t => t.id === tierId);
+
+                    if (existingTierIndex >= 0) {
+                      // Update existing tier
+                      const existingTier = updatedProviderTiers[providerIdNum][existingTierIndex];
+                      const updates: Partial<ProviderTier> = {};
+
+                      // Only update if value is provided (not empty string)
+                      if (bulkUpdateData.formula) {
+                        updates.formula = bulkUpdateData.formula as RebateSetupFormula;
+                      }
+                      if (bulkUpdateData.validBetAmount) {
+                        updates.validBetAmount = parseFloat(bulkUpdateData.validBetAmount);
+                      }
+                      if (bulkUpdateData.rebatePercentage) {
+                        updates.rebatePercentage = parseFloat(bulkUpdateData.rebatePercentage);
+                      }
+                      if (bulkUpdateData.rebateAmount) {
+                        updates.rebateAmount = parseFloat(bulkUpdateData.rebateAmount);
+                      }
+
+                      updatedProviderTiers[providerIdNum][existingTierIndex] = { ...existingTier, ...updates };
+                    } else {
+                      // Create new tier if somehow doesn't exist
+                      const newTier: ProviderTier = {
+                        id: tierId,
+                        formula: (bulkUpdateData.formula || '') as RebateSetupFormula | '',
+                        validBetAmount: bulkUpdateData.validBetAmount ? parseFloat(bulkUpdateData.validBetAmount) : 0,
+                        rebatePercentage: bulkUpdateData.rebatePercentage ? parseFloat(bulkUpdateData.rebatePercentage) : 0,
+                        rebateAmount: bulkUpdateData.rebateAmount ? parseFloat(bulkUpdateData.rebateAmount) : 0
+                      };
+                      updatedProviderTiers[providerIdNum].push(newTier);
+                    }
+                  }
+
+                  // Auto-sort after bulk update
+                  if (updatedProviderTiers[providerIdNum].length > 0) {
+                    updatedProviderTiers[providerIdNum] = updatedProviderTiers[providerIdNum].sort((a, b) => a.validBetAmount - b.validBetAmount);
+                  }
+                });
+
+                setProviderTiers(updatedProviderTiers);
+                setShowBulkUpdateModal(false);
+                setSelectedTierRows(new Set());
+                setBulkUpdateData({ formula: '', validBetAmount: '', rebatePercentage: '', rebateAmount: '' });
+              }}
+              className="bg-[#4caf50] hover:bg-[#45a049] text-white"
+            >
+              Update All
             </Button>
           </div>
         </DialogContent>

@@ -9,6 +9,7 @@ import ProfileContent from './ProfileContent';
 import { sampleUsers, User } from './UserData';
 import { rebateSetupsData } from './RebateSetupData';
 import { allTransactions, Transaction } from './transactionData';
+import { initialLevels } from './LevelData';
 
 // Filter transactions to only get REBATE type records with PENDING status
 const getPendingRebateRecords = () => {
@@ -20,8 +21,7 @@ const getPendingRebateRecords = () => {
 export default function RebateReleaseManagement() {
   const [searchFilters, setSearchFilters] = useState({
     dateFrom: '',
-    dateTo: '',
-    setupName: 'all'
+    memberLevel: 'all'
   });
 
   const [hasGenerated, setHasGenerated] = useState(false);
@@ -82,93 +82,9 @@ export default function RebateReleaseManagement() {
 
   // Helper function to group transactions by user and target type for Period feature
   const groupTransactionsByPeriod = (transactions: Transaction[]) => {
-    // Only group if BOTH dateFrom AND dateTo are selected
-    if (!searchFilters.dateFrom || !searchFilters.dateTo) {
-      return transactions; // No date range selected, return as-is
-    }
+    // No period grouping anymore - single date only
+    return transactions;
 
-    // Group by userID + targetType ONLY (remove date from grouping to allow multi-day combination)
-    const grouped = transactions.reduce((acc, transaction) => {
-      const targetType = transaction.rebateTargetType || 'Unknown';
-      const userID = transaction.userID;
-
-      // Create unique key: userID_targetType (NO DATE)
-      const key = `${userID}_${targetType}`;
-
-      if (!acc[key]) {
-        acc[key] = [];
-      }
-      acc[key].push(transaction);
-      return acc;
-    }, {} as Record<string, Transaction[]>);
-
-    // Combine transactions in each group (across multiple days)
-    const combinedTransactions = Object.values(grouped).map(group => {
-      // Sum all amounts across all days
-      const totalAmount = group.reduce((sum, t) => sum + (t.amount || 0), 0);
-      const totalLossAmount = group.reduce((sum, t) => sum + (t.lossAmount || 0), 0);
-      const totalRebateAmount = group.reduce((sum, t) => sum + (t.rebateAmount || 0), 0);
-
-      // Find earliest and latest dates
-      const dates = group.map(t => t.submitTime.split(' ')[0]); // Extract dates only
-      const uniqueDates = [...new Set(dates)].sort(); // Get unique sorted dates
-      const earliestDate = uniqueDates[0];
-      const latestDate = uniqueDates[uniqueDates.length - 1];
-
-      // Find earliest and latest submit times for time display
-      const times = group.map(t => new Date(t.submitTime));
-      const earliestTime = new Date(Math.min(...times.map(t => t.getTime())));
-      const latestTime = new Date(Math.max(...times.map(t => t.getTime())));
-
-      // Use earliest transaction as base
-      const earliestTransaction = group.reduce((earliest, current) => {
-        return new Date(current.submitTime) < new Date(earliest.submitTime)
-          ? current
-          : earliest;
-      });
-
-      // Format submit time display
-      const formatDateTime = (date: Date) => {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        const hours = String(date.getHours()).padStart(2, '0');
-        const minutes = String(date.getMinutes()).padStart(2, '0');
-        const seconds = String(date.getSeconds()).padStart(2, '0');
-        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-      };
-
-      // Display format based on whether it spans multiple days
-      let submitTimeDisplay;
-      if (group.length > 1 && earliestDate !== latestDate) {
-        // Multiple days: show date range with times
-        submitTimeDisplay = `${formatDateTime(earliestTime)} - ${formatDateTime(latestTime)}`;
-      } else if (group.length > 1 && earliestDate === latestDate) {
-        // Same day, multiple records: show time range
-        submitTimeDisplay = `${formatDateTime(earliestTime)} - ${formatDateTime(latestTime)}`;
-      } else {
-        // Single record: show as-is
-        submitTimeDisplay = earliestTransaction.submitTime;
-      }
-
-      // Return combined transaction with earliest transaction's details
-      return {
-        ...earliestTransaction,
-        amount: totalAmount,
-        lossAmount: totalLossAmount,
-        rebateAmount: totalRebateAmount,
-        id: `${earliestTransaction.id}_combined_${group.length}`, // Mark as combined with count
-        submitTime: submitTimeDisplay,
-        remark: '', // Leave remark blank for combined records
-        // Store original transaction IDs for batch operations
-        originalIds: group.map(t => t.id),
-        // Store metadata for display
-        combinedCount: group.length,
-        dateRange: earliestDate !== latestDate ? `${earliestDate} to ${latestDate}` : earliestDate
-      };
-    });
-
-    return combinedTransactions;
   };
 
   // Filter transactions based on search filters
@@ -176,10 +92,16 @@ export default function RebateReleaseManagement() {
     // Only show PENDING transactions
     if (transaction.status !== 'PENDING') return false;
 
-    // Date filters (by submitTime)
-    if (searchFilters.dateFrom && new Date(transaction.submitTime) < new Date(searchFilters.dateFrom)) return false;
-    if (searchFilters.dateTo && new Date(transaction.submitTime) > new Date(searchFilters.dateTo + ' 23:59:59')) return false;
-    if (searchFilters.setupName && searchFilters.setupName !== 'all' && transaction.rebateName !== searchFilters.setupName) return false;
+    // Date filter (by submitTime) - single date only
+    if (searchFilters.dateFrom) {
+      const transactionDate = new Date(transaction.submitTime).toISOString().split('T')[0];
+      if (transactionDate !== searchFilters.dateFrom) return false;
+    }
+    // Member Level filter
+    if (searchFilters.memberLevel && searchFilters.memberLevel !== 'all') {
+      const userLevel = getUserLevel(transaction);
+      if (userLevel !== searchFilters.memberLevel.toLowerCase()) return false;
+    }
 
     return true;
   })
@@ -207,8 +129,7 @@ export default function RebateReleaseManagement() {
   const handleReset = () => {
     setSearchFilters({
       dateFrom: '',
-      dateTo: '',
-      setupName: 'all'
+      memberLevel: 'all'
     });
     setHasGenerated(false);
     setSelectedRows(new Set());
@@ -429,29 +350,21 @@ export default function RebateReleaseManagement() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-3">
           <Input
             type="date"
-            placeholder="Date From (Submit Time)"
+            placeholder="Rebate Date"
             value={searchFilters.dateFrom}
             onChange={(e) => handleInputChange('dateFrom', e.target.value)}
             className="h-9"
           />
 
-          <Input
-            type="date"
-            placeholder="Date To (Submit Time)"
-            value={searchFilters.dateTo}
-            onChange={(e) => handleInputChange('dateTo', e.target.value)}
-            className="h-9"
-          />
-
-          <Select value={searchFilters.setupName} onValueChange={(value) => handleInputChange('setupName', value)}>
+          <Select value={searchFilters.memberLevel} onValueChange={(value) => handleInputChange('memberLevel', value)}>
             <SelectTrigger className="h-9">
-              <SelectValue placeholder="Setup Name" />
+              <SelectValue placeholder="Member Level" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Setups</SelectItem>
-              {rebateSetupsData.map(setup => (
-                <SelectItem key={setup.id} value={setup.name}>
-                  {setup.name}
+              <SelectItem value="all">All Levels</SelectItem>
+              {initialLevels.map(level => (
+                <SelectItem key={level.id} value={level.levelName}>
+                  {level.levelName}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -535,18 +448,18 @@ export default function RebateReleaseManagement() {
                   </th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Username</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Level</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Rebate Name</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Rebate Type</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Rebate Tier</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Rebate Rate (%)</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Rebate Max Limit</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Rebate Amount</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Handler</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Submit Time</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Completed Time</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Valid Bet Amount</th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Rebate Amount</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Rebate Reward Amount</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Release Amount</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Remark</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Status</th>
                   <th className="px-3 py-2 text-left text-xs font-semibold text-gray-900 uppercase">Action</th>
                 </tr>
               </thead>
@@ -557,7 +470,12 @@ export default function RebateReleaseManagement() {
                   const rebateTier = getRebateTier(transaction.lossAmount || 0, rebateSetup);
                   const rebateRate = getRebateRate(transaction.lossAmount || 0, rebateSetup);
                   const rebateAmount = calculateRebateAmount(transaction.lossAmount || 0, rebateRate);
-                  const maxLimit = getRebateMaxLimit(rebateSetup);
+
+                  // Determine if this tier uses percentage or amount
+                  const isPercentageType = rebateSetup?.rebateCalculationType === 'Percentage';
+                  const displayRebateRate = isPercentageType && typeof rebateRate === 'number' ? `${rebateRate}%` : '-';
+                  const displayRebateAmount = !isPercentageType && rebateSetup ?
+                    `$${(rebateSetup.amountTiers.find(t => (transaction.lossAmount || 0) >= t.validBetMoreThan)?.rebateAmount || 0).toFixed(2)}` : '-';
 
                   return (
                     <tr key={transaction.id} className="hover:bg-gray-50">
@@ -586,17 +504,14 @@ export default function RebateReleaseManagement() {
                           {userLevel.toUpperCase()}
                         </Badge>
                       </td>
-                      <td className="px-3 py-2 text-gray-900 text-xs">{transaction.rebateName || '-'}</td>
-                      <td className="px-3 py-2 text-gray-900 text-xs">{transaction.rebateType || '-'}</td>
+                      <td className="px-3 py-2 text-gray-900 text-xs">{transaction.rebateType || 'Valid Bet'}</td>
                       <td className="px-3 py-2 text-gray-900 text-xs">{rebateTier}</td>
-                      <td className="px-3 py-2 text-gray-900 text-xs">
-                        {typeof rebateRate === 'string' ? rebateRate : `${rebateRate}%`}
-                      </td>
-                      <td className="px-3 py-2 text-gray-900 text-xs">{maxLimit}</td>
+                      <td className="px-3 py-2 text-gray-900 text-xs">{displayRebateRate}</td>
+                      <td className="px-3 py-2 text-gray-900 text-xs">{displayRebateAmount}</td>
                       <td className="px-3 py-2 text-blue-600 text-xs">{transaction.completeBy || '-'}</td>
                       <td className="px-3 py-2 text-gray-900 text-xs">{transaction.submitTime}</td>
                       <td className="px-3 py-2 text-gray-900 text-xs">{transaction.completeTime || '-'}</td>
-                      <td className="px-3 py-2 text-green-600 font-semibold text-xs">
+                      <td className="px-3 py-2 text-gray-900 text-xs">
                         ${(transaction.lossAmount || 0).toFixed(2)}
                       </td>
                       <td className="px-3 py-2 text-green-600 font-semibold text-xs">
@@ -618,6 +533,11 @@ export default function RebateReleaseManagement() {
                           onChange={(e) => handleRemarkChange(transaction.id, e.target.value)}
                           className="h-7 w-28 text-xs"
                         />
+                      </td>
+                      <td className="px-3 py-2">
+                        <Badge className="bg-yellow-100 text-yellow-700 text-xs font-semibold px-2 py-1">
+                          {transaction.status}
+                        </Badge>
                       </td>
                       <td className="px-3 py-2">
                         <div className="flex gap-2">
