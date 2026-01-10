@@ -110,7 +110,7 @@ export default function RebateSetupManagement() {
 
   const openModal = (mode: ModalMode, rebate?: RebateSetup) => {
     setModalMode(mode);
-    setActiveTab('info');
+    setActiveTab('languages');
     setLanguageTab('english');
     setValidationErrors({});
 
@@ -621,6 +621,16 @@ export default function RebateSetupManagement() {
             {/* Left Sidebar Tabs */}
             <div className="w-48 border-r pr-4 space-y-2">
               <button
+                onClick={() => setActiveTab('languages')}
+                className={`w-full text-left px-4 py-2 rounded font-medium transition-colors ${
+                  activeTab === 'languages'
+                    ? 'bg-[#3949ab] text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Languages
+              </button>
+              <button
                 onClick={() => setActiveTab('info')}
                 className={`w-full text-left px-4 py-2 rounded font-medium transition-colors ${
                   activeTab === 'info'
@@ -651,16 +661,6 @@ export default function RebateSetupManagement() {
                 Provider Amount
               </button>
               <button
-                onClick={() => setActiveTab('languages')}
-                className={`w-full text-left px-4 py-2 rounded font-medium transition-colors ${
-                  activeTab === 'languages'
-                    ? 'bg-[#3949ab] text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Languages
-              </button>
-              <button
                 onClick={() => setActiveTab('eligibility')}
                 className={`w-full text-left px-4 py-2 rounded font-medium transition-colors ${
                   activeTab === 'eligibility'
@@ -680,20 +680,6 @@ export default function RebateSetupManagement() {
                   <div>
                     <h3 className="text-lg font-bold mb-4 text-gray-800 pb-2 border-b">Basic Information</h3>
                     <div className="space-y-4">
-                      <div className="w-full">
-                        <label className="block text-sm font-semibold mb-2 text-gray-700">Rebate Name *</label>
-                        <Input
-                          type="text"
-                          value={formData.name}
-                          onChange={(e) => handleInputChange('name', e.target.value)}
-                          placeholder="Enter rebate name"
-                          className="w-full h-10"
-                        />
-                        {validationErrors.name && (
-                          <p className="text-red-600 text-sm mt-1">{validationErrors.name}</p>
-                        )}
-                      </div>
-
                       <div className="w-full">
                         <label className="block text-sm font-semibold mb-2 text-gray-700">Rebate Type *</label>
                         <Input
@@ -956,18 +942,60 @@ export default function RebateSetupManagement() {
                         </div>
                       </div>
 
-                      {/* Rebate Calculation Type */}
-                      <div className="w-full">
-                        <label className="block text-sm font-semibold mb-2 text-gray-700">Rebate Calculation Type</label>
-                        <select
-                          value={formData.rebateCalculationType}
-                          onChange={(e) => handleInputChange('rebateCalculationType', e.target.value as 'Percentage' | 'Amount')}
-                          className="w-full h-10 px-3 py-2 border rounded-md"
-                        >
-                          <option value="Percentage">Percentage</option>
-                          <option value="Amount">Amount</option>
-                        </select>
-                        <p className="text-xs text-gray-500 mt-1">Configure amount settings in the "Provider Amount Settings" tab</p>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-semibold mb-2 text-gray-700">Minimum Withdraw Amount *</label>
+                          <Input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={formData.minWithdrawAmount || 0}
+                            onChange={(e) => handleInputChange('minWithdrawAmount', parseFloat(e.target.value) || 0)}
+                            placeholder="Enter amount"
+                            className="w-full h-10"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-semibold mb-2 text-gray-700">Max Withdraw Amount Per Transaction *</label>
+                          <Input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={formData.maxWithdrawAmountPerTransaction || 0}
+                            onChange={(e) => handleInputChange('maxWithdrawAmountPerTransaction', parseFloat(e.target.value) || 0)}
+                            placeholder="Enter amount"
+                            className="w-full h-10"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-semibold mb-2 text-gray-700">Max Withdraw Amount Per Day</label>
+                          <Input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={formData.maxWithdrawAmountPerDay || 0}
+                            onChange={(e) => handleInputChange('maxWithdrawAmountPerDay', parseFloat(e.target.value) || 0)}
+                            placeholder="Enter amount"
+                            className="w-full h-10"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-semibold mb-2 text-gray-700">Max Withdraw Count Per Day</label>
+                          <Input
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={formData.maxWithdrawCountPerDay || 0}
+                            onChange={(e) => handleInputChange('maxWithdrawCountPerDay', parseInt(e.target.value) || 0)}
+                            placeholder="Enter count"
+                            className="w-full h-10"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>

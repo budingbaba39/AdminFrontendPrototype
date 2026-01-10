@@ -40,6 +40,10 @@ export interface RebateSetup {
   maxTotalPayoutAmount: number;
   maxWithdrawAmount: number;
   maxWithdrawPercentage: number;
+  minWithdrawAmount?: number; // Minimum Withdraw Amount
+  maxWithdrawAmountPerTransaction?: number; // Max Withdraw Amount Per Transaction
+  maxWithdrawAmountPerDay?: number; // Max Withdraw Amount Per Day
+  maxWithdrawCountPerDay?: number; // Max Withdraw Count Per Day
   recurring: 'Immediate' | 'One Time' | 'Recurring';
   resetFrequency?: 'Everyday' | 'Every Week' | 'Every Month'; // only if recurring
   resetFrequencyDay?: number | string; // number for month (1-28), string for week day
